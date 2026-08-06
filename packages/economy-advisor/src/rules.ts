@@ -42,6 +42,13 @@ export const economyRulesSchema = z.object({
     semiMinSpend: z.number().int().nonnegative(),
     forceMinSpend: z.number().int().nonnegative(),
   }),
+  corpusValidation: z
+    .object({
+      method: z.string(),
+      run: z.string(),
+      results: z.record(z.string(), z.string()),
+    })
+    .optional(),
   notes: z.record(z.string(), z.string()).optional(),
 });
 

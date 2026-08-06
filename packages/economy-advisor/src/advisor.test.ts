@@ -64,6 +64,14 @@ describe("projection", () => {
     expect(ct.lossWithPlant).toBe(ct.loss);
   });
 
+  it("pistol-round loss pays 1900 instead of the streak table (C10)", () => {
+    const base = { money: 2000, spendNow: 0, side: "T" as const, lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
+    const pistol = projectNextRoundMoney({ ...base, pistolRound: true });
+    const regular = projectNextRoundMoney({ ...base, pistolRound: false });
+    expect(pistol.loss).toBe(regular.loss + 500); // 1900 vs 1400
+    expect(pistol.loss).toBe(2000 + 1900);
+  });
+
   it("kill rewards enter the projection (rifle $300, AWP $100)", () => {
     const kills = [{ weaponClass: "rifle" as const, count: 2 }, { weaponClass: "awp" as const, count: 1 }];
     expect(killRewardsTotal({ kills, rules: DEFAULT_RULES })).toBe(700);

@@ -20,10 +20,10 @@
     },
     {
       "name": "cs2-demo-format corpus (player-economies.json startMoney 差分)",
-      "url": "local corpus (300+ matches, path pending)",
-      "revision": "n/a",
-      "accessed": "pending",
-      "notes": "计划中的经验核验: 奖励/价格/下包奖金均以语料统计确认"
+      "url": "local corpus: rival-rating/fixtures/pro-20260611/zips (52) + cs2-demo-analysis-kit/fixtures/input (13), 55 matches / 1122 rounds / 10425 samples",
+      "revision": "2026-01-25 ~ 2026-06-06 比赛",
+      "accessed": "2026-08-06",
+      "notes": "experiments/economy-ledger/scripts/validate-economy.ts OLS + 分组均值核验，见 corpusValidation"
     }
   ],
   "maxMoney": 16000,
@@ -68,10 +68,24 @@
     "semiMinSpend": 800,
     "forceMinSpend": 2000
   },
+  "corpusValidation": {
+    "method": "income = startMoney(r) − startMoney(r−1) + moneySpent(r−1); OLS on kill-class counts + CT team kills + intercept; group means on kill-corrected residuals",
+    "run": "2026-08-06, 55 matches / 1122 rounds / 10425 samples (2026-01~06 pro & sample corpus)",
+    "results": {
+      "winByElimination": "confirmed ≈ 3250 (corrected Δ −122~+54)",
+      "winByBomb": "confirmed ≈ 3500 (Δ −17~−38)",
+      "lossBonusByStreak": "confirmed 1400/1900/2400/2900/3400 (Δ ±150, streak-1/4 ±400 系击杀修正耦合)",
+      "pistolRoundLoss": "confirmed 1900 (Δ −15~+48)",
+      "plantBonusT": "corpus 估计 ≈ 430~690 (两轮 432/486 修正后); fandom $600 合理, CS:GO 的 $800 可排除",
+      "killRewards": "recent corpus (2026-05~06): pistol ≈300, smg ≈600, rifle ≈250~300, awp ≈100~160 — 与 fandom 一致量级; ≤2026-03 语料 pistol ≈25 异常, 待核实早期语料导出质量或规则变更",
+      "ctTeamKillReward": "语料 (≤2026-06-06) 未见 CT 团队奖励 (OLS −10~−15 ≈ 0); 用户报告 2026-08 现版本 CT 击杀有 $50 — 语料未覆盖, 待新语料/Windows 实测",
+      "maxMoney": "cap filter 生效, 未直接验证"
+    }
+  },
   "notes": {
     "lossBonusRule": "连败计数: 每败+1、每胜-1 (min 0, max 4)。2025 经济更新取代旧的'两连胜后首败 $1500'规则。奖金索引 = 本回合前的连败数 (lossStreak)，与 fandom 表格'Losing (loss count: N)'语义一致。",
     "plantBonusT": "fandom 标注 CS2 下包奖金 $600 (CS:GO $800)；数值存疑，待语料 startMoney 差分核验。",
-    "ctTeamKillReward": "竞技/Premier 无 CT 团队击杀奖励 ($50 仅 Casual)。输入模型保留 ctTeamKillsOnTs 字段，规则值 0 便于未来调整。",
+    "ctTeamKillReward": "竞技/Premier 无 CT 团队击杀奖励 ($50 仅 Casual)。输入模型保留 ctTeamKillsOnTs 字段，规则值 0 便于未来调整。⚠️ 语料 (≤2026-06-06) OLS 证实无团队奖励；但用户报告 2026-08 现版本 CT 击杀有 $50/击杀 — 需新语料或 Windows 实测确认后更新此值。",
     "killRewardUnknown": "GSI 不给击杀武器 (capability-matrix §2)，实时路径无法知道击杀武器类别；unknown 按步枪 $300 估算并显式标注假设。",
     "pricesRevisionWarning": "Buy_Menu 页修订于 2023-11-17，2024-2026 价格补丁可能未反映；待 Windows 游戏内核对 + 语料 moneySpent 分布交叉验证。",
     "winBombNote": "拆包/爆炸获胜 $3500 仅在下包回合适用；投影中 winBomb 分支供参考，保守推荐用 win (3250)。"

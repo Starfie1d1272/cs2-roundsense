@@ -153,8 +153,8 @@ describe("estimateRemaining", () => {
 
   it("uses the versioned default fuse (B1/B2)", () => {
     const out = estimateRemainingDefault(planted, planted + 20_000_000_000n);
-    expect(C4_FUSE_RULES.fuseMs).toBe(41_000); // corpus-verified: 2624 ticks @64
+    expect(C4_FUSE_RULES.fuseMs).toBe(41_000); // corpus-verified: 2624 ticks @64, 223 samples
     expect(out.remainingMs).toBe(21_000);
-    expect(C4_FUSE_RULES.status).toBe("corpus-preliminary"); // honesty: Windows check pending
+    expect(C4_FUSE_RULES.status).toBe("corpus-verified");
   });
 });

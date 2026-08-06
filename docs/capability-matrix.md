@@ -15,8 +15,8 @@
 | 安放开始（plant_begin） | 不可用（GSI 无此状态） | `bombs.json type=plant_begin` | 实时侧只能观测"安放完成" |
 | 爆炸事件 | 状态差分：`round.bomb: exploding`（或 round.phase→over 推断） | `bombs.json type=exploded + tick` | 实时侧"exploding"到达率/时序待测；不伪造未观测到的爆炸 |
 | 拆包开始/完成 | 拆包开始不可用；完成 = `round.bomb: defused` | `bombs.json defuse_begin/defused` | 同上 |
-| 剩余时间 | 规则估算：`plantedAt + fuseMs − now`（B1/B4） | `(explodedTick − plantedTick)/64` 精确值（实测恒 41.000s） | **Phase_countdowns 不可用（A2）→ 必须估算** |
-| 引信时长 | 规则（B1，corpus-preliminary 41s，40s 待 Windows 排除） | 语料分布核验（B2，11/11 = 41.000s） | 规则文件版本化 |
+| 剩余时间 | 规则估算：`plantedAt + fuseMs − now`（B1/B4） | `(explodedTick − plantedTick)/64` 精确值（223/223 = 41.000s） | **Phase_countdowns 不可用（A2）→ 必须估算** |
+| 引信时长 | 规则（B1，corpus-verified 41s，40s 待 Windows 排除） | 语料分布核验（B2，223/223 = 41.000s） | 规则文件版本化 |
 | 炸弹位置/携带者 | 不可用（`bomb` 组件仅观战） | `bombs.json` position/actorIndex | — |
 | 掉包/拾包 | `round.bomb: dropped`（A3） | `bombs.json dropped/picked_up` | dropped ≠ planted，不得误报安放 |
 

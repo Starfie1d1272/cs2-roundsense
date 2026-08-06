@@ -99,6 +99,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       lossStreak: input.lossStreak,
       kills: input.killsThisRound,
       bombPlantedThisRound: input.bombPlantedThisRound ?? false,
+      pistolRound: input.roundNumber === 1 || input.roundNumber === 14, // C10
       rules,
     };
     const projections = projectNextRoundMoney(projectionInput);
