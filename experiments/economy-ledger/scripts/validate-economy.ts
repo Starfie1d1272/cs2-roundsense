@@ -18,9 +18,9 @@
  *
  * Run: pnpm --filter @roundsense/experiment-economy-ledger exec tsx scripts/validate-economy.ts <zip|dir>...
  */
-import { readdirSync } from "node:fs";
+import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { loadDemoPackage, teamLossStreakPerRound, type ParsedDemoPackage } from "@roundsense/demo-oracle";
+import { loadDemoPackage, loadDemoPackageDir, teamLossStreakPerRound, type ParsedDemoPackage } from "@roundsense/demo-oracle";
 
 // ── weapon internal-name → class (cs2df exports internal names) ──────────────
 const CLASS_RULES: [RegExp, string][] = [
@@ -53,7 +53,15 @@ interface Sample {
   lostStreak: number | null;
   tLostWithPlant: boolean;
   killCounts: Map<string, number>;
-  ctTeamKillsPrev: number; // CT only meaningful; 0 for T samples
+  /** own kills total (for LOO computation) */
+  ownKills: number;
+  /** CT team kills in prev round (CT players only; 0 for T) */
+  ctTeamKillsPrev: number;
+  /** leave-one-out: CT team kills EXCLUDING this player's own kills — breaks
+   *  collinearity with per-class kill rewards in the OLS */
+  ctTeamKillsLoo: number;
+  /** true when the player was CT in the PREVIOUS round (team reward applies) */
+  prevWasCt: boolean;
   side: "CT" | "T";
   playerIndex: number;
   round: number;
@@ -130,9 +138,15 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
     if (!prev) continue;
 
     const prevKills = killsByRound.get(r - 1) ?? [];
-    const ctTeamKillsPrev = prevKills.filter(
-      (k) => k.killerIndex !== null && teamByPlayer.get(k.killerIndex) === "teamA"
-        && teamByPlayer.get(k.victimIndex) !== "teamA",
+    // CT team kill reward (2025-07-15 rule): EVERY CT player gets +$50 per
+    // T eliminated in the previous round. Determine which teamKey is CT in
+    // the PREVIOUS round (sides swap every half!) and count their kills.
+    const ctTeamKeyPrev = prev.teamASide === "ct" ? "teamA" : "teamB";
+    const ctKillsPrev = prevKills.filter(
+      (k) =>
+        k.killerIndex !== null &&
+        teamByPlayer.get(k.killerIndex) === ctTeamKeyPrev &&
+        teamByPlayer.get(k.victimIndex) !== ctTeamKeyPrev,
     ).length;
 
     const prevPlanted = plantedByRound.get(r - 1) ?? false;
@@ -178,18 +192,25 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       const residual = income - modeled;
       // sanity filter: mid-game joins/leaves create garbage rows
       if (Math.abs(residual) > 6000) continue;
-      // cap filter: income truncated at $16000 (C6) — skip capped samples
-      if (pre.start - pre.spent + modeled > 16000) continue;
+      // cap filter: income truncated at $16000 (C6) — reserve $500 headroom
+      // for unmodeled kill rewards so capped samples stay out of the OLS
+      if (pre.start - pre.spent + modeled > 15500) continue;
 
       const killCounts = new Map<string, number>();
+      const myTeam = teamByPlayer.get(playerIndex);
+      let ownKills = 0;
       for (const k of prevKills) {
         if (k.killerIndex === playerIndex && k.victimIndex !== playerIndex) {
+          // team-kills pay NO reward — exclude same-team victims
+          if (teamByPlayer.get(k.victimIndex) === myTeam) continue;
+          ownKills++;
           const cls = weaponClass(k.weapon);
           if (cls === "world" || cls.startsWith("unknown")) continue; // no reward
           killCounts.set(cls, (killCounts.get(cls) ?? 0) + 1);
         }
       }
 
+      const isCt = prevSide === "ct";
       s.samples.push({
         residual,
         won,
@@ -197,7 +218,10 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
         lostStreak,
         tLostWithPlant: !wonPrev && prevSide === "t" && prevPlanted,
         killCounts,
-        ctTeamKillsPrev: teamKey === "teamA" ? ctTeamKillsPrev : 0,
+        ownKills,
+        ctTeamKillsPrev: isCt ? ctKillsPrev : 0, // CT players only (2025-07-15 rule)
+        ctTeamKillsLoo: isCt ? Math.max(0, ctKillsPrev - ownKills) : 0,
+        prevWasCt: isCt,
         side,
         playerIndex,
         round: r,
@@ -248,12 +272,17 @@ function report(s: Stats): void {
 
   // OLS first, then report group means on KILL-CORRECTED residuals so the
   // group Δ values read out the TRUE reward − model directly.
-  const classes = [...new Set(s.samples.flatMap((x) => [...x.killCounts.keys()]))].sort();
+  // Rare classes (knife/zeus/grenade: <~100 samples, special scenarios) are
+  // excluded from the OLS — their tiny counts and collinearity with team
+  // kills distort every other coefficient (observed knife ≈ 2600 artifacts).
+  const classes = [...new Set(s.samples.flatMap((x) => [...x.killCounts.keys()]))]
+    .filter((c) => s.samples.reduce((n, x) => n + (x.killCounts.get(c) ?? 0), 0) >= 150)
+    .sort();
   const design: number[][] = [];
   const y: number[] = [];
   for (const x of s.samples) {
     const row = classes.map((c) => x.killCounts.get(c) ?? 0);
-    row.push(x.ctTeamKillsPrev);
+    row.push(x.ctTeamKillsLoo);
     row.push(1); // intercept
     design.push(row);
     y.push(x.residual);
@@ -266,6 +295,25 @@ function report(s: Stats): void {
   };
   const cm = (xs: Sample[]) => (xs.length ? xs.reduce((a, b) => a + corrected(b), 0) / xs.length : NaN);
   const cn = (xs: Sample[]) => xs.length;
+
+  // ── CT team kill reward (2025-07-15 rule): direct group means ──────────────
+  // CT players only AND the player was CT in the previous round (that is when
+  // the reward applies). Each additional team kill should add ~$50 to EVERY
+  // CT player's income.
+  const ctSamples = s.samples.filter((x) => x.prevWasCt);
+  const ctByKills = new Map<number, Sample[]>();
+  for (const x of ctSamples) {
+    const list = ctByKills.get(x.ctTeamKillsPrev) ?? [];
+    list.push(x);
+    ctByKills.set(x.ctTeamKillsPrev, list);
+  }
+  console.log("CT team-kill reward — residual by prev-round CT kills (CT players, prev round CT):");
+  const base = ctByKills.get(0) ?? [];
+  const baseMean = cm(base);
+  for (const [k, list] of [...ctByKills.entries()].sort((a, b) => a[0] - b[0])) {
+    const perKill = k === 0 ? 0 : (cm(list) - baseMean) / k;
+    console.log(`  ctKills=${k}: correctedMean=${cm(list).toFixed(0)} (n=${list.length})  → +$${perKill.toFixed(1)}/kill vs ctKills=0`);
+  }
 
   const won = s.samples.filter((x) => x.won && !x.wonBomb);
   const wonBomb = s.samples.filter((x) => x.wonBomb);
@@ -282,11 +330,11 @@ function report(s: Stats): void {
   const plant = s.samples.filter((x) => x.tLostWithPlant);
   console.log(`T lost with plant: true plantBonusT=${cm(plant).toFixed(1)} (model 0, n=${cn(plant)})`);
 
-  console.log("OLS per-kill reward (residual ~ Σ kills_cls × r_cls + ctTeamKills × r_ct + 1):");
+  console.log("OLS per-kill reward (residual ~ Σ kills_cls × r_cls + ctTeamKills_LOO × r_ct + 1):");
   for (let i = 0; i < classes.length; i++) {
     console.log(`  ${classes[i]}: ${coef[i]!.toFixed(1)}`);
   }
-  console.log(`  ctTeamKills(teamA/CT): ${coef[classes.length]!.toFixed(1)}`);
+  console.log(`  ctTeamKills(LOO): ${coef[classes.length]!.toFixed(1)}`);
   console.log(`  intercept: ${coef[classes.length + 1]!.toFixed(1)} (n=${s.samples.length})`);
 
   const olsFor = (samples: Sample[], label: string): void => {
@@ -294,7 +342,7 @@ function report(s: Stats): void {
     const yy: number[] = [];
     for (const x of samples) {
       const row = classes.map((c) => x.killCounts.get(c) ?? 0);
-      row.push(x.ctTeamKillsPrev);
+      row.push(x.ctTeamKillsLoo);
       row.push(1);
       d.push(row);
       yy.push(x.residual);
@@ -302,7 +350,7 @@ function report(s: Stats): void {
     const c = ols(d, yy);
     console.log(`OLS ${label} (n=${samples.length}):`);
     for (let i = 0; i < classes.length; i++) console.log(`  ${classes[i]}: ${c[i]!.toFixed(1)}`);
-    console.log(`  ctTeamKills: ${c[classes.length]!.toFixed(1)}  intercept: ${c[classes.length + 1]!.toFixed(1)}`);
+    console.log(`  ctTeamKills(LOO): ${c[classes.length]!.toFixed(1)}  intercept: ${c[classes.length + 1]!.toFixed(1)}`);
   };
   const early = s.samples.filter((x) => x.month <= 3);
   const recent = s.samples.filter((x) => x.month >= 5);
@@ -319,13 +367,23 @@ function report(s: Stats): void {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const files: string[] = [];
+  const dirs: string[] = [];
   for (const arg of args) {
     if (arg.endsWith(".zip")) files.push(arg);
-    else {
-      for (const f of readdirSync(arg)) if (f.endsWith(".zip")) files.push(join(arg, f));
+    else if (existsSync(join(arg, "manifest.json"))) dirs.push(arg); // unpacked v3 dir
+    else if (existsSync(arg)) {
+      // directory of zips and/or unpacked v3 package dirs
+      for (const entry of readdirSync(arg, { withFileTypes: true })) {
+        const p = join(arg, entry.name);
+        if (entry.isDirectory()) {
+          if (existsSync(join(p, "manifest.json"))) dirs.push(p);
+        } else if (entry.name.endsWith(".zip")) {
+          files.push(p);
+        }
+      }
     }
   }
-  if (files.length === 0) { console.error("usage: tsx validate-economy.ts <zip|dir> ..."); process.exit(1); }
+  if (files.length === 0 && dirs.length === 0) { console.error("usage: tsx validate-economy.ts <zip|dir> ..."); process.exit(1); }
   const s: Stats = { samples: [], fuseMs: [], fuseDistinct: new Map(), matches: 0, rounds: 0 };
   for (const f of files) {
     try {
@@ -337,6 +395,15 @@ async function main(): Promise<void> {
       console.error(`✓ ${base}`);
     } catch (e) {
       console.error(`✗ ${f.split("/").pop()}: ${(e as Error).message.slice(0, 100)}`);
+    }
+  }
+  for (const d of dirs) {
+    try {
+      const pkg = await loadDemoPackageDir(d);
+      analyze(pkg, s, 0); // month unknown for Windows corpus
+      console.error(`✓ dir:${d.split("/").pop()}`);
+    } catch (e) {
+      console.error(`✗ dir:${d.split("/").pop()}: ${(e as Error).message.slice(0, 100)}`);
     }
   }
   report(s);

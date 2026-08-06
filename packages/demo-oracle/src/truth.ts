@@ -101,11 +101,17 @@ export function roundTruth(pkg: ParsedDemoPackage): RoundTruthRow[] {
   }));
 }
 
-/** Team-level loss streak per round, derived from consecutive losses (C2). */
+/** Team-level loss streak per round, derived from consecutive losses (C2).
+ * Streaks RESET at the half switch (MR12: round 15 starts the second half). */
 export function teamLossStreakPerRound(pkg: ParsedDemoPackage): Map<string, number> {
   const out = new Map<string, number>();
   const streak = { teamA: 0, teamB: 0 };
   for (const round of pkg.files.rounds) {
+    if (round.roundNumber === 15) {
+      // second half begins: loss counters reset to 0 (C2)
+      streak.teamA = 0;
+      streak.teamB = 0;
+    }
     out.set(`${round.roundNumber}:teamA`, streak.teamA);
     out.set(`${round.roundNumber}:teamB`, streak.teamB);
     if (round.winnerTeamKey === "teamA") {

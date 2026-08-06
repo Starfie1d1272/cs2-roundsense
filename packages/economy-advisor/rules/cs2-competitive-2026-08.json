@@ -78,7 +78,7 @@
       "pistolRoundLoss": "confirmed 1900 (Δ −15~+48)",
       "plantBonusT": "corpus 估计 ≈ 430~690 (两轮 432/486 修正后); fandom $600 合理, CS:GO 的 $800 可排除",
       "killRewards": "recent corpus (2026-05~06): pistol ≈300, smg ≈600, rifle ≈250~300, awp ≈100~160 — 与 fandom 一致量级; ≤2026-03 语料 pistol ≈25 异常, 待核实早期语料导出质量或规则变更",
-      "ctTeamKillReward": "语料 (≤2026-06-06) 未见 CT 团队奖励 (OLS −10~−15 ≈ 0); 用户报告 2026-08 现版本 CT 击杀有 $50 — 语料未覆盖, 待新语料/Windows 实测",
+      "ctTeamKillReward": "316 场语料（55 职业 demo + 202 科隆 ESL + 59 完美世界赛事服务器）的整数差分与 replay 逐帧现金（74 击杀/252 非击杀者观察）均无 $50 团队奖励。⚠️ 所有语料均来自第三方服务器（自定义经济配置），**无一场 Valve 官方竞技/Premier 匹配**——规则（Steam 2025-07-16 'shared team award'）可能在官方服务器生效而赛事服务器关闭。待官方匹配 demo 验证。",
       "maxMoney": "cap filter 生效, 未直接验证"
     }
   },

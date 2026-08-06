@@ -44,6 +44,9 @@ importers:
       '@roundsense/demo-oracle':
         specifier: workspace:*
         version: link:../../packages/demo-oracle
+      cs2-demo-format:
+        specifier: ^3.1.0
+        version: 3.1.0(zod@3.25.76)
 
   packages/c4-estimator:
     dependencies:
