@@ -1,0 +1,345 @@
+/**
+ * Economy truth validation over the v3 ZIP corpus (docs/experiments/economy-validation.md).
+ *
+ * Method: per-player per-round income differences
+ *   income(p, r) = startMoney(p, r) − startMoney(p, r−1) + moneySpent(p, r−1)
+ *
+ * Modeled income (all rewards that the rules file claims):
+ *   roundReward (3250/3500 by endReason) + lossBonus[streak] + plant/defuse
+ *   player bonus (+300) + plantBonusT(0 in model — target of validation)
+ *   + kill rewards (0 in model — estimated by OLS)
+ *   + CT team kill reward (0 in model — estimated by OLS)
+ *
+ * residual = income − modeled. Group means READ OUT the true values:
+ *   won-group mean  = trueWinReward − 3250
+ *   loss streak i   = trueLossBonus[i] − model
+ *   T-loss-with-plant group = truePlantBonusT
+ * OLS over kill-class counts + team kill count estimates per-kill rewards.
+ *
+ * Run: pnpm --filter @roundsense/experiment-economy-ledger exec tsx scripts/validate-economy.ts <zip|dir>...
+ */
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+import { loadDemoPackage, teamLossStreakPerRound, type ParsedDemoPackage } from "@roundsense/demo-oracle";
+
+// ── weapon internal-name → class (cs2df exports internal names) ──────────────
+const CLASS_RULES: [RegExp, string][] = [
+  [/^(ak47|m4a4|m4a1_silencer|m4a1|galilar|famas|sg556|aug)$/, "rifle"],
+  [/^awp$/, "awp"],
+  [/^(ssg08|scar20|g3sg1)$/, "sniper"],
+  [/^(mac10|mp9|mp7|mp5sd|ump45|p90|bizon)$/, "smg"],
+  [/^(nova|sawedoff|mag7|xm1014)$/, "shotgun"],
+  [/^(m249|negev)$/, "mg"],
+  [/^(glock|usp_silencer|p2000|hkp2000|p250|elite|tec9|cz75a|fiveseven|deagle|revolver)$/, "pistol"],
+  [/^(hegrenade|molotov|incgrenade|inferno|decoy)$/, "grenade"],
+  [/^taser$/, "zeus"],
+  [/^knife/, "knife"],
+  [/^world$/, "world"],
+];
+function weaponClass(weapon: string): string {
+  for (const [re, cls] of CLASS_RULES) if (re.test(weapon)) return cls;
+  return `unknown:${weapon}`;
+}
+
+const WIN_BY_BOMB = new Set(["target_bombed", "bomb_defused"]);
+const LOSS_BONUS_MODEL = [1400, 1900, 2400, 2900, 3400];
+const WIN_REWARD_ELIM = 3250;
+const WIN_REWARD_BOMB = 3500;
+
+interface Sample {
+  residual: number;
+  won: boolean;
+  wonBomb: boolean;
+  lostStreak: number | null;
+  tLostWithPlant: boolean;
+  killCounts: Map<string, number>;
+  ctTeamKillsPrev: number; // CT only meaningful; 0 for T samples
+  side: "CT" | "T";
+  playerIndex: number;
+  round: number;
+  month: number; // match month (1-12) — detect recent rule changes
+}
+
+interface Stats {
+  samples: Sample[];
+  fuseMs: number[];
+  fuseDistinct: Map<number, number>;
+  matches: number;
+  rounds: number;
+}
+
+function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
+  s.matches++;
+  s.rounds += pkg.files.rounds.length;
+  const { players, rounds, kills, bombs, playerEconomies } = pkg.files;
+  const tickrate = pkg.manifest.tickrate ?? 64;
+
+  const teamByPlayer = new Map<number, string>();
+  players.forEach((p, i) => teamByPlayer.set(i, p.teamKey));
+
+  const money = new Map<number, Map<number, { start: number; spent: number }>>();
+  for (const row of playerEconomies) {
+    let m = money.get(row.playerIndex);
+    if (!m) { m = new Map(); money.set(row.playerIndex, m); }
+    m.set(row.roundNumber, { start: row.startMoney, spent: row.moneySpent });
+  }
+
+  const roundByNumber = new Map(rounds.map((r) => [r.roundNumber, r]));
+  const streaks = teamLossStreakPerRound(pkg);
+
+  const plantedByRound = new Map<number, boolean>();
+  const plantPlayersByRound = new Map<number, Set<number>>();
+  const defusePlayersByRound = new Map<number, Set<number>>();
+  const bombsByRound = new Map<number, typeof bombs>();
+  for (const b of bombs) {
+    const list = bombsByRound.get(b.roundNumber) ?? [];
+    list.push(b); bombsByRound.set(b.roundNumber, list);
+    if (b.type === "planted") {
+      plantedByRound.set(b.roundNumber, true);
+      const set = plantPlayersByRound.get(b.roundNumber) ?? new Set();
+      set.add(b.actorIndex); plantPlayersByRound.set(b.roundNumber, set);
+    }
+    if (b.type === "defused") {
+      const set = defusePlayersByRound.get(b.roundNumber) ?? new Set();
+      set.add(b.actorIndex); defusePlayersByRound.set(b.roundNumber, set);
+    }
+  }
+
+  // fuse truth
+  for (const round of rounds) {
+    const bm = bombsByRound.get(round.roundNumber);
+    const planted = bm?.find((b) => b.type === "planted");
+    const exploded = bm?.find((b) => b.type === "exploded");
+    if (planted && exploded) {
+      const fuseMs = ((exploded.tick - planted.tick) / tickrate) * 1000;
+      s.fuseMs.push(fuseMs);
+      s.fuseDistinct.set(fuseMs, (s.fuseDistinct.get(fuseMs) ?? 0) + 1);
+    }
+  }
+
+  const killsByRound = new Map<number, typeof kills>();
+  for (const k of kills) {
+    const list = killsByRound.get(k.roundNumber) ?? [];
+    list.push(k); killsByRound.set(k.roundNumber, list);
+  }
+
+  for (const round of rounds) {
+    const r = round.roundNumber;
+    if (r < 2) continue;
+    const prev = roundByNumber.get(r - 1);
+    if (!prev) continue;
+
+    const prevKills = killsByRound.get(r - 1) ?? [];
+    const ctTeamKillsPrev = prevKills.filter(
+      (k) => k.killerIndex !== null && teamByPlayer.get(k.killerIndex) === "teamA"
+        && teamByPlayer.get(k.victimIndex) !== "teamA",
+    ).length;
+
+    const prevPlanted = plantedByRound.get(r - 1) ?? false;
+    const prevPlantPlayers = plantPlayersByRound.get(r - 1) ?? new Set();
+    const prevDefusePlayers = defusePlayersByRound.get(r - 1) ?? new Set();
+    const prevIsPistol = r - 1 === 1 || r - 1 === 14;
+
+    for (const [playerIndex, m] of money) {
+      const cur = m.get(r);
+      const pre = m.get(r - 1);
+      if (!cur || !pre) continue;
+      const teamKey = teamByPlayer.get(playerIndex);
+      if (!teamKey) continue;
+      const side = (teamKey === "teamA" ? round.teamASide : round.teamBSide) as "CT" | "T";
+      // NOTE: demo format uses lowercase "t"/"ct" (sideSchema); GSI uses "CT"/"T"
+      const prevSide = teamKey === "teamA" ? prev.teamASide : prev.teamBSide;
+
+      const income = cur.start - pre.start + pre.spent;
+      const wonPrev = prev.winnerTeamKey === teamKey; // outcome of round r-1 feeds income(r)
+      const won = round.winnerTeamKey === teamKey;
+
+      // modeled rewards (kill rewards + plantBonusT + ct team reward = 0 in model)
+      let modeled = 0;
+      let wonBomb = false;
+      let lostStreak: number | null = null;
+      if (wonPrev) {
+        wonBomb = WIN_BY_BOMB.has(prev.endReason);
+        modeled += wonBomb ? WIN_REWARD_BOMB : WIN_REWARD_ELIM;
+      } else {
+        // pistol-round loss pays 1900 (fandom separate row, C10); verify via Δ
+        if (prevIsPistol) {
+          modeled += 1900;
+          lostStreak = -1; // pistol bucket
+        } else {
+          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // streak BEFORE round r-1
+          lostStreak = streak;
+          modeled += LOSS_BONUS_MODEL[Math.min(streak, 4)]!;
+        }
+      }
+      if (prevPlantPlayers.has(playerIndex)) modeled += 300;
+      if (prevDefusePlayers.has(playerIndex)) modeled += 300;
+
+      const residual = income - modeled;
+      // sanity filter: mid-game joins/leaves create garbage rows
+      if (Math.abs(residual) > 6000) continue;
+      // cap filter: income truncated at $16000 (C6) — skip capped samples
+      if (pre.start - pre.spent + modeled > 16000) continue;
+
+      const killCounts = new Map<string, number>();
+      for (const k of prevKills) {
+        if (k.killerIndex === playerIndex && k.victimIndex !== playerIndex) {
+          const cls = weaponClass(k.weapon);
+          if (cls === "world" || cls.startsWith("unknown")) continue; // no reward
+          killCounts.set(cls, (killCounts.get(cls) ?? 0) + 1);
+        }
+      }
+
+      s.samples.push({
+        residual,
+        won,
+        wonBomb,
+        lostStreak,
+        tLostWithPlant: !wonPrev && prevSide === "t" && prevPlanted,
+        killCounts,
+        ctTeamKillsPrev: teamKey === "teamA" ? ctTeamKillsPrev : 0,
+        side,
+        playerIndex,
+        round: r,
+        month,
+      });
+    }
+  }
+}
+
+// ── tiny OLS via normal equations + Gaussian elimination ─────────────────────
+function ols(design: number[][], y: number[]): number[] {
+  const n = design.length;
+  const p = design[0]!.length;
+  const XtX: number[][] = Array.from({ length: p }, () => new Array(p).fill(0));
+  const Xty: number[] = new Array(p).fill(0);
+  for (let i = 0; i < n; i++) {
+    for (let a = 0; a < p; a++) {
+      Xty[a]! += design[i]![a]! * y[i]!;
+      for (let b = 0; b < p; b++) XtX[a]![b]! += design[i]![a]! * design[i]![b]!;
+    }
+  }
+  // augmented matrix
+  const M = XtX.map((row, i) => [...row, Xty[i]!]);
+  for (let col = 0; col < p; col++) {
+    let piv = col;
+    for (let r = col + 1; r < p; r++) if (Math.abs(M[r]![col]!) > Math.abs(M[piv]![col]!)) piv = r;
+    [M[col], M[piv]] = [M[piv]!, M[col]!];
+    const d = M[col]![col]!;
+    if (Math.abs(d) < 1e-12) continue;
+    for (let c = col; c <= p; c++) M[col]![c]! /= d;
+    for (let r = 0; r < p; r++) {
+      if (r === col) continue;
+      const f = M[r]![col]!;
+      if (Math.abs(f) < 1e-12) continue;
+      for (let c = col; c <= p; c++) M[r]![c]! -= f * M[col]![c]!;
+    }
+  }
+  return M.map((row) => row[p]!);
+}
+
+function report(s: Stats): void {
+  console.log(`matches=${s.matches} rounds=${s.rounds} samples=${s.samples.length}`);
+  const fuseMean = s.fuseMs.length ? s.fuseMs.reduce((a, b) => a + b, 0) / s.fuseMs.length : NaN;
+  console.log(`C4 fuse: mean=${fuseMean.toFixed(1)}ms n=${s.fuseMs.length} distinct=${JSON.stringify([...s.fuseDistinct.entries()])}`);
+
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
+  const n = (xs: number[]) => xs.length;
+
+  // OLS first, then report group means on KILL-CORRECTED residuals so the
+  // group Δ values read out the TRUE reward − model directly.
+  const classes = [...new Set(s.samples.flatMap((x) => [...x.killCounts.keys()]))].sort();
+  const design: number[][] = [];
+  const y: number[] = [];
+  for (const x of s.samples) {
+    const row = classes.map((c) => x.killCounts.get(c) ?? 0);
+    row.push(x.ctTeamKillsPrev);
+    row.push(1); // intercept
+    design.push(row);
+    y.push(x.residual);
+  }
+  const coef = ols(design, y);
+  const corrected = (x: Sample): number => {
+    let k = 0;
+    for (const c of classes) k += (x.killCounts.get(c) ?? 0) * coef[classes.indexOf(c)]!;
+    return x.residual - k - coef[classes.length + 1]!;
+  };
+  const cm = (xs: Sample[]) => (xs.length ? xs.reduce((a, b) => a + corrected(b), 0) / xs.length : NaN);
+  const cn = (xs: Sample[]) => xs.length;
+
+  const won = s.samples.filter((x) => x.won && !x.wonBomb);
+  const wonBomb = s.samples.filter((x) => x.wonBomb);
+  console.log(`win elim: true=${(WIN_REWARD_ELIM + cm(won)).toFixed(0)} (model ${WIN_REWARD_ELIM}, Δ=${cm(won).toFixed(0)}, n=${cn(won)})`);
+  console.log(`win bomb: true=${(WIN_REWARD_BOMB + cm(wonBomb)).toFixed(0)} (model ${WIN_REWARD_BOMB}, Δ=${cm(wonBomb).toFixed(0)}, n=${cn(wonBomb)})`);
+
+  for (let i = 0; i < 5; i++) {
+    const g = s.samples.filter((x) => x.lostStreak !== null && x.lostStreak >= 0 && Math.min(x.lostStreak, 4) === i);
+    console.log(`loss streak ${i}: true=${(LOSS_BONUS_MODEL[i]! + cm(g)).toFixed(0)} (model ${LOSS_BONUS_MODEL[i]}, Δ=${cm(g).toFixed(0)}, n=${cn(g)})`);
+  }
+  const pistolLoss = s.samples.filter((x) => x.lostStreak === -1);
+  console.log(`pistol-round loss: true=${(1900 + cm(pistolLoss)).toFixed(0)} (model 1900, Δ=${cm(pistolLoss).toFixed(0)}, n=${cn(pistolLoss)})`);
+
+  const plant = s.samples.filter((x) => x.tLostWithPlant);
+  console.log(`T lost with plant: true plantBonusT=${cm(plant).toFixed(1)} (model 0, n=${cn(plant)})`);
+
+  console.log("OLS per-kill reward (residual ~ Σ kills_cls × r_cls + ctTeamKills × r_ct + 1):");
+  for (let i = 0; i < classes.length; i++) {
+    console.log(`  ${classes[i]}: ${coef[i]!.toFixed(1)}`);
+  }
+  console.log(`  ctTeamKills(teamA/CT): ${coef[classes.length]!.toFixed(1)}`);
+  console.log(`  intercept: ${coef[classes.length + 1]!.toFixed(1)} (n=${s.samples.length})`);
+
+  const olsFor = (samples: Sample[], label: string): void => {
+    const d: number[][] = [];
+    const yy: number[] = [];
+    for (const x of samples) {
+      const row = classes.map((c) => x.killCounts.get(c) ?? 0);
+      row.push(x.ctTeamKillsPrev);
+      row.push(1);
+      d.push(row);
+      yy.push(x.residual);
+    }
+    const c = ols(d, yy);
+    console.log(`OLS ${label} (n=${samples.length}):`);
+    for (let i = 0; i < classes.length; i++) console.log(`  ${classes[i]}: ${c[i]!.toFixed(1)}`);
+    console.log(`  ctTeamKills: ${c[classes.length]!.toFixed(1)}  intercept: ${c[classes.length + 1]!.toFixed(1)}`);
+  };
+  const early = s.samples.filter((x) => x.month <= 3);
+  const recent = s.samples.filter((x) => x.month >= 5);
+  if (early.length > 200) olsFor(early, "by match date — early (≤2026-03)");
+  if (recent.length > 200) olsFor(recent, "by match date — recent (≥2026-05)");
+  const june = s.samples.filter((x) => x.month === 6);
+  if (june.length > 100) olsFor(june, "by match date — 2026-06 only");
+
+  // group means for the residual sanity
+  const all = s.samples.map((x) => x.residual);
+  console.log(`residual all: mean=${mean(all).toFixed(1)} n=${n(all)}`);
+}
+
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const files: string[] = [];
+  for (const arg of args) {
+    if (arg.endsWith(".zip")) files.push(arg);
+    else {
+      for (const f of readdirSync(arg)) if (f.endsWith(".zip")) files.push(join(arg, f));
+    }
+  }
+  if (files.length === 0) { console.error("usage: tsx validate-economy.ts <zip|dir> ..."); process.exit(1); }
+  const s: Stats = { samples: [], fuseMs: [], fuseDistinct: new Map(), matches: 0, rounds: 0 };
+  for (const f of files) {
+    try {
+      const pkg = await loadDemoPackage(f);
+      const base = f.split("/").pop() ?? f;
+      const m = /(?:^|-)2026-(\d{2})/.exec(base);
+      const month = m ? Number(m[1]) : 0;
+      analyze(pkg, s, month);
+      console.error(`✓ ${base}`);
+    } catch (e) {
+      console.error(`✗ ${f.split("/").pop()}: ${(e as Error).message.slice(0, 100)}`);
+    }
+  }
+  report(s);
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });

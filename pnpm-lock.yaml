@@ -39,6 +39,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/gsi-protocol
 
+  experiments/economy-ledger:
+    dependencies:
+      '@roundsense/demo-oracle':
+        specifier: workspace:*
+        version: link:../../packages/demo-oracle
+
   packages/c4-estimator:
     dependencies:
       '@roundsense/shared-types':

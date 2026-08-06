@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "experiments/economy-ledger"
 
 allowBuilds:
   esbuild: true

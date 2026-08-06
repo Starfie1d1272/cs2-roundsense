@@ -1,0 +1,13 @@
+{
+  "name": "@roundsense/experiment-economy-ledger",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "validate": "tsx scripts/validate-economy.ts"
+  },
+  "dependencies": {
+    "@roundsense/demo-oracle": "workspace:*"
+  }
+}
