@@ -99,7 +99,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       lossStreak: input.lossStreak,
       kills: input.killsThisRound,
       bombPlantedThisRound: input.bombPlantedThisRound ?? false,
-      pistolRound: input.roundNumber === 1 || input.roundNumber === 14, // C10
+      pistolRound: input.roundNumber === 1 || input.roundNumber === 13, // C10 (MR12: r13 = second-half pistol)
       ctTeamKillsOnTs: input.ctTeamKillsOnTs, // C5: CT shared team award
       rules,
     };

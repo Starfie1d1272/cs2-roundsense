@@ -52,6 +52,9 @@ const KILL_REWARD_MODEL: Record<string, number> = {
   knife: 1500, zeus: 100, grenade: 300, world: 0, taser: 100, unknown: 0,
 };
 
+// R4: T plant-loss bonus (whole T team) — fandom $600, corpus ≈ 585-672
+const PLANT_BONUS_T_MODEL = 600;
+
 interface Sample {
   residual: number;
   won: boolean;
@@ -142,25 +145,28 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
   for (const round of rounds) {
     const r = round.roundNumber;
     if (r < 2) continue;
+    // r13 = second-half pistol round: economy RESETS (startMoney back to 800),
+    // so the income-difference ledger is invalid for this round's start.
+    if (r === 13) continue;
     const prev = roundByNumber.get(r - 1);
     if (!prev) continue;
 
     const prevKills = killsByRound.get(r - 1) ?? [];
-    // CT team kill reward (2025-07-15 rule): EVERY CT player gets +$50 per
-    // T eliminated in the previous round. Determine which teamKey is CT in
-    // the PREVIOUS round (sides swap every half!) and count their kills.
-    const ctTeamKeyPrev = prev.teamASide === "ct" ? "teamA" : "teamB";
-    const ctKillsPrev = prevKills.filter(
-      (k) =>
-        k.killerIndex !== null &&
-        teamByPlayer.get(k.killerIndex) === ctTeamKeyPrev &&
-        teamByPlayer.get(k.victimIndex) !== ctTeamKeyPrev,
+    // CT shared team award (2025-07-16 rule): EVERY CT player gets +$50 per
+    // T ELIMINATED in the previous round — "eliminated" includes world kills
+    // (C4 explosion, fall damage; killerIndex null) and team kills, i.e.
+    // COUNT BY VICTIM (victim is on the T side), not by CT killer.
+    // Corpus-verified 2026-08-06: r9 Cologne QF1 = 3 CT kills + 1 C4 suicide
+    // kill of the planter → award 4×50=200 per CT player.
+    const tTeamKeyPrev = prev.teamASide === "t" ? "teamA" : "teamB";
+    const tEliminatedPrev = prevKills.filter(
+      (k) => k.victimIndex !== null && teamByPlayer.get(k.victimIndex) === tTeamKeyPrev,
     ).length;
 
     const prevPlanted = plantedByRound.get(r - 1) ?? false;
     const prevPlantPlayers = plantPlayersByRound.get(r - 1) ?? new Set();
     const prevDefusePlayers = defusePlayersByRound.get(r - 1) ?? new Set();
-    const prevIsPistol = r - 1 === 1 || r - 1 === 14;
+    const prevIsPistol = r - 1 === 1 || r - 1 === 13;
 
     for (const [playerIndex, m] of money) {
       const cur = m.get(r);
@@ -200,7 +206,7 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       let modeled = 0;
       let wonBomb = false;
       let lostStreak: number | null = null;
-      if (prevSide === "ct") modeled += 50 * ctKillsPrev; // 2025-07-16 shared team award
+      if (prevSide === "ct") modeled += 50 * tEliminatedPrev; // 2025-07-16 shared team award
       if (wonPrev) {
         wonBomb = WIN_BY_BOMB.has(prev.endReason);
         modeled += wonBomb ? WIN_REWARD_BOMB : WIN_REWARD_ELIM;
@@ -210,7 +216,7 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
           modeled += 1900;
           lostStreak = -1; // pistol bucket
         } else {
-          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // streak BEFORE round r-1
+          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // losses BEFORE round r-1
           lostStreak = streak;
           modeled += LOSS_BONUS_MODEL[Math.min(streak, 4)]!;
         }
@@ -219,6 +225,9 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
         const per = KILL_REWARD_MODEL[cls as keyof typeof KILL_REWARD_MODEL];
         if (per !== undefined) modeled += per * cnt;
       }
+      // R4: T plant-loss bonus (600, whole T team) — T lost prev round with a plant
+      if (!wonPrev && prevSide === "t" && prevPlanted) modeled += PLANT_BONUS_T_MODEL;
+      // R7/R8: planter +300 / defuser +300
       if (prevPlantPlayers.has(playerIndex)) modeled += 300;
       if (prevDefusePlayers.has(playerIndex)) modeled += 300;
 
@@ -231,8 +240,8 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       if (capped) continue;
 
       const isCt = prevSide === "ct";
-      if (process.env.RS_DEBUG5 && wonPrev && isCt && ctKillsPrev === 5 && s.samples.length < 12) {
-        console.error(`D5 r=${r} p=${playerIndex} income=${income} modeled=${modeled} residual=${residual} kills=[${[...killCounts.entries()].map(([c, n]) => `${c}x${n}`).join(",")}] ownKills=${ownKills} prevEnd=${prev.endReason} pre=${pre.start}/${pre.spent} cur=${cur.start}`);
+      if (process.env.RS_D5 && residual === -500) {
+        console.error(`D5 r=${r} p=${playerIndex} side=${prevSide} wonPrev=${wonPrev} streak=${streaks.get(`${r - 1}:${teamKey}`)} prevEnd=${prev.endReason} income=${income} modeled=${modeled} kills=[${[...killCounts.entries()].map(([c, n]) => `${c}x${n}`).join(",")}] pre=${pre.start}/${pre.spent} cur=${cur.start}`);
       }
       s.samples.push({
         residual,
@@ -243,8 +252,8 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
         tLostWithPlant: !wonPrev && prevSide === "t" && prevPlanted,
         killCounts,
         ownKills,
-        ctTeamKillsPrev: isCt ? ctKillsPrev : 0, // CT players only (2025-07-15 rule)
-        ctTeamKillsLoo: isCt ? Math.max(0, ctKillsPrev - ownKills) : 0,
+        ctTeamKillsPrev: isCt ? tEliminatedPrev : 0, // CT players only (2025-07-15 rule)
+        ctTeamKillsLoo: isCt ? Math.max(0, tEliminatedPrev - ownKills) : 0,
         prevWasCt: isCt,
         side,
         playerIndex,
@@ -412,6 +421,13 @@ function report(s: Stats): void {
   // group means for the residual sanity
   const all = s.samples.map((x) => x.residual);
   console.log(`residual all: mean=${mean(all).toFixed(1)} n=${n(all)}`);
+  // ── LEDGER RECONCILIATION: computed must equal actual exactly (diff=0) ─────
+  const exactZero = s.samples.filter((x) => x.residual === 0).length;
+  const intDiffs = s.samples.filter((x) => Number.isInteger(x.residual)).length;
+  console.log(`LEDGER: diff=0 (exact): ${exactZero}/${s.samples.length} (${((100 * exactZero) / s.samples.length).toFixed(1)}%), integer diffs: ${intDiffs}`);
+  const nz = new Map<number, number>();
+  for (const x of s.samples) if (x.residual !== 0) nz.set(x.residual, (nz.get(x.residual) ?? 0) + 1);
+  console.log(`LEDGER: top nonzero diffs: ${[...nz.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([d, c]) => `${d}×${c}`).join(", ")}`);
 }
 
 async function main(): Promise<void> {

@@ -78,7 +78,7 @@
       "pistolRoundLoss": "confirmed 1900 (Δ −15~+48)",
       "plantBonusT": "corpus 估计 ≈ 430~690 (两轮 432/486 修正后); fandom $600 合理, CS:GO 的 $800 可排除",
       "killRewards": "recent corpus (2026-05~06): pistol ≈300, smg ≈600, rifle ≈250~300, awp ≈100~160 — 与 fandom 一致量级; ≤2026-03 语料 pistol ≈25 异常, 待核实早期语料导出质量或规则变更",
-      "ctTeamKillReward": "已证实-语料 (2026-08-06): 整数全对账 + replay 回合末跳变 = 每名 CT 每消灭一名 T +$50（win ctKills=5 残差归零, 决赛场逐样本精确 0: 4100=3250+600+250）。结算于回合末, startMoney 包含。⚠️ 赛事服务器配置差异: 科隆 1/4 决赛(6-18)无、半决赛/决赛(6-20/21)有、完美世界赛事(59 场)无 — 官方竞技/Premier 匹配待用户 demo 确认。",
+      "ctTeamKillReward": "已证实-语料 (2026-08-06): 整数全对账 = 每名 CT 每消灭一名 T +$50（victim 口径，含 C4 世界击杀；win ctKills=5 残差归零，replay 回合末跳变 50×消灭数精确）。316 场全部生效。",
       "maxMoney": "cap filter 生效, 未直接验证"
     }
   },
