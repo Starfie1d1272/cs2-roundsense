@@ -37,7 +37,7 @@
     "plantBonusT": 600,
     "plantBonusPlayer": 300,
     "defuseBonusPlayer": 300,
-    "ctTeamKillReward": 0
+    "ctTeamKillReward": 50
   },
   "killRewards": {
     "knife": 1500,
@@ -78,14 +78,14 @@
       "pistolRoundLoss": "confirmed 1900 (Δ −15~+48)",
       "plantBonusT": "corpus 估计 ≈ 430~690 (两轮 432/486 修正后); fandom $600 合理, CS:GO 的 $800 可排除",
       "killRewards": "recent corpus (2026-05~06): pistol ≈300, smg ≈600, rifle ≈250~300, awp ≈100~160 — 与 fandom 一致量级; ≤2026-03 语料 pistol ≈25 异常, 待核实早期语料导出质量或规则变更",
-      "ctTeamKillReward": "316 场语料（55 职业 demo + 202 科隆 ESL + 59 完美世界赛事服务器）的整数差分与 replay 逐帧现金（74 击杀/252 非击杀者观察）均无 $50 团队奖励。⚠️ 所有语料均来自第三方服务器（自定义经济配置），**无一场 Valve 官方竞技/Premier 匹配**——规则（Steam 2025-07-16 'shared team award'）可能在官方服务器生效而赛事服务器关闭。待官方匹配 demo 验证。",
+      "ctTeamKillReward": "已证实-语料 (2026-08-06): 整数全对账 + replay 回合末跳变 = 每名 CT 每消灭一名 T +$50（win ctKills=5 残差归零, 决赛场逐样本精确 0: 4100=3250+600+250）。结算于回合末, startMoney 包含。⚠️ 赛事服务器配置差异: 科隆 1/4 决赛(6-18)无、半决赛/决赛(6-20/21)有、完美世界赛事(59 场)无 — 官方竞技/Premier 匹配待用户 demo 确认。",
       "maxMoney": "cap filter 生效, 未直接验证"
     }
   },
   "notes": {
     "lossBonusRule": "连败计数: 每败+1、每胜-1 (min 0, max 4)。2025 经济更新取代旧的'两连胜后首败 $1500'规则。奖金索引 = 本回合前的连败数 (lossStreak)，与 fandom 表格'Losing (loss count: N)'语义一致。",
     "plantBonusT": "fandom 标注 CS2 下包奖金 $600 (CS:GO $800)；数值存疑，待语料 startMoney 差分核验。",
-    "ctTeamKillReward": "竞技/Premier 无 CT 团队击杀奖励 ($50 仅 Casual)。输入模型保留 ctTeamKillsOnTs 字段，规则值 0 便于未来调整。⚠️ 语料 (≤2026-06-06) OLS 证实无团队奖励；但用户报告 2026-08 现版本 CT 击杀有 $50/击杀 — 需新语料或 Windows 实测确认后更新此值。",
+    "ctTeamKillReward": "已证实-语料 (2026-08-06): CT 共享团队奖励 = 每名 CT 每消灭一名 T +$50，回合末结算。Steam 2025-07-16 补丁确认引入；整数对账 + replay 回合末跳变证实（科隆半决赛/决赛全部场次 win ctKills=5 残差≈0）。⚠️ 赛事服务器配置差异（科隆 1/4 决赛无、半决赛/决赛有、完美世界赛事无）——advisor 投影按规则 50 建模，输入 ctTeamKillsOnTs 由调用方提供（GSI 下 CT 全队击杀 T 数可观测）。",
     "killRewardUnknown": "GSI 不给击杀武器 (capability-matrix §2)，实时路径无法知道击杀武器类别；unknown 按步枪 $300 估算并显式标注假设。",
     "pricesRevisionWarning": "Buy_Menu 页修订于 2023-11-17，2024-2026 价格补丁可能未反映；待 Windows 游戏内核对 + 语料 moneySpent 分布交叉验证。",
     "winBombNote": "拆包/爆炸获胜 $3500 仅在下包回合适用；投影中 winBomb 分支供参考，保守推荐用 win (3250)。"

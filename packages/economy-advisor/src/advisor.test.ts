@@ -72,6 +72,17 @@ describe("projection", () => {
     expect(pistol.loss).toBe(2000 + 1900);
   });
 
+  it("CT team kill award adds $50/kill to every CT player's projection (C5)", () => {
+    const base = { money: 2000, spendNow: 0, side: "CT" as const, lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
+    const noKills = projectNextRoundMoney({ ...base, ctTeamKillsOnTs: 0 });
+    const withKills = projectNextRoundMoney({ ...base, ctTeamKillsOnTs: 3 });
+    expect(withKills.win).toBe(noKills.win + 3 * DEFAULT_RULES.roundRewards.ctTeamKillReward);
+    expect(DEFAULT_RULES.roundRewards.ctTeamKillReward).toBe(50); // corpus-verified
+    // T never receives the award
+    const t = projectNextRoundMoney({ ...base, side: "T", ctTeamKillsOnTs: 5 });
+    expect(t.win).toBe(2000 + 3250);
+  });
+
   it("kill rewards enter the projection (rifle $300, AWP $100)", () => {
     const kills = [{ weaponClass: "rifle" as const, count: 2 }, { weaponClass: "awp" as const, count: 1 }];
     expect(killRewardsTotal({ kills, rules: DEFAULT_RULES })).toBe(700);

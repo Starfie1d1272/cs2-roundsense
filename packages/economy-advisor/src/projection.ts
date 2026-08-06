@@ -29,13 +29,18 @@ export interface ProjectionInput {
   bombPlantedThisRound: boolean;
   /** current round is a pistol round (1 or 14) — loss pays 1900 (C10) */
   pistolRound?: boolean;
+  /** CT team kills of T this round — every CT player gets +$50 each (C5,
+   *  corpus-verified 2026-08-06; server-config dependent, see rules notes) */
+  ctTeamKillsOnTs?: number;
   rules: EconomyRules;
 }
 
 export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranches {
   const { rules } = input;
+  const teamAward =
+    input.side === "CT" ? rules.roundRewards.ctTeamKillReward * (input.ctTeamKillsOnTs ?? 0) : 0;
   const base = (reward: number) =>
-    Math.min(rules.maxMoney, Math.max(0, input.money - input.spendNow + reward + killRewardsTotal(input)));
+    Math.min(rules.maxMoney, Math.max(0, input.money - input.spendNow + reward + teamAward + killRewardsTotal(input)));
   const lossReward = input.pistolRound ? 1900 : lossBonus(rules, input.lossStreak);
   const loss = base(lossReward);
   const lossWithPlant =

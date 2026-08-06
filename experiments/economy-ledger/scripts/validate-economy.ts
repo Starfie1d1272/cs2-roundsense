@@ -46,9 +46,17 @@ const LOSS_BONUS_MODEL = [1400, 1900, 2400, 2900, 3400];
 const WIN_REWARD_ELIM = 3250;
 const WIN_REWARD_BOMB = 3500;
 
+// ── versioned personal kill-reward model (fandom Money page; Δ-verified) ────
+const KILL_REWARD_MODEL: Record<string, number> = {
+  rifle: 300, smg: 600, pistol: 300, awp: 100, sniper: 300, shotgun: 900, mg: 300,
+  knife: 1500, zeus: 100, grenade: 300, world: 0, taser: 100, unknown: 0,
+};
+
 interface Sample {
   residual: number;
   won: boolean;
+  /** whether the player's team won the PREVIOUS round (team award belongs to r−1) */
+  prevWon: boolean;
   wonBomb: boolean;
   lostStreak: number | null;
   tLostWithPlant: boolean;
@@ -158,6 +166,9 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       const cur = m.get(r);
       const pre = m.get(r - 1);
       if (!cur || !pre) continue;
+      if (process.env.RS_DEBUG && s.samples.length === 0 && r === 2) {
+        console.error(`DEBUG p=${playerIndex} cur=${JSON.stringify(cur)} pre=${JSON.stringify(pre)}`);
+      }
       const teamKey = teamByPlayer.get(playerIndex);
       if (!teamKey) continue;
       const side = (teamKey === "teamA" ? round.teamASide : round.teamBSide) as "CT" | "T";
@@ -168,34 +179,7 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       const wonPrev = prev.winnerTeamKey === teamKey; // outcome of round r-1 feeds income(r)
       const won = round.winnerTeamKey === teamKey;
 
-      // modeled rewards (kill rewards + plantBonusT + ct team reward = 0 in model)
-      let modeled = 0;
-      let wonBomb = false;
-      let lostStreak: number | null = null;
-      if (wonPrev) {
-        wonBomb = WIN_BY_BOMB.has(prev.endReason);
-        modeled += wonBomb ? WIN_REWARD_BOMB : WIN_REWARD_ELIM;
-      } else {
-        // pistol-round loss pays 1900 (fandom separate row, C10); verify via Δ
-        if (prevIsPistol) {
-          modeled += 1900;
-          lostStreak = -1; // pistol bucket
-        } else {
-          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // streak BEFORE round r-1
-          lostStreak = streak;
-          modeled += LOSS_BONUS_MODEL[Math.min(streak, 4)]!;
-        }
-      }
-      if (prevPlantPlayers.has(playerIndex)) modeled += 300;
-      if (prevDefusePlayers.has(playerIndex)) modeled += 300;
-
-      const residual = income - modeled;
-      // sanity filter: mid-game joins/leaves create garbage rows
-      if (Math.abs(residual) > 6000) continue;
-      // cap filter: income truncated at $16000 (C6) — reserve $500 headroom
-      // for unmodeled kill rewards so capped samples stay out of the OLS
-      if (pre.start - pre.spent + modeled > 15500) continue;
-
+      // personal kill rewards of the PREVIOUS round (class table — versioned)
       const killCounts = new Map<string, number>();
       const myTeam = teamByPlayer.get(playerIndex);
       let ownKills = 0;
@@ -210,10 +194,50 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
         }
       }
 
+      // modeled rewards — FULL integer ledger (everything is modeled):
+      //   win/loss + plant/defuse + PERSONAL KILL REWARDS (class table) +
+      //   CT shared team award (50 × prev-round CT kills for CT players)
+      let modeled = 0;
+      let wonBomb = false;
+      let lostStreak: number | null = null;
+      if (prevSide === "ct") modeled += 50 * ctKillsPrev; // 2025-07-16 shared team award
+      if (wonPrev) {
+        wonBomb = WIN_BY_BOMB.has(prev.endReason);
+        modeled += wonBomb ? WIN_REWARD_BOMB : WIN_REWARD_ELIM;
+      } else {
+        // pistol-round loss pays 1900 (fandom separate row, C10); verify via Δ
+        if (prevIsPistol) {
+          modeled += 1900;
+          lostStreak = -1; // pistol bucket
+        } else {
+          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // streak BEFORE round r-1
+          lostStreak = streak;
+          modeled += LOSS_BONUS_MODEL[Math.min(streak, 4)]!;
+        }
+      }
+      for (const [cls, cnt] of killCounts) {
+        const per = KILL_REWARD_MODEL[cls as keyof typeof KILL_REWARD_MODEL];
+        if (per !== undefined) modeled += per * cnt;
+      }
+      if (prevPlantPlayers.has(playerIndex)) modeled += 300;
+      if (prevDefusePlayers.has(playerIndex)) modeled += 300;
+
+      const residual = income - modeled;
+      // cap (C6): $16000 truncation makes residual non-informative for the
+      // affected sample — mark it and exclude from ALL statistics instead of
+      // dropping it outright (modeled is now complete, so nearly every capped
+      // player would otherwise be filtered).
+      const capped = cur.start >= 16000 && income < modeled;
+      if (capped) continue;
+
       const isCt = prevSide === "ct";
+      if (process.env.RS_DEBUG5 && wonPrev && isCt && ctKillsPrev === 5 && s.samples.length < 12) {
+        console.error(`D5 r=${r} p=${playerIndex} income=${income} modeled=${modeled} residual=${residual} kills=[${[...killCounts.entries()].map(([c, n]) => `${c}x${n}`).join(",")}] ownKills=${ownKills} prevEnd=${prev.endReason} pre=${pre.start}/${pre.spent} cur=${cur.start}`);
+      }
       s.samples.push({
         residual,
         won,
+        prevWon: wonPrev,
         wonBomb,
         lostStreak,
         tLostWithPlant: !wonPrev && prevSide === "t" && prevPlanted,
@@ -313,6 +337,32 @@ function report(s: Stats): void {
   for (const [k, list] of [...ctByKills.entries()].sort((a, b) => a[0] - b[0])) {
     const perKill = k === 0 ? 0 : (cm(list) - baseMean) / k;
     console.log(`  ctKills=${k}: correctedMean=${cm(list).toFixed(0)} (n=${list.length})  → +$${perKill.toFixed(1)}/kill vs ctKills=0`);
+  }
+
+  // ── CT team-award residual by (prev-round outcome × prev-round CT kills) ────
+  // FULL integer ledger: personal kill rewards are now IN modeled, so raw
+  // residual groups directly measure the team-award correctness. Grouping key
+  // uses the PREVIOUS round's outcome (the award belongs to round r−1, paid
+  // into income(r)).
+  const rawBy = new Map<string, number[]>(); // `${prevWon}:${ctKills}` → residuals
+  for (const x of s.samples) {
+    if (!x.prevWasCt) continue;
+    const key = `${x.prevWon ? "W" : "L"}:${x.ctTeamKillsPrev}`;
+    const list = rawBy.get(key) ?? [];
+    list.push(x.residual);
+    rawBy.set(key, list);
+  }
+  const rmean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+  console.log("CT team-award residual by (PREV outcome × PREV CT kills) — full integer ledger; all groups → 0 if award=50/kill:");
+  for (const won of ["W", "L"]) {
+    const base = rawBy.get(`${won}:0`) ?? [];
+    const baseMean = rmean(base);
+    for (const k of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const list = rawBy.get(`${won}:${k}`);
+      if (!list || list.length === 0) continue;
+      const pk = (rmean(list) - baseMean) / k;
+      console.log(`  ${won === "W" ? "win " : "loss"} ctKills=${k}: n=${list.length} mean=${rmean(list).toFixed(0)} → +$${pk.toFixed(1)}/kill vs ctKills=0 (base=${baseMean.toFixed(0)}, n=${base.length})`);
+    }
   }
 
   const won = s.samples.filter((x) => x.won && !x.wonBomb);

@@ -1,48 +1,34 @@
 /**
- * Replay cash-jump analysis: does a T-elimination give EVERY CT player +$50
- * (2025-07-15 shared team award) at the moment of the kill?
+ * Replay cash-jump analysis v2 — hunt for the CT shared team award (+$50 per
+ * T-elimination to EVERY CT player, 2025-07-15 patch).
  *
- * Uses replay.json per-frame cash (8Hz, covers the whole round incl. freeze
- * time) — pure integer arithmetic, no statistics.
+ * v2 fixes vs v1:
+ *  1. SELF-CHECK frame alignment: victim HP must hit 0 at the kill frame —
+ *     if not, our tick→frame conversion is wrong and we're looking at the
+ *     wrong frames entirely (v1 never verified this!).
+ *  2. Wide window: scan +40 frames (~5s) after the kill, not ±1.
+ *  3. Enumerate ALL non-zero cash jumps per CT player per round, so any
+ *     delayed settlement (e.g. round-end payout of the team award) shows up
+ *     as a +50×kills pattern.
  *
- * Run: pnpm --filter @roundsense/experiment-economy-ledger exec tsx scripts/replay-cash-jump.ts <zip> [<zip>...]
+ * Run: pnpm --filter @roundsense/experiment-economy-ledger exec tsx scripts/replay-cash-jump.ts <zip>...
  */
-import { readFile } from "node:fs/promises";
 import { loadDemoPackage, type ParsedDemoPackage } from "@roundsense/demo-oracle";
 import { decodeDelta } from "cs2-demo-format/parser";
 
 interface KillEvent { roundNumber: number; tick: number; killerIndex: number | null; victimIndex: number; }
-
-function weaponClass(weapon: string): string {
-  const m: Array<[RegExp, string]> = [
-    [/^ak47$|^m4a4$|^m4a1_silencer$|^galilar$|^famas$|^sg556$|^aug$/, "rifle"],
-    [/^awp$/, "awp"],
-    [/^ssg08$|^scar20$|^g3sg1$/, "sniper"],
-    [/^mac10$|^mp9$|^mp7$|^mp5sd$|^ump45$|^p90$|^bizon$/, "smg"],
-    [/^nova$|^sawedoff$|^mag7$|^xm1014$/, "shotgun"],
-    [/^m249$|^negev$/, "mg"],
-    [/^knife/, "knife"],
-    [/^zeus$/, "zeus"],
-    [/^hegrenade$|^molotov$|^incgrenade$|^inferno$|^flashbang$|^decoy$/, "grenade"],
-    [/^glock$|^usp_silencer$|^hkp2000$|^p250$|^elite$|^tec9$|^cz75a$|^fiveseven$|^deagle$|^revolver$/, "pistol"],
-  ];
-  for (const [re, cls] of m) if (re.test(weapon)) return cls;
-  return weapon.startsWith("unknown") ? "unknown:" + weapon : weapon;
-}
 
 async function analyzeOne(pkg: ParsedDemoPackage, label: string): Promise<void> {
   const { files } = pkg;
   const teamByPlayer = new Map<number, string>();
   for (const [i, p] of files.players.entries()) teamByPlayer.set(i, p.teamKey);
 
-  // teamKey → side per round (teamA/teamB sides swap at half)
   const sideOf = (teamKey: string, roundNumber: number): "ct" | "t" | null => {
     const r = files.rounds.find((x) => x.roundNumber === roundNumber);
     if (!r) return null;
     return teamKey === "teamA" ? r.teamASide : r.teamBSide;
   };
 
-  // kills per round
   const killsByRound = new Map<number, KillEvent[]>();
   for (const k of files.kills) {
     const list = killsByRound.get(k.roundNumber) ?? [];
@@ -53,13 +39,20 @@ async function analyzeOne(pkg: ParsedDemoPackage, label: string): Promise<void> 
   const replay = files.replay;
   if (!replay) { console.log(`${label}: no replay — skipped`); return; }
 
-  let checkedKills = 0;
-  let nonKillerPlus50 = 0;
-  let nonKillerNoChange = 0;
+  let ctKillsChecked = 0;
+  let frameAligned = 0;
+  let frameMisaligned = 0;
+  let plus50AfterKill = 0;
+  let zeroAfterKill = 0;
+  let otherAfterKill = 0;
   const examples: string[] = [];
+  let roundEndTeamAwardHits = 0;
+  let roundEndChecks = 0;
 
   for (const rr of replay.rounds) {
     const roundNumber = rr.roundNumber;
+    const round = files.rounds.find((x) => x.roundNumber === roundNumber);
+    if (!round) continue;
     const kills = killsByRound.get(roundNumber) ?? [];
     const ctKills = kills.filter((k) => {
       if (k.killerIndex === null) return false;
@@ -67,38 +60,79 @@ async function analyzeOne(pkg: ParsedDemoPackage, label: string): Promise<void> 
       const vTeam = teamByPlayer.get(k.victimIndex);
       return kTeam !== undefined && vTeam !== undefined && sideOf(kTeam, roundNumber) === "ct" && sideOf(vTeam, roundNumber) === "t";
     });
-    if (ctKills.length === 0) continue;
-
-    // CT players this round
     const ctPlayers = rr.players.filter((t) => sideOf(teamByPlayer.get(t.playerIndex) ?? "", roundNumber) === "ct");
-    // decode money tracks
-    const moneyByPlayer = new Map<number, number[]>();
-    for (const t of ctPlayers) moneyByPlayer.set(t.playerIndex, decodeDelta(t.money));
+    if (ctPlayers.length === 0) continue;
 
+    const moneyByPlayer = new Map<number, number[]>();
+    const hpByPlayer = new Map<number, number[]>();
+    for (const t of ctPlayers) {
+      moneyByPlayer.set(t.playerIndex, decodeDelta(t.money));
+      hpByPlayer.set(t.playerIndex, t.hp);
+    }
+
+    // ── per-kill: frame alignment self-check + cash window scan ────────────
     for (const kill of ctKills) {
-      checkedKills++;
+      ctKillsChecked++;
       const fi = Math.round((kill.tick - rr.startTick) / rr.tickStep);
-      if (fi <= 0 || fi + 1 >= rr.frameCount) continue;
+      if (fi <= 0 || fi >= rr.frameCount) continue;
+
+      // self-check: victim HP must be >0 before and 0 at/after the kill frame
+      const victimHp = hpByPlayer.get(kill.victimIndex);
+      const victimWasAliveBefore = victimHp && victimHp[Math.max(0, fi - 2)] > 0;
+      const victimDeadAt = victimHp ? victimHp[fi] === 0 || (fi + 1 < victimHp.length && victimHp[fi + 1] === 0) : false;
+      if (victimWasAliveBefore && victimDeadAt) frameAligned++;
+      else frameMisaligned++;
+
+      // window: 40 frames ≈ 5s after kill
       for (const t of ctPlayers) {
         const money = moneyByPlayer.get(t.playerIndex)!;
-        const before = money[fi - 1];
-        const after = money[fi + 1];
-        if (before === undefined || after === undefined) continue;
-        const jump = after - before;
         const isKiller = t.playerIndex === kill.killerIndex;
-        if (!isKiller) {
-          if (jump === 50) { nonKillerPlus50++; if (examples.length < 5) examples.push(`r${roundNumber} tick=${kill.tick} nonKiller p${t.playerIndex} money ${before}→${after} (+50 ✓)`); }
-          else if (jump === 0) { nonKillerNoChange++; if (examples.length < 5) examples.push(`r${roundNumber} tick=${kill.tick} nonKiller p${t.playerIndex} money ${before}→${after} (no change)`); }
-          else if (examples.length < 8) examples.push(`r${roundNumber} tick=${kill.tick} nonKiller p${t.playerIndex} money ${before}→${after} (jump=${jump})`);
+        if (isKiller) continue; // killer gets weapon reward — separate concern
+        let found = false;
+        for (let f = fi; f < Math.min(fi + 40, money.length - 1); f++) {
+          const jump = money[f + 1]! - money[f]!;
+          if (jump !== 0) {
+            if (jump === 50) { plus50AfterKill++; if (examples.length < 8) examples.push(`r${roundNumber} tick=${kill.tick} +50 after kill (p${t.playerIndex}, frame ${f}→${f + 1})`); }
+            else if (jump === 0) zeroAfterKill++;
+            else otherAfterKill++;
+            found = true;
+            break;
+          }
         }
+        if (!found) zeroAfterKill++;
+      }
+    }
+
+    // ── round-end settlement: does the team award land with the round result? ──
+    // Round-end frame: the last frame before the next round's startTick.
+    const ctKillCount = ctKills.length;
+    if (ctKillCount > 0) {
+      roundEndChecks++;
+      const lastFrame = rr.frameCount - 1;
+      const endJumps = new Map<number, number>(); // playerIndex → total jump in last 3 frames
+      for (const t of ctPlayers) {
+        const money = moneyByPlayer.get(t.playerIndex)!;
+        const a = money[Math.max(0, lastFrame - 3)] ?? 0;
+        const b = money[lastFrame] ?? a;
+        endJumps.set(t.playerIndex, b - a);
+      }
+      // every CT player should see +50×ctKillCount if the award settles at round end
+      const allMatch = [...endJumps.values()].every((j) => j === 50 * ctKillCount || j === 0);
+      if (allMatch && ctKillCount > 0) {
+        roundEndTeamAwardHits++;
+        if (examples.length < 10) examples.push(`r${roundNumber}: round-end jumps = ${[...endJumps.values()].join(",")} (ctKills=${ctKillCount})`);
+      } else if (examples.length < 12) {
+        examples.push(`r${roundNumber}: round-end jumps = ${[...endJumps.values()].join(",")} (ctKills=${ctKillCount}, expected +${50 * ctKillCount} each)`);
       }
     }
   }
 
   console.log(`\n=== ${label} ===`);
-  console.log(`CT kills checked: ${checkedKills}`);
-  console.log(`non-killer CT players: +$50 at kill frame: ${nonKillerPlus50}, no change: ${nonKillerNoChange}`);
-  for (const ex of examples) console.log(`  ${ex}`);
+  console.log(`CT kills checked: ${ctKillsChecked}`);
+  console.log(`frame alignment (victim HP→0 at kill frame): ${frameAligned} aligned, ${frameMisaligned} misaligned`);
+  console.log(`non-killer CT cash in 5s window after kill: +50: ${plus50AfterKill}, zero: ${zeroAfterKill}, other: ${otherAfterKill}`);
+  console.log(`round-end settlement checks: ${roundEndChecks}, team-award pattern hits: ${roundEndTeamAwardHits}`);
+  for (const ex of examples.slice(0, 14)) console.log(`  ${ex}`);
 }
 
 async function main(): Promise<void> {

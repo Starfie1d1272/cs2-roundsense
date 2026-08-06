@@ -28,6 +28,9 @@ export interface AdvisorInput {
   killsThisRound: KillAttribution[];
   /** T side only: bomb was planted this round (affects loss branch) */
   bombPlantedThisRound?: boolean;
+  /** CT side only: how many T the CT team eliminated this round — every CT
+   *  player receives +$50 each (C5, corpus-verified 2026-08-06) */
+  ctTeamKillsOnTs?: number;
   nextRoundGoal: NextRoundGoal;
 }
 
