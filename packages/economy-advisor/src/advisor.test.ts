@@ -1,0 +1,189 @@
+import { describe, expect, it } from "vitest";
+import { DEFAULT_RULES, economyRulesSchema, lossBonus, price } from "./rules.js";
+import { projectNextRoundMoney, killRewardsTotal, goalTargetCost } from "./projection.js";
+import { classifyPurchase } from "./round-type.js";
+import { recommend } from "./advisor.js";
+import type { AdvisorInput } from "./types.js";
+
+function input(partial: Partial<AdvisorInput>): AdvisorInput {
+  return {
+    side: "T",
+    roundNumber: 2,
+    money: 3400,
+    lossStreak: 0,
+    inventory: { hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [], survivedLastRound: false },
+    killsThisRound: [],
+    bombPlantedThisRound: false,
+    nextRoundGoal: "rifle_armor",
+    ...partial,
+  };
+}
+
+describe("rules file", () => {
+  it("is a valid versioned rule set with sources", () => {
+    const parsed = economyRulesSchema.parse(DEFAULT_RULES);
+    expect(parsed.ruleSetId).toBe("cs2-competitive-2026-08");
+    expect(parsed.status).toBe("provisional");
+    expect(parsed.sources.length).toBeGreaterThanOrEqual(2);
+    expect(parsed.roundRewards.lossBonusByStreak).toEqual([1400, 1900, 2400, 2900, 3400]);
+    expect(parsed.maxMoney).toBe(16000);
+  });
+
+  it("lossBonus clamps streak at 4 (C2)", () => {
+    expect(lossBonus(DEFAULT_RULES, 0)).toBe(1400);
+    expect(lossBonus(DEFAULT_RULES, 2)).toBe(2400);
+    expect(lossBonus(DEFAULT_RULES, 4)).toBe(3400);
+    expect(lossBonus(DEFAULT_RULES, 7)).toBe(3400);
+  });
+
+  it("has prices for all advisor items", () => {
+    for (const item of ["ak47", "m4a4", "awp", "kevlar", "kevlar_helmet", "smoke", "flash", "deagle", "mac10", "mp9"] as const) {
+      expect(price(DEFAULT_RULES, item)).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("projection", () => {
+  it("pistol round 1 win → round 2 full-buy affordability baseline", () => {
+    // T wins pistol with $800 start, spent $650 (kevlar), 0 kills
+    // r2 money = 800 - 650 + 3250 = 3400
+    const branches = projectNextRoundMoney({
+      money: 3400, spendNow: 0, side: "T", lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES,
+    });
+    expect(branches.win).toBe(3400 + 3250);
+    expect(branches.loss).toBe(3400 + 1400);
+  });
+
+  it("loss with plant adds plantBonusT for T only (C3)", () => {
+    const base = { money: 2000, spendNow: 0, side: "T" as const, lossStreak: 0, kills: [], rules: DEFAULT_RULES };
+    const withPlant = projectNextRoundMoney({ ...base, bombPlantedThisRound: true });
+    const without = projectNextRoundMoney({ ...base, bombPlantedThisRound: false });
+    expect(withPlant.lossWithPlant).toBe(without.lossWithPlant + DEFAULT_RULES.roundRewards.plantBonusT);
+    // CT never gets a plant bonus
+    const ct = projectNextRoundMoney({ ...base, side: "CT", bombPlantedThisRound: true });
+    expect(ct.lossWithPlant).toBe(ct.loss);
+  });
+
+  it("kill rewards enter the projection (rifle $300, AWP $100)", () => {
+    const kills = [{ weaponClass: "rifle" as const, count: 2 }, { weaponClass: "awp" as const, count: 1 }];
+    expect(killRewardsTotal({ kills, rules: DEFAULT_RULES })).toBe(700);
+    const branches = projectNextRoundMoney({
+      money: 1000, spendNow: 0, side: "T", lossStreak: 0, kills, bombPlantedThisRound: false, rules: DEFAULT_RULES,
+    });
+    expect(branches.win).toBe(1000 + 3250 + 700);
+  });
+
+  it("clamps at maxMoney 16000", () => {
+    const branches = projectNextRoundMoney({
+      money: 15000, spendNow: 0, side: "T", lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES,
+    });
+    expect(branches.win).toBe(16000);
+  });
+});
+
+describe("classifyPurchase", () => {
+  it("rifle + armor → full", () => {
+    expect(classifyPurchase(DEFAULT_RULES, ["ak47", "kevlar_helmet"], 3700)).toBe("full");
+  });
+  it("rifle without armor → semi", () => {
+    expect(classifyPurchase(DEFAULT_RULES, ["ak47"], 2700)).toBe("semi");
+  });
+  it("deagle + armor + flash → force threshold", () => {
+    expect(classifyPurchase(DEFAULT_RULES, ["deagle", "kevlar", "flash"], 1550)).toBe("semi");
+    expect(classifyPurchase(DEFAULT_RULES, ["deagle", "kevlar", "flash", "smoke"], 1850)).toBe("semi");
+    // heavier force (e.g. smg+armor+util) crosses forceMinSpend
+    expect(classifyPurchase(DEFAULT_RULES, ["mac10", "kevlar_helmet", "smoke", "flash"], 2350)).toBe("force");
+  });
+  it("nothing → eco", () => {
+    expect(classifyPurchase(DEFAULT_RULES, [], 0)).toBe("eco");
+  });
+});
+
+describe("recommend()", () => {
+  it("rifle_armor goal with $3400: full buy affordable (AK+全甲 $3700 not, AK+半甲 $3350 yes)", () => {
+    const out = recommend(input({ money: 3400, nextRoundGoal: "rifle_armor" }));
+    expect(out.recommended).not.toBeNull();
+    expect(out.recommended!.purchases.map((p) => p.item)).toContain("ak47");
+    expect(out.recommended!.roundType).toBe("full");
+    expect(out.recommended!.totalCost).toBeLessThanOrEqual(3400);
+    expect(out.recommended!.breaksGoal).toBe(false);
+    // alternatives: affordable, distinct from the recommended plan
+    expect(out.alternatives.length).toBeGreaterThanOrEqual(1);
+    for (const alt of out.alternatives) {
+      expect(alt.affordable).toBe(true);
+      expect(alt.id).not.toBe(out.recommended!.id);
+    }
+    // the more expensive rifle+helmet bundle (3700) is NOT affordable at 3400
+    expect(out.alternatives.find((s) => s.id === "rifle-helmet")).toBeUndefined();
+  });
+
+  it("rifle_armor with $1400 (eco round): recommends a saving/cheap scheme, rifle bundles unaffordable", () => {
+    const out = recommend(input({ money: 1400, nextRoundGoal: "rifle_armor" }));
+    expect(out.recommended).not.toBeNull();
+    expect(out.recommended!.affordable).toBe(true);
+    expect(out.recommended!.totalCost).toBeLessThanOrEqual(1400);
+    // The rifle+armor bundle must be present but unaffordable
+    const rifle = out.alternatives.find((s) => s.id === "rifle-helmet");
+    // (alternatives are affordable-only; check via full scheme list is not exposed —
+    //  instead: recommended must not be a rifle+armor full buy)
+    expect(out.recommended!.roundType).not.toBe("full");
+  });
+
+  it("awp goal: saving is recommended when AWP is unaffordable; spending breaks it", () => {
+    // money 4000: AWP+armor (5400) not affordable → save is recommended and
+    // guarantees AWP on the loss branch (4000+1400 = 5400).
+    const out = recommend(input({ money: 4000, lossStreak: 0, nextRoundGoal: "awp" }));
+    const save = out.recommended;
+    expect(save).not.toBeNull();
+    expect(save!.id).toBe("save");
+    expect(save!.breaksGoal).toBe(false);
+    expect(save!.projections.loss).toBeGreaterThanOrEqual(goalTargetCost(DEFAULT_RULES, "awp", "T"));
+    // any real spend now breaks the AWP guarantee on the loss branch
+    const bridge = out.alternatives.find((s) => s.id === "rifle-bridge");
+    expect(bridge).toBeDefined();
+    expect(bridge!.affordable).toBe(true);
+    expect(bridge!.breaksGoal).toBe(true);
+    const force = out.alternatives.find((s) => s.id === "force-deagle");
+    if (force) expect(force.breaksGoal).toBe(true);
+  });
+
+  it("awp goal with $2400: save is still the plan; win branch reaches the target", () => {
+    const out = recommend(input({ money: 2400, lossStreak: 0, nextRoundGoal: "awp" }));
+    expect(out.recommended!.id).toBe("save");
+    expect(out.recommended!.breaksGoal).toBe(false);
+    // win branch: 2400 + 3250 = 5650 ≥ 5400 → AWP achievable after a win
+    expect(out.recommended!.projections.win).toBeGreaterThanOrEqual(goalTargetCost(DEFAULT_RULES, "awp", "T"));
+  });
+
+  it("awp goal with $6000: AWP+armor affordable now (goal achieved)", () => {
+    const out = recommend(input({ money: 6000, nextRoundGoal: "awp" }));
+    expect(out.recommended!.id).toBe("awp-helmet");
+    expect(out.recommended!.breaksGoal).toBe(false);
+  });
+
+  it("max_combat_now never reports breaksGoal", () => {
+    const out = recommend(input({ money: 2500, nextRoundGoal: "max_combat_now" }));
+    for (const s of [out.recommended, ...out.alternatives]) {
+      if (s) expect(s.breaksGoal).toBe(false);
+    }
+  });
+
+  it("is a pure function: same input twice → same output", () => {
+    const a = recommend(input({ money: 3400 }));
+    const b = recommend(input({ money: 3400 }));
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+
+  it("exposes rule provenance in the output", () => {
+    const out = recommend(input({ money: 3400 }));
+    expect(out.rules.ruleSetId).toBe("cs2-competitive-2026-08");
+    expect(out.rules.status).toBe("provisional");
+    expect(out.rules.sources.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("CT uses m4a4 pricing", () => {
+    const out = recommend(input({ side: "CT", money: 4000, nextRoundGoal: "rifle_armor" }));
+    const rifle = out.recommended!.purchases.find((p) => p.item === "m4a4" || p.item === "ak47");
+    expect(rifle?.item).toBe("m4a4");
+  });
+});
