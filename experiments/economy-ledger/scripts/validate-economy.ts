@@ -37,12 +37,49 @@ const CLASS_RULES: [RegExp, string][] = [
   [/^world$/, "world"],
 ];
 function weaponClass(weapon: string): string {
+  // weapon-specific values first (deviate from class table): P90/CZ75 etc.
+  if (weapon === "p90" || weapon === "cz75a" || weapon === "sawedoff" || weapon === "nova" || weapon === "mag7" || weapon === "xm1014" || weapon === "m249" || weapon === "negev") return weapon;
   for (const [re, cls] of CLASS_RULES) if (re.test(weapon)) return cls;
   return `unknown:${weapon}`;
 }
 
 const WIN_BY_BOMB = new Set(["target_bombed", "bomb_defused"]);
 const LOSS_BONUS_MODEL = [1400, 1900, 2400, 2900, 3400];
+
+// ── STANDARD loss-counter model (gamemode_competitive.cfg) ───────────────────
+// mp_starting_losses = 1  → each half starts lossCount = 1
+// loss:   payout = min(3400, 1400 + 500 × lossCount)  [lossCount BEFORE round]
+//         lossCount = min(4, lossCount + 1)
+// win:    lossCount = max(0, lossCount - 1)
+// Half boundary: MR12 second half starts at round 13 (resets to 1).
+let stdLossCache: Map<number, { teamA: number; teamB: number }> | null = null;
+function buildStdLossCache(pkg: Parameters<typeof teamLossStreakPerRound>[0]): void {
+  const out = new Map<number, { teamA: number; teamB: number }>();
+  let lossCount = { teamA: 1, teamB: 1 };
+  for (const round of pkg.files.rounds) {
+    // second half reset (MR12: r13) and each OT half (r25, r28, r31, … every 3 rounds)
+    if (round.roundNumber === 13 || (round.roundNumber >= 25 && (round.roundNumber - 25) % 3 === 0)) lossCount = { teamA: 1, teamB: 1 };
+    out.set(round.roundNumber, { ...lossCount });
+    if (round.winnerTeamKey === "teamA") {
+      // win decrement is count-dependent (corpus-verified on Cologne playoff):
+      //   time_ran_out win: −2 (QF1-m1 r16: 4→2)
+      //   normal win: −1 if count already at cap (≥4), else −2 (to 0)
+      const dec = round.endReason === "time_ran_out" ? 2 : lossCount.teamA >= 4 ? 1 : 2;
+      lossCount.teamA = Math.max(0, lossCount.teamA - dec);
+      lossCount.teamB = Math.min(4, lossCount.teamB + 1);
+    } else {
+      const dec = round.endReason === "time_ran_out" ? 2 : lossCount.teamB >= 4 ? 1 : 2;
+      lossCount.teamB = Math.max(0, lossCount.teamB - dec);
+      lossCount.teamA = Math.min(4, lossCount.teamA + 1);
+    }
+  }
+  stdLossCache = out;
+}
+function stdLossCountAt(roundNumber: number, teamKey: string): number {
+  const row = stdLossCache?.get(roundNumber);
+  if (!row) return 1;
+  return teamKey === "teamA" ? row.teamA : row.teamB;
+}
 const WIN_REWARD_ELIM = 3250;
 const WIN_REWARD_BOMB = 3500;
 
@@ -50,7 +87,11 @@ const WIN_REWARD_BOMB = 3500;
 const KILL_REWARD_MODEL: Record<string, number> = {
   rifle: 300, smg: 600, pistol: 300, awp: 100, sniper: 300, shotgun: 900, mg: 300,
   knife: 1500, zeus: 100, grenade: 300, world: 0, taser: 100, unknown: 0,
+  // weapon-specific overrides (fandom / weapons.vdata values)
+  p90: 300, cz75a: 100, cz75: 100, sawedoff: 900, nova: 900, mag7: 900, xm1014: 600, m249: 300, negev: 300,
 };
+
+const TK_PENALTY = 300; // teamkill: −$300 per teamkill (C-new, empirical + fandom)
 
 // R4: T plant-loss bonus (whole T team) — fandom $600, corpus ≈ 585-672
 const PLANT_BONUS_T_MODEL = 600;
@@ -87,7 +128,7 @@ interface Stats {
   rounds: number;
 }
 
-function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
+function analyze(pkg: ParsedDemoPackage, s: Stats, month: number, zipName = "?"): void {
   s.matches++;
   s.rounds += pkg.files.rounds.length;
   const { players, rounds, kills, bombs, playerEconomies } = pkg.files;
@@ -105,6 +146,7 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
 
   const roundByNumber = new Map(rounds.map((r) => [r.roundNumber, r]));
   const streaks = teamLossStreakPerRound(pkg);
+  buildStdLossCache(pkg);
 
   const plantedByRound = new Map<number, boolean>();
   const plantPlayersByRound = new Map<number, Set<number>>();
@@ -145,9 +187,10 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
   for (const round of rounds) {
     const r = round.roundNumber;
     if (r < 2) continue;
-    // r13 = second-half pistol round: economy RESETS (startMoney back to 800),
-    // so the income-difference ledger is invalid for this round's start.
-    if (r === 13) continue;
+    // r13 = second-half pistol round, r25/r28/… = OT half openers: economy
+    // RESETS (startMoney back to 800), so the income-difference ledger is
+    // invalid for these rounds' start.
+    if (r === 13 || (r >= 25 && (r - 25) % 3 === 0)) continue;
     const prev = roundByNumber.get(r - 1);
     if (!prev) continue;
 
@@ -189,10 +232,14 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       const killCounts = new Map<string, number>();
       const myTeam = teamByPlayer.get(playerIndex);
       let ownKills = 0;
+      let prevTkCount = 0;
+      // dead players in prev round (victim of any kill) — for T-survivor rule
+      const prevDeadSet = new Set<number>();
+      for (const k of prevKills) if (k.victimIndex !== null) prevDeadSet.add(k.victimIndex);
       for (const k of prevKills) {
         if (k.killerIndex === playerIndex && k.victimIndex !== playerIndex) {
-          // team-kills pay NO reward — exclude same-team victims
-          if (teamByPlayer.get(k.victimIndex) === myTeam) continue;
+          // team-kills pay NO reward and cost −300 each — exclude same-team victims
+          if (teamByPlayer.get(k.victimIndex) === myTeam) { prevTkCount++; continue; }
           ownKills++;
           const cls = weaponClass(k.weapon);
           if (cls === "world" || cls.startsWith("unknown")) continue; // no reward
@@ -210,21 +257,25 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
       if (wonPrev) {
         wonBomb = WIN_BY_BOMB.has(prev.endReason);
         modeled += wonBomb ? WIN_REWARD_BOMB : WIN_REWARD_ELIM;
+      } else if (prev.endReason === "time_ran_out" && prevSide === "t" && !prevDeadSet.has(playerIndex)) {
+        // C-new: on time_ran_out loss, SURVIVING T players get NO round-end
+        // loss bonus (only dead T players do). Empirically confirmed.
+        modeled += 0;
+        lostStreak = -1;
       } else {
-        // pistol-round loss pays 1900 (fandom separate row, C10); verify via Δ
-        if (prevIsPistol) {
-          modeled += 1900;
-          lostStreak = -1; // pistol bucket
-        } else {
-          const streak = streaks.get(`${r - 1}:${teamKey}`) ?? 0; // losses BEFORE round r-1
-          lostStreak = streak;
-          modeled += LOSS_BONUS_MODEL[Math.min(streak, 4)]!;
-        }
+        // STANDARD MODEL (gamemode_competitive.cfg: mp_starting_losses=1):
+        // payout = min(3400, 1400 + 500 × lossCount) with lossCount BEFORE
+        // this round; pistol-round loss pays 1900 = 1400+500×1 automatically.
+        const streak = stdLossCountAt(r - 1, teamKey);
+        lostStreak = streak;
+        modeled += Math.min(3400, 1400 + 500 * streak);
       }
       for (const [cls, cnt] of killCounts) {
         const per = KILL_REWARD_MODEL[cls as keyof typeof KILL_REWARD_MODEL];
         if (per !== undefined) modeled += per * cnt;
       }
+      // TK penalty: −300 per teamkill by this player (cash_player_killed_teammate)
+      modeled -= TK_PENALTY * prevTkCount;
       // R4: T plant-loss bonus (600, whole T team) — T lost prev round with a plant
       if (!wonPrev && prevSide === "t" && prevPlanted) modeled += PLANT_BONUS_T_MODEL;
       // R7/R8: planter +300 / defuser +300
@@ -241,7 +292,7 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, month: number): void {
 
       const isCt = prevSide === "ct";
       if (process.env.RS_D5 && residual === -500) {
-        console.error(`D5 r=${r} p=${playerIndex} side=${prevSide} wonPrev=${wonPrev} streak=${streaks.get(`${r - 1}:${teamKey}`)} prevEnd=${prev.endReason} income=${income} modeled=${modeled} kills=[${[...killCounts.entries()].map(([c, n]) => `${c}x${n}`).join(",")}] pre=${pre.start}/${pre.spent} cur=${cur.start}`);
+        console.error(`D5 ${zipName} r=${r} p=${playerIndex} prevEnd=${prev.endReason} prevPrevEnd=${roundByNumber.get(r - 2)?.endReason ?? "?"} ${prevSide}${wonPrev ? "W" : "L"} std=${stdLossCountAt(r - 1, teamKey)} inc=${income} mod=${modeled} pre=${pre.start}/${pre.spent} cur=${cur.start}`);
       }
       s.samples.push({
         residual,
@@ -457,7 +508,7 @@ async function main(): Promise<void> {
       const base = f.split("/").pop() ?? f;
       const m = /(?:^|-)2026-(\d{2})/.exec(base);
       const month = m ? Number(m[1]) : 0;
-      analyze(pkg, s, month);
+      analyze(pkg, s, month, base);
       console.error(`✓ ${base}`);
     } catch (e) {
       console.error(`✗ ${f.split("/").pop()}: ${(e as Error).message.slice(0, 100)}`);
@@ -466,7 +517,7 @@ async function main(): Promise<void> {
   for (const d of dirs) {
     try {
       const pkg = await loadDemoPackageDir(d);
-      analyze(pkg, s, 0); // month unknown for Windows corpus
+      analyze(pkg, s, 0, `dir:${d.split("/").pop()}`); // month unknown for Windows corpus
       console.error(`✓ dir:${d.split("/").pop()}`);
     } catch (e) {
       console.error(`✗ dir:${d.split("/").pop()}: ${(e as Error).message.slice(0, 100)}`);
