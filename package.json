@@ -1,0 +1,24 @@
+{
+  "name": "cs2-roundsense",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "description": "RoundSense — read-only real-time decision-assist research for CS2: C4 time estimation and personal economy advisor",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "recorder": "pnpm --filter @roundsense/gsi-recorder start",
+    "viewer": "pnpm --filter @roundsense/debug-viewer start",
+    "oracle:inspect": "pnpm --filter @roundsense/demo-oracle inspect"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "jszip": "^3.10.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.8"
+  }
+}

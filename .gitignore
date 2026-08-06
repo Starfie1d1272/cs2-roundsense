@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Recordings & experiment outputs (never commit captured data)
+recordings/
+experiments/**/output/
+coverage/
+
+# macOS
+.DS_Store
+
+# Editors / agents
+.idea/
+.vscode/
+.omc/
+.codegraph/
+.claude/
+.codex/
