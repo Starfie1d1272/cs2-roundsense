@@ -1,0 +1,61 @@
+{
+	statted_item_base =
+	{
+		m_nPrice = -1
+		m_nKillAward = 300
+	}
+	melee =
+	{
+		m_nKillAward = 1500
+	}
+	weapon_knife =
+	{
+		_class = "weapon_knife"
+		m_nPrice = 0
+	}
+	weapon_ak47_prefab =
+	{
+		m_nPrice = 2700
+		m_nKillAward = 300
+		weapon_ak47 =
+		{
+			_class = "weapon_ak47"
+			m_nPrice = 2700
+		}
+	}
+	weapon_awp =
+	{
+		_class = "weapon_awp"
+		m_nPrice = 4750
+	}
+	weapon_awp_prefab =
+	{
+		m_nPrice = 4750
+		m_nKillAward = 100
+	}
+	weapon_p90 =
+	{
+		_class = "weapon_p90"
+		m_nPrice = 2350
+	}
+	weapon_p90_prefab =
+	{
+		m_nPrice = 2350
+		m_nKillAward = 300
+	}
+	weapon_bizon =
+	{
+		_class = "weapon_bizon"
+		m_nPrice = 1300
+	}
+	weapon_bizon_prefab =
+	{
+		m_nPrice = 1300
+		m_nKillAward = 600
+	}
+	weapon_cz75a_prefab =
+	{
+		m_nPrice = 500
+		m_nKillAward = 300
+	}
+}

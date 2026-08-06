@@ -1,0 +1,460 @@
+{
+  "generatedFrom": {
+    "repo": "SteamDatabase/GameTracking-CS2",
+    "commit": "2e606a0bc54f619bc96689ae29cddc337cbde60a",
+    "path": "game/csgo/pak01_dir/scripts/weapons.vdata",
+    "accessed": "2026-08-06",
+    "localInstall": "D:\\steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\csgo\\pak01_dir\\scripts\\weapons.vdata",
+    "note": "price = m_nPrice; killAward = m_nKillAward resolved through _base → prefab → statted_item_base (300); first block per weapon id wins."
+  },
+  "weaponAliases": {
+    "m4a4": "weapon_m4a1",
+    "m4a1": "weapon_m4a1",
+    "m4a1_silencer": "weapon_m4a1_silencer",
+    "usp_silencer": "weapon_usp_silencer",
+    "hkp2000": "weapon_hkp2000",
+    "elite": "weapon_elite",
+    "tec9": "weapon_tec9",
+    "cz75a": "weapon_cz75a",
+    "cz75": "weapon_cz75a",
+    "fiveseven": "weapon_fiveseven",
+    "deagle": "weapon_deagle",
+    "revolver": "weapon_revolver",
+    "glock": "weapon_glock",
+    "ak47": "weapon_ak47",
+    "galilar": "weapon_galilar",
+    "famas": "weapon_famas",
+    "sg556": "weapon_sg556",
+    "aug": "weapon_aug",
+    "awp": "weapon_awp",
+    "ssg08": "weapon_ssg08",
+    "scar20": "weapon_scar20",
+    "g3sg1": "weapon_g3sg1",
+    "mac10": "weapon_mac10",
+    "mp9": "weapon_mp9",
+    "mp7": "weapon_mp7",
+    "mp5sd": "weapon_mp5sd",
+    "ump45": "weapon_ump45",
+    "p90": "weapon_p90",
+    "bizon": "weapon_bizon",
+    "nova": "weapon_nova",
+    "sawedoff": "weapon_sawedoff",
+    "mag7": "weapon_mag7",
+    "xm1014": "weapon_xm1014",
+    "m249": "weapon_m249",
+    "negev": "weapon_negev",
+    "taser": "weapon_taser",
+    "zeus": "weapon_taser",
+    "knife": "weapon_knife",
+    "hegrenade": "weapon_hegrenade",
+    "molotov": "weapon_molotov",
+    "incgrenade": "weapon_incgrenade",
+    "inferno": "weapon_incgrenade",
+    "decoy": "weapon_decoy",
+    "flashbang": "weapon_flashbang",
+    "smokegrenade": "weapon_smokegrenade"
+  },
+  "weapons": {
+    "weapon_cs_base": {
+      "price": 0,
+      "killAward": 1500,
+      "class": "knife",
+      "weaponType": "WEAPONTYPE_KNIFE",
+      "aliases": []
+    },
+    "weapon_hegrenade": {
+      "price": 300,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "hegrenade"
+      ]
+    },
+    "weapon_c4": {
+      "price": 0,
+      "killAward": 1500,
+      "class": "unknown:WEAPONTYPE_C4",
+      "weaponType": "WEAPONTYPE_C4",
+      "aliases": []
+    },
+    "weapon_knife": {
+      "price": 0,
+      "killAward": 1500,
+      "class": "knife",
+      "weaponType": "WEAPONTYPE_KNIFE",
+      "aliases": [
+        "knife"
+      ]
+    },
+    "weapon_deagle": {
+      "price": 700,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "deagle"
+      ]
+    },
+    "weapon_elite": {
+      "price": 300,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "elite"
+      ]
+    },
+    "weapon_fiveseven": {
+      "price": 500,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "fiveseven"
+      ]
+    },
+    "weapon_glock": {
+      "price": 200,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "glock"
+      ]
+    },
+    "weapon_ak47": {
+      "price": 2700,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "ak47"
+      ]
+    },
+    "weapon_aug": {
+      "price": 3300,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "aug"
+      ]
+    },
+    "weapon_awp": {
+      "price": 4750,
+      "killAward": 100,
+      "class": "sniper",
+      "weaponType": "WEAPONTYPE_SNIPER_RIFLE",
+      "aliases": [
+        "awp"
+      ]
+    },
+    "weapon_famas": {
+      "price": 1950,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "famas"
+      ]
+    },
+    "weapon_g3sg1": {
+      "price": 5000,
+      "killAward": 300,
+      "class": "sniper",
+      "weaponType": "WEAPONTYPE_SNIPER_RIFLE",
+      "aliases": [
+        "g3sg1"
+      ]
+    },
+    "weapon_galilar": {
+      "price": 1800,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "galilar"
+      ]
+    },
+    "weapon_m249": {
+      "price": 5200,
+      "killAward": 300,
+      "class": "mg",
+      "weaponType": "WEAPONTYPE_MACHINEGUN",
+      "aliases": [
+        "m249"
+      ]
+    },
+    "weapon_m4a1": {
+      "price": 2900,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "m4a4",
+        "m4a1"
+      ]
+    },
+    "weapon_mac10": {
+      "price": 1050,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "mac10"
+      ]
+    },
+    "weapon_p90": {
+      "price": 2350,
+      "killAward": 300,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "p90"
+      ]
+    },
+    "weapon_mp7": {
+      "price": 1400,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "mp7"
+      ]
+    },
+    "weapon_ump45": {
+      "price": 1200,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "ump45"
+      ]
+    },
+    "weapon_xm1014": {
+      "price": 2000,
+      "killAward": 600,
+      "class": "shotgun",
+      "weaponType": "WEAPONTYPE_SHOTGUN",
+      "aliases": [
+        "xm1014"
+      ]
+    },
+    "weapon_bizon": {
+      "price": 1300,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "bizon"
+      ]
+    },
+    "weapon_mag7": {
+      "price": 1300,
+      "killAward": 900,
+      "class": "shotgun",
+      "weaponType": "WEAPONTYPE_SHOTGUN",
+      "aliases": [
+        "mag7"
+      ]
+    },
+    "weapon_negev": {
+      "price": 1700,
+      "killAward": 300,
+      "class": "mg",
+      "weaponType": "WEAPONTYPE_MACHINEGUN",
+      "aliases": [
+        "negev"
+      ]
+    },
+    "weapon_sawedoff": {
+      "price": 1100,
+      "killAward": 900,
+      "class": "shotgun",
+      "weaponType": "WEAPONTYPE_SHOTGUN",
+      "aliases": [
+        "sawedoff"
+      ]
+    },
+    "weapon_tec9": {
+      "price": 500,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "tec9"
+      ]
+    },
+    "weapon_taser": {
+      "price": 200,
+      "killAward": 100,
+      "class": "unknown:WEAPONTYPE_TASER",
+      "weaponType": "WEAPONTYPE_TASER",
+      "aliases": [
+        "taser",
+        "zeus"
+      ]
+    },
+    "weapon_hkp2000": {
+      "price": 200,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "hkp2000"
+      ]
+    },
+    "weapon_mp9": {
+      "price": 1250,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "mp9"
+      ]
+    },
+    "weapon_nova": {
+      "price": 1050,
+      "killAward": 900,
+      "class": "shotgun",
+      "weaponType": "WEAPONTYPE_SHOTGUN",
+      "aliases": [
+        "nova"
+      ]
+    },
+    "weapon_p250": {
+      "price": 300,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": []
+    },
+    "weapon_scar20": {
+      "price": 5000,
+      "killAward": 300,
+      "class": "sniper",
+      "weaponType": "WEAPONTYPE_SNIPER_RIFLE",
+      "aliases": [
+        "scar20"
+      ]
+    },
+    "weapon_sg556": {
+      "price": 3000,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "sg556"
+      ]
+    },
+    "weapon_ssg08": {
+      "price": 1700,
+      "killAward": 300,
+      "class": "sniper",
+      "weaponType": "WEAPONTYPE_SNIPER_RIFLE",
+      "aliases": [
+        "ssg08"
+      ]
+    },
+    "weapon_flashbang": {
+      "price": 200,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "flashbang"
+      ]
+    },
+    "weapon_smokegrenade": {
+      "price": 300,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "smokegrenade"
+      ]
+    },
+    "weapon_molotov": {
+      "price": 400,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "molotov"
+      ]
+    },
+    "weapon_decoy": {
+      "price": 50,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "decoy"
+      ]
+    },
+    "weapon_incgrenade": {
+      "price": 500,
+      "killAward": 300,
+      "class": "grenade",
+      "weaponType": "WEAPONTYPE_GRENADE",
+      "aliases": [
+        "incgrenade",
+        "inferno"
+      ]
+    },
+    "weapon_healthshot": {
+      "price": 0,
+      "killAward": 300,
+      "class": "unknown:WEAPONTYPE_STACKABLEITEM",
+      "weaponType": "WEAPONTYPE_STACKABLEITEM",
+      "aliases": []
+    },
+    "weapon_m4a1_silencer": {
+      "price": 2900,
+      "killAward": 300,
+      "class": "rifle",
+      "weaponType": "WEAPONTYPE_RIFLE",
+      "aliases": [
+        "m4a1_silencer"
+      ]
+    },
+    "weapon_usp_silencer": {
+      "price": 200,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "usp_silencer"
+      ]
+    },
+    "weapon_cz75a": {
+      "price": 500,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "cz75a",
+        "cz75"
+      ]
+    },
+    "weapon_revolver": {
+      "price": 600,
+      "killAward": 300,
+      "class": "pistol",
+      "weaponType": "WEAPONTYPE_PISTOL",
+      "aliases": [
+        "revolver"
+      ]
+    },
+    "weapon_mp5sd": {
+      "price": 1400,
+      "killAward": 600,
+      "class": "smg",
+      "weaponType": "WEAPONTYPE_SUBMACHINEGUN",
+      "aliases": [
+        "mp5sd"
+      ]
+    }
+  }
+}
