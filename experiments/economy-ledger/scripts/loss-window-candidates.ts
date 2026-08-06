@@ -22,11 +22,35 @@ interface Candidate {
   round: number; // the WIN round
   side: "CT" | "T";
   player: string;
-  inferredStateBefore: number; // lossCount before the win (from r−1 payout)
+  /** (previousLossPayout − 1400) / 500 — the OBSERVED payout tier of the
+   * loss BEFORE the win. This is NOT claimed to be the internal counter:
+   * the documented update order (loss +1, win −d, half start 1) means the
+   * internal state at win start is tier + 1 under interpretation B. */
+  previousLossPayoutTier: number;
+  /** (nextLossPayout − 1400) / 500 — observed payout tier of the loss
+   * AFTER the win. */
+  nextLossPayoutTier: number;
   winReason: string;
   nextLossPayout: number;
   winTeam: string;
   exclusions: string[]; // empty = passed
+}
+
+/** Map a loss payout to its observable tier; 3400 (cap) → null; non-table
+ * payouts throw. The tier is a payout ladder index, NOT an internal
+ * loss-counter value. */
+export function payoutTierOf(payout: number): number | null {
+  if (payout >= 3400) return null; // capped interval [4, ∞) — not identifiable
+  const tier = (payout - 1400) / 500;
+  if (!Number.isInteger(tier) || tier < 0) throw new Error(`non-table loss payout: ${payout}`);
+  return tier;
+}
+
+/** Interpretation B: under the documented update order (loss → counter+1,
+ * win → counter−d), the internal decrement candidate implied by two
+ * observable payout tiers. DERIVED, not directly observed. */
+export function candidateInternalWinDecrement(prevTier: number, nextTier: number): number {
+  return prevTier + 1 - nextTier;
 }
 
 const WIN_TYPE = (end: string): "elimination" | "time_ran_out" | "target_bombed" | "bomb_defused" =>
@@ -141,7 +165,7 @@ async function main(): Promise<void> {
         // p1 = loss payout (losers never get the team award; kill rewards land
         // at kill time, not in the settlement window)
         const P1 = p1;
-        const p1State = P1 >= 3400 ? null : (P1 - 1400) / 500;
+        const prevTier = P1 >= 3400 ? null : (P1 - 1400) / 500;
 
         // next loss payout
         let p2 = 0;
@@ -154,9 +178,9 @@ async function main(): Promise<void> {
         if (p2 >= 3400) exclusions.push("cap-next"); // post-win state not identifiable
         if (p2 < 1400) exclusions.push("no-settlement-next"); // missing/aborted round
         if (p2 >= 1400 && !Number.isInteger((p2 - 1400) / 500)) exclusions.push("non-table-payout-next");
-        if (p1State === null) exclusions.push("cap-prev");
-        if (!Number.isInteger(p1State) || (p1State ?? 0) < 0) exclusions.push("non-table-payout-prev");
-        if (process.env.CAND_DEBUG && exclusions.includes("non-table-payout-prev") && debugShown < 4) {
+        if (prevTier === null) exclusions.push("cap-prev");
+        if (prevTier !== null && (!Number.isInteger(prevTier) || prevTier < 0)) exclusions.push("non-table-payout-prev");
+        if (process.env.CAND_DEBUG && prevTier !== null && (!Number.isInteger(prevTier) || prevTier < 0) && debugShown < 4) {
           debugShown++;
           const jumps: string[] = [];
           for (let f = 0; f < prevMoney.length - 1; f++) {
@@ -190,7 +214,8 @@ async function main(): Promise<void> {
             round: r.roundNumber,
             side: sideOf(teamByPlayer.get(pi)!, r.roundNumber) === "ct" ? "CT" : "T",
             player: nameOf.get(pi) ?? `p${pi}`,
-            inferredStateBefore: p1State!,
+            previousLossPayoutTier: prevTier!,
+            nextLossPayoutTier: (p2 - 1400) / 500,
             winReason: WIN_TYPE(r.endReason),
             nextLossPayout: p2,
             winTeam,
@@ -208,29 +233,34 @@ async function main(): Promise<void> {
   const exclCount = new Map<string, number>();
   for (const e of exclusionLog) exclCount.set(e, (exclCount.get(e) ?? 0) + 1);
   console.log("exclusions:", [...exclCount.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}×${v}`).join(", "));
-  // descriptive decrement summary (NO model selection from this set)
-  const decAgg = new Map<string, { n: number; decs: Map<number, number> }>();
+  // descriptive summary — TWO interpretations, NO model selection
+  const dropAgg = new Map<string, { n: number; drops: Map<number, number>; decs: Map<number, number> }>();
   for (const c of candidates) {
-    const nextState = (c.nextLossPayout - 1400) / 500;
-    const dec = c.inferredStateBefore - nextState;
-    const key = `${c.winReason}|stateBefore=${c.inferredStateBefore}`;
-    const row = decAgg.get(key) ?? { n: 0, decs: new Map() };
+    const drop = c.previousLossPayoutTier - c.nextLossPayoutTier;
+    const dec = candidateInternalWinDecrement(c.previousLossPayoutTier, c.nextLossPayoutTier);
+    const key = `${c.winReason}|prevTier=${c.previousLossPayoutTier}`;
+    const row = dropAgg.get(key) ?? { n: 0, drops: new Map(), decs: new Map() };
     row.n++;
+    row.drops.set(drop, (row.drops.get(drop) ?? 0) + 1);
     row.decs.set(dec, (row.decs.get(dec) ?? 0) + 1);
-    decAgg.set(key, row);
+    dropAgg.set(key, row);
   }
-  console.log("\ndec (stateBefore − stateAfter) distribution by win type:");
-  for (const [k, v] of [...decAgg.entries()].sort()) {
-    console.log(`  ${k}: n=${v.n} decs={${[...v.decs.entries()].map(([d, c]) => `${d}×${c}`).join(", ")}}`);
+  console.log("\nInterpretation A — observed payout-tier transition (prevTier → nextTier):");
+  for (const [k, v] of [...dropAgg.entries()].sort()) {
+    console.log(`  ${k}: n=${v.n} tierDrop={${[...v.drops.entries()].map(([d, c]) => `${d}×${c}`).join(", ")}}`);
+  }
+  console.log("\nInterpretation B — candidate internal win decrement (prevTier + 1 − nextTier, DERIVED under documented update order, not directly observed):");
+  for (const [k, v] of [...dropAgg.entries()].sort()) {
+    console.log(`  ${k}: n=${v.n} candDecrement={${[...v.decs.entries()].map(([d, c]) => `${d}×${c}`).join(", ")}}`);
   }
   // unique windows (one per match+round) for the report table
   const uniq = new Set<string>();
-  for (const c of candidates) uniq.add(`${c.match}|${c.round}|${c.winReason}|${c.inferredStateBefore}`);
+  for (const c of candidates) uniq.add(`${c.match}|${c.round}|${c.winReason}|${c.previousLossPayoutTier}`);
   console.log(`unique windows: ${uniq.size}`);
   for (const t of ["elimination", "time_ran_out", "target_bombed", "bomb_defused"] as const) {
     const list = byType(t);
     console.log(`\n== ${t}: ${list.length} ==`);
-    for (const c of list) console.log(`  ${c.match} r${c.round} ${c.side} ${c.player.padEnd(12)} stateBefore=${c.inferredStateBefore} nextLossPayout=${c.nextLossPayout}`);
+    for (const c of list) console.log(`  ${c.match} r${c.round} ${c.side} ${c.player.padEnd(12)} prevTier=${c.previousLossPayoutTier} nextTier=${c.nextLossPayoutTier} tierDrop=${c.previousLossPayoutTier - c.nextLossPayoutTier} candDec=${candidateInternalWinDecrement(c.previousLossPayoutTier, c.nextLossPayoutTier)} nextLossPayout=${c.nextLossPayout}`);
   }
 }
 
