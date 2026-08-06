@@ -1,0 +1,14 @@
+{
+  "name": "@roundsense/gsi-recorder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "@roundsense/gsi-protocol": "workspace:*"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts"
+  }
+}
