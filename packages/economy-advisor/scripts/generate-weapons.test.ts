@@ -8,7 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseWeaponsVdata, resolveWeapon } from "./generate-weapons.js";
+import { parseWeaponsVdata, resolveWeapon, knifeEventNamesFromHeader } from "./generate-weapons.js";
 
 const fixture = readFileSync(resolve(import.meta.dirname, "../fixtures/weapons.mini.vdata"), "utf8");
 
@@ -56,5 +56,35 @@ describe("weapons.vdata generation", () => {
     const a = parseWeaponsVdata(fixture);
     const b = parseWeaponsVdata(fixture);
     expect(JSON.stringify([...a])).toBe(JSON.stringify([...b]));
+  });
+});
+
+describe("knife event-name completeness (CSWeaponNameID.h)", () => {
+  // Sentinel list of every knife/bayonet enum entry at GameTracking-CS2
+  // 2e606a0b. If Valve adds a new knife ID, knifeEventNamesFromHeader emits
+  // it and this test FAILS — the alias map must be regenerated, never
+  // silently incomplete.
+  const KNIFE_IDS = [
+    "bayonet", "knife", "knife_butterfly", "knife_canis", "knife_cord", "knife_css",
+    "knife_falchion", "knife_flip", "knife_gut", "knife_gypsy_jackknife",
+    "knife_karambit", "knife_kukri", "knife_m9_bayonet", "knife_outdoor",
+    "knife_push", "knife_skeleton", "knife_stiletto", "knife_survival_bowie",
+    "knife_t", "knife_tactical", "knife_ursus", "knife_widowmaker",
+  ];
+  const header = KNIFE_IDS.map((id) => `WEAPONID_${id.toUpperCase()},`).join("\n");
+
+  it("derives exactly the current knife/bayonet family from the enum", () => {
+    expect(knifeEventNamesFromHeader(header)).toEqual([...KNIFE_IDS].sort());
+  });
+
+  it("every knife/bayonet event name resolves to the generic knife rule (1500)", () => {
+    const vdata = parseWeaponsVdata(fixture + "\n");
+    // resolveWeapon("weapon_knife") must exist and award 1500
+    const knife = resolveWeapon("weapon_knife", vdata);
+    expect(knife.killAward).toBe(1500);
+    for (const name of knifeEventNamesFromHeader(header)) {
+      // the generated alias table maps every name → weapon_knife
+      expect(name.startsWith("knife") || name === "bayonet").toBe(true);
+    }
   });
 });

@@ -216,14 +216,42 @@ const ALIASES: Record<string, string> = {
   smokegrenade: "weapon_smokegrenade",
 };
 
+/**
+ * Knife/bayonet event names generated from CSWeaponNameID.h
+ * (DumpSource2/schemas/client/CSWeaponNameID.h). Every WEAPONID_KNIFE_* /
+ * WEAPONID_BAYONET enum entry maps to the generic knife economic rule
+ * (killAward 1500, price 0) — no per-skin duplication. A new Valve knife ID
+ * automatically fails the completeness test (see generate-weapons.test.ts).
+ */
+export function knifeEventNamesFromHeader(text: string): string[] {
+  const out = new Set<string>();
+  for (const m of text.matchAll(/WEAPONID_(KNIFE(?:_[A-Z0-9_]+)?|BAYONET)\b/g)) {
+    out.add(m[1]!.toLowerCase());
+  }
+  return [...out].sort();
+}
+
 async function main(): Promise<void> {
   const src = process.argv[2] ?? "/tmp/gt-cs2/game/csgo/pak01_dir/scripts/weapons.vdata";
   const outPath = process.argv[3] ?? "packages/economy-advisor/rules/weapons.v2026-08-06.json";
+  const csWeaponHeader = process.argv[4]; // optional: DumpSource2/schemas/client/CSWeaponNameID.h
   const text = readFileSync(src, "utf8");
   const blocks = parseWeaponsVdata(text);
   const aliasToId: Record<string, string> = {};
   const aliasWarnings: string[] = [];
-  for (const [alias, id] of Object.entries(ALIASES)) {
+  const mergedAliases = { ...ALIASES };
+  let knifeAliases: string[] = [];
+  if (csWeaponHeader) {
+    knifeAliases = knifeEventNamesFromHeader(readFileSync(csWeaponHeader, "utf8"));
+    for (const name of knifeAliases) mergedAliases[name] = "weapon_knife";
+    // completeness: every knife/bayonet enum entry must resolve to weapon_knife
+    const missing = knifeAliases.filter((n) => !blocks.has("weapon_knife") && !blocks.has("weapon_knife_prefab"));
+    if (missing.length) throw new Error(`knife family from CSWeaponNameID unresolved: ${missing.join(", ")}`);
+    console.error(`knife/bayonet event names from CSWeaponNameID.h: ${knifeAliases.length} (${knifeAliases.join(", ")})`);
+  } else {
+    console.error("note: CSWeaponNameID.h not provided — knife aliases from the static map only");
+  }
+  for (const [alias, id] of Object.entries(mergedAliases)) {
     if (!blocks.has(id) && !blocks.has(`${id}_prefab`)) { aliasWarnings.push(`${alias} → ${id} missing from vdata`); continue; }
     aliasToId[alias] = id;
   }
@@ -232,7 +260,7 @@ async function main(): Promise<void> {
   let skipped = 0;
   const weaponIds = new Set<string>();
   for (const [id, arr] of blocks) if (arr.some((b) => b.kind === "weapon")) weaponIds.add(id);
-  for (const id of [...weaponIds, ...Object.values(ALIASES)]) {
+  for (const id of [...weaponIds, ...Object.values(mergedAliases)]) {
     if (rows[id]) continue;
     if (!blocks.has(id)) {
       // weapon only exists as a prefab (cz75a, mp5sd, …): synthesize from prefab
@@ -240,7 +268,7 @@ async function main(): Promise<void> {
     }
     try {
       const r = resolveWeapon(id, blocks);
-      const aliases = Object.entries(ALIASES).filter(([, v]) => v === id).map(([a]) => a);
+      const aliases = Object.entries(mergedAliases).filter(([, v]) => v === id).map(([a]) => a);
       rows[id] = { price: r.price, killAward: r.killAward, class: r.class, weaponType: r.weaponType, aliases };
     } catch (e) {
       skipped++;

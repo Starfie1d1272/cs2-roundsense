@@ -56,7 +56,25 @@
     "inferno": "weapon_incgrenade",
     "decoy": "weapon_decoy",
     "flashbang": "weapon_flashbang",
-    "smokegrenade": "weapon_smokegrenade"
+    "smokegrenade": "weapon_smokegrenade",
+    "bayonet": "weapon_knife",
+    "knife_canis": "weapon_knife",
+    "knife_cord": "weapon_knife",
+    "knife_css": "weapon_knife",
+    "knife_falchion": "weapon_knife",
+    "knife_flip": "weapon_knife",
+    "knife_gut": "weapon_knife",
+    "knife_gypsy_jackknife": "weapon_knife",
+    "knife_kukri": "weapon_knife",
+    "knife_m9_bayonet": "weapon_knife",
+    "knife_outdoor": "weapon_knife",
+    "knife_push": "weapon_knife",
+    "knife_skeleton": "weapon_knife",
+    "knife_stiletto": "weapon_knife",
+    "knife_survival_bowie": "weapon_knife",
+    "knife_tactical": "weapon_knife",
+    "knife_ursus": "weapon_knife",
+    "knife_widowmaker": "weapon_knife"
   },
   "weapons": {
     "weapon_cs_base": {
@@ -91,7 +109,25 @@
         "knife",
         "knife_karambit",
         "knife_butterfly",
-        "knife_t"
+        "knife_t",
+        "bayonet",
+        "knife_canis",
+        "knife_cord",
+        "knife_css",
+        "knife_falchion",
+        "knife_flip",
+        "knife_gut",
+        "knife_gypsy_jackknife",
+        "knife_kukri",
+        "knife_m9_bayonet",
+        "knife_outdoor",
+        "knife_push",
+        "knife_skeleton",
+        "knife_stiletto",
+        "knife_survival_bowie",
+        "knife_tactical",
+        "knife_ursus",
+        "knife_widowmaker"
       ]
     },
     "weapon_deagle": {
