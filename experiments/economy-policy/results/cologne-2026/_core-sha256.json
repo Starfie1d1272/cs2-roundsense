@@ -1,0 +1,8 @@
+{
+ "economy-reference-surface.csv": "674a7567d9974d844796eb6cde4ccbadd80ecd55d4c341f14a512d78f3ff949a",
+ "purchase-surface.csv": "dc4bfcfb6b0da2d784d285e99835d4fdb97b4c8dc41cc7e16dc8b08469f23bdd",
+ "primary-distribution.csv": "ddc29f624086e57b0c674f733bcac1b3a7c28547b0e8cf12e58c4b148241009e",
+ "secondary-distribution.csv": "cea6b7248b2964f354bf78ed5fea0170936654f6dff6a540bf66f7f77634cf5b",
+ "conditional-loadouts.csv": "18aac0e3124113aaa4ecbfb3972d69b191f1c73ee3c2e29f75bacd957ec9c3c5",
+ "retained-coverage.csv": "e4f265b0e723bd4af0e7e7e99ef7dab9b3b92ca0dae99aaa79d6c39fdf12f24c"
+}

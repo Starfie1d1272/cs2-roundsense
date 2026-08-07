@@ -44,7 +44,8 @@ def card(side, lr, M, rv="none"):
 
 md = ["# Policy Review Atlas (Decision Cards)", "",
       "职业行为证据卡——供人工逐状态制定 policy。无推荐列。",
-      "仅含 OBSERVED/INTERPOLATED/INTERPOLATED_WIDE 且 purchase 非 LOW_SUPPORT 的 state。", ""]
+      "仅含 OBSERVED/INTERPOLATED/INTERPOLATED_WIDE 且 purchase 非 LOW_SUPPORT 的 state。",
+      "no-retained 关键金额 + retained rifle/SMG/AWP 代表 states（非全量 3157 覆盖）。", ""]
 n_cards = 0
 for side in ["t", "ct"]:
     for lr in [1400, 1900, 2400, 2900, 3400]:
@@ -59,5 +60,31 @@ for side in ["t", "ct"]:
         for M in picks:
             md.append(card(side, lr, M))
             n_cards += 1
+
+# retained representative cards: pick supported rows per (side, retained family)
+# — rifle / smg / awp — at key money near each side's full transition band
+md.append("---")
+md.append("")
+md.append("# Retained Weapon Representative Cards")
+md.append("")
+md.append("仅从 policy-review-table.csv 读取 supported rows（不重新估计）。")
+md.append("")
+RET_REP = {
+    "rifle": ["AK-47", "M4A4"],
+    "smg": ["MP9", "MAC-10"],
+    "awp": ["AWP"],
+}
+for side in ["t", "ct"]:
+    for lr in [1900, 2400]:
+        for fam, weapons in RET_REP.items():
+            for rv in weapons:
+                rows_rv = [r for r in ROWS if r["side"] == side and r["lossReward"] == str(lr)
+                           and r["retained_value"] == rv]
+                if not rows_rv:
+                    continue
+                # pick the supported row nearest $3,800 (full transition zone)
+                best = min(rows_rv, key=lambda r: abs(int(r["roundStartMoney"]) - 3800))
+                md.append(card(side, lr, best["roundStartMoney"], rv))
+                n_cards += 1
 open(f"{RESULTS}/policy-review-atlas.md", "w").write("\n".join(md))
 print("policy-review-atlas.md:", len(md), "lines,", n_cards, "cards")

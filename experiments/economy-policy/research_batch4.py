@@ -55,8 +55,11 @@ def tree_eval(leaves):
     return ll / n, acc / n, f1 / n
 
 def surface_oof():
-    """Grouped OOF empirical lookup: build cell table from TRAIN folds only,
-    evaluate held-out fold; unseen cells get the global train distribution."""
+    """Grouped OOF naive empirical exact-cell lookup: build cell table from
+    TRAIN folds only, evaluate held-out fold; unseen cells get the global
+    train distribution. This is the NAIVE baseline — NOT the frozen
+    adaptive-Gaussian surface (the frozen kernel surface is never compared
+    here because the trees were not evaluated against it)."""
     ll = 0.0
     acc = 0.0
     n = 0
@@ -84,7 +87,7 @@ def surface_oof():
     return ll / n, acc / n
 
 sll, sacc = surface_oof()
-rows = [["surface_exact_lookup_OOF", -1, round(sll, 4), round(sacc, 4), ""]]
+rows = [["naive_empirical_exact_cell_lookup_OOF", -1, round(sll, 4), round(sacc, 4), ""]]
 for leaves in [30, 60, 100]:
     ll, acc, f1 = tree_eval(leaves)
     rows.append(["rule_tree_{}leaves_OOF".format(leaves), leaves, round(ll, 4), round(acc, 4), round(f1, 4)])
@@ -129,16 +132,21 @@ for leaves in [30, 60, 100]:
 
 with open(f"{RESULTS}/representation-benchmark.csv", "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["representation", "leaves", "grouped_oof_log_loss", "grouped_oof_accuracy", "grouped_oof_macroF1", "mode"])
+    w.writerow(["representation", "leaves", "grouped_oof_log_loss", "grouped_oof_accuracy",
+                "grouped_oof_macroF1", "avg_kl_bits", "avg_tv", "label_agreement", "mode"])
     for r in rows:
-        w.writerow(r + ["generalization_OOF"])
+        w.writerow(r + ["", "", "", "generalization_OOF"])
     for leaves, k, t, ag in COMP:
-        w.writerow(["rule_tree_{}leaves_full".format(leaves), leaves, "", "", "", "compression_fidelity"])
+        w.writerow(["rule_tree_{}leaves_full".format(leaves), leaves, "", "", "",
+                    k, t, ag, "compression_fidelity"])
 
 md = ["# Representation Options", "",
       "## A. Predictive generalization (5-fold match-series grouped OOF)", "",
-      "Both the surface lookup and the rule trees are built from training folds",
-      "only and evaluated on held-out folds (apples-to-apples).", "",
+      "Both the naive empirical exact-cell lookup and the rule trees are built",
+      "from training folds only and evaluated on held-out folds (apples-to-apples).",
+      "注意：naive exact-cell lookup 是经验频率基线，不是 frozen adaptive-Gaussian",
+      "kernel surface——本研究未对 frozen surface 与 tree 做 OOF 比较，",
+      "不声称 tree 优于 frozen surface。", "",
       "| representation | leaves | OOF log loss | OOF acc | macroF1 |", "|---|---|---|---|---|"]
 for r in rows:
     md.append("| {} | {} | {:.4f} | {:.4f} | {} |".format(r[0], r[1], r[2], r[3], r[4] if r[4] else "-"))

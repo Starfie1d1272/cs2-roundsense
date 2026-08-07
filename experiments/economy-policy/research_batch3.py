@@ -85,7 +85,9 @@ md = ["# Team-Context Ceiling", "",
       "- + team oracle (total start //2000, rifle count, AWP count): {:.4f} bits".format(H_team),
       "- relative reduction: {:.1f}%".format(100 * (1 - H_team / H_ind) if H_ind else 0),
       "",
-      "普通 GSI 看不到队友经济时的信息损失 ≈ 上述差值（oracle 上限）。",
+      "注：team oracle 特征含本回合 resulting rifle/AWP counts（TEAM 聚合在回合结束后才",
+      "完整可知）——这是 post-decision oracle ceiling，不是'缺少 teammate economy 导致",
+      "X% 信息损失'的因果表述。全样本条件熵（非 held-out）。",
       "team-round-patterns.csv 含全量 team-round 聚合（含 drop 行——仅描述性）。"]
 open(f"{RESULTS}/team-context-ceiling.md", "w").write("\n".join(md))
 print("17 done: H_ind {:.4f} H_team {:.4f}".format(H_ind, H_team))
@@ -157,7 +159,8 @@ for r in STRICT:
 md = ["# Role Ambiguity", "",
       "- state-conditioned entropy: {:.4f} bits".format(H_state),
       "- +player identity entropy: {:.4f} bits".format(H_player),
-      "- irreducible role ambiguity ≈ {:.4f} bits (player-conditioned residual)".format(H_player),
+      "- in-sample player-conditioned residual entropy ≈ {:.4f} bits（全样本条件熵，非 held-out；".format(H_player),
+      "  OOF 泛化能力未单独评估）",
       "",
       "AWP/utility usage per player（自动统计，不贴角色标签）:"]
 for name, n in player_n.most_common(20):
@@ -185,7 +188,11 @@ md = ["# Round/Score Context", "",
       "- +round stage (//3): {:.4f} bits (Δ {:.3f})".format(H_rn, H_ind - H_rn),
       "- +score diff (clamped ±6): {:.4f} bits (Δ {:.3f})".format(H_sc, H_ind - H_sc),
       "",
-      "增量信息很小——不建议仅为 round/score 增加 production 复杂度（除非后续 policy 需要）。"]
+      "解读（两层证据）:",
+      "- in-sample conditional entropy 有明显下降（Δ 0.18–0.21 bits）；",
+      "- 但 grouped OOF feature ladder 中 B5 +roundstage 对 format-state log loss 无改善",
+      "  （B4 0.8456 → B5 0.8619 bits，见 feature-value.csv）。",
+      "因此当前没有 held-out 证据支持为 production 增加 round/score complexity。"]
 open(f"{RESULTS}/round-score-context.md", "w").write("\n".join(md))
 print("20 done")
 

@@ -39,7 +39,7 @@
 
 ### Representation
 
-- surface_exact_lookup_OOF: OOF logloss 1.1807 · acc 0.8224 · macroF1 -
+- naive_empirical_exact_cell_lookup_OOF: OOF logloss 1.1807 · acc 0.8224 · macroF1 -
 - rule_tree_30leaves_OOF: OOF logloss 0.4654 · acc 0.8216 · macroF1 0.7205
 - rule_tree_60leaves_OOF: OOF logloss 0.4794 · acc 0.8246 · macroF1 0.7291
 - rule_tree_100leaves_OOF: OOF logloss 0.5067 · acc 0.8248 · macroF1 0.7302
@@ -121,7 +121,9 @@ format-state conditional entropy (retained=none):
 - relative reduction: 54.8%
 
 注：上述为全样本条件熵（oracle 上限，非 held-out）；team 特征含本回合团队聚合（决策时 GSI 不可见），
-普通 GSI 看不到队友经济时的信息损失 ≈ 上述差值（oracle 上限）。
+注：team oracle 特征含本回合 resulting rifle/AWP counts（TEAM 聚合在回合结束后才
+完整可知）——这是 post-decision oracle ceiling，不是'缺少 teammate economy 导致
+X% 信息损失'的因果表述。全样本条件熵（非 held-out）。
 team-round-patterns.csv 含全量 team-round 聚合（含 drop 行——仅描述性）。
 
 # Role Ambiguity
@@ -136,7 +138,8 @@ team-round-patterns.csv 含全量 team-round 聚合（含 drop 行——仅描�
 
 ## HUMAN POLICY DECISIONS
 
-- policy-review-table.csv / policy-review-atlas.md：仅 supported states（3157 cards 覆盖 3157 rows）。
+- policy-review-table.csv：3157 supported review-table rows（仅 OBSERVED/INTERPOLATED/INTERPOLATED_WIDE + purchase 非 LOW_SUPPORT）。
+- policy-review-atlas.md：57 张人工 review cards（no-retained 关键金额 + retained rifle/SMG/AWP 代表 states——非全量覆盖，供人工审阅）。
 - HUMAN POLICY DECISION 字段留空——由人工逐卡填写。
 
 ## RUNTIME VALIDATIONS

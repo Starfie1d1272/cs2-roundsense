@@ -2,6 +2,7 @@
 
 职业行为证据卡——供人工逐状态制定 policy。无推荐列。
 仅含 OBSERVED/INTERPOLATED/INTERPOLATED_WIDE 且 purchase 非 LOW_SUPPORT 的 state。
+no-retained 关键金额 + retained rifle/SMG/AWP 代表 states（非全量 3157 覆盖）。
 
 ---
 
@@ -930,6 +931,183 @@ loadout top3 (mass 0.787):
   - M4A1-S|USP-S|a1h0k0|sm1fl1HE1fr1
   - M4A4|USP-S|a1h0k0|sm1fl1HE1fr1
   - M4A4|USP-S|a1h1k0|sm1fl1HE0fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+---
+
+# Retained Weapon Representative Cards
+
+仅从 policy-review-table.csv 读取 supported rows（不重新估计）。
+
+### T · lossReward $1900 · roundStartMoney $1850 · retained AK-47
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 20.5 · nearest $50 · estimate exact
+economy:   entropy 1.165 bits
+spend:     p25 $0 · median $600 · p75 $700
+next:      no-spend $3750 · after-median-spend $3150 · T plant $3750
+primary:   AK-47:60%;none:35%;Galil AR:3%
+equip:     armor 65% · helmet 65% · kit 0%
+utility:   smoke 59% · flash>=1 62% · flash2 26% · HE 26% · fire 48%
+loadout top3 (mass 0.962):
+  - none|Glock-18|a0h0k0|sm0fl0HE0fr0
+  - AK-47|Glock-18|a1h1k0|sm1fl2HE0fr1
+  - AK-47|Glock-18|a1h1k0|sm1fl1HE1fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### T · lossReward $1900 · roundStartMoney $2200 · retained M4A4
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 20.4 · nearest $50 · estimate family
+economy:   entropy 1.029 bits
+spend:     p25 $0 · median $0 · p75 $700
+next:      no-spend $4100 · after-median-spend $4100 · T plant $4700
+primary:   none:60%;AK-47:38%;AWP:1%
+equip:     armor 40% · helmet 38% · kit 0%
+utility:   smoke 38% · flash>=1 39% · flash2 14% · HE 17% · fire 30%
+loadout top3 (mass 0.985):
+  - none|Glock-18|a0h0k0|sm0fl0HE0fr0
+  - AK-47|Glock-18|a1h1k0|sm1fl1HE1fr1
+  - AK-47|Glock-18|a1h1k0|sm1fl2HE0fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### T · lossReward $2400 · roundStartMoney $2950 · retained AK-47
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 21.3 · nearest $150 · estimate family
+economy:   entropy 0.053 bits
+spend:     p25 $0 · median $0 · p75 $0
+next:      no-spend $5350 · after-median-spend $5350 · T plant $5950
+primary:   none:99%;AK-47:1%;Galil AR:0%
+equip:     armor 1% · helmet 1% · kit 0%
+utility:   smoke 3% · flash>=1 0% · flash2 0% · HE 0% · fire 1%
+loadout top3 (mass 1.0):
+  - none|Glock-18|a0h0k0|sm0fl0HE0fr0
+  - none|Glock-18|a0h0k0|sm1fl0HE0fr0
+  - none|none|a0h0k0|sm0fl0HE0fr0
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### T · lossReward $2400 · roundStartMoney $2950 · retained M4A4
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 21.3 · nearest $150 · estimate family
+economy:   entropy 0.053 bits
+spend:     p25 $0 · median $0 · p75 $0
+next:      no-spend $5350 · after-median-spend $5350 · T plant $5950
+primary:   none:99%;AK-47:1%;Galil AR:0%
+equip:     armor 1% · helmet 1% · kit 0%
+utility:   smoke 3% · flash>=1 0% · flash2 0% · HE 0% · fire 1%
+loadout top3 (mass 1.0):
+  - none|Glock-18|a0h0k0|sm0fl0HE0fr0
+  - none|Glock-18|a0h0k0|sm1fl0HE0fr0
+  - none|none|a0h0k0|sm0fl0HE0fr0
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### CT · lossReward $1900 · roundStartMoney $3800 · retained AK-47
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 26.3 · nearest $150 · estimate family
+economy:   entropy 1.056 bits
+spend:     p25 $200 · median $500 · p75 $800
+next:      no-spend $5700 · after-median-spend $5200 · T plant $
+primary:   M4A4:34%;M4A1-S:20%;none:20%
+equip:     armor 85% · helmet 76% · kit 52%
+utility:   smoke 75% · flash>=1 74% · flash2 1% · HE 74% · fire 58%
+loadout top3 (mass 0.84):
+  - M4A4|USP-S|a1h1k1|sm1fl1HE1fr1
+  - none|USP-S|a0h0k0|sm0fl0HE0fr0
+  - AK-47|USP-S|a1h1k1|sm1fl1HE1fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### CT · lossReward $1900 · roundStartMoney $3800 · retained M4A4
+
+```text
+support:   INTERPOLATED · exact_n 0 · effective_n 26.3 · nearest $150 · estimate family
+economy:   entropy 1.056 bits
+spend:     p25 $200 · median $500 · p75 $800
+next:      no-spend $5700 · after-median-spend $5200 · T plant $
+primary:   M4A4:34%;M4A1-S:20%;none:20%
+equip:     armor 85% · helmet 76% · kit 52%
+utility:   smoke 75% · flash>=1 74% · flash2 1% · HE 74% · fire 58%
+loadout top3 (mass 0.84):
+  - M4A4|USP-S|a1h1k1|sm1fl1HE1fr1
+  - none|USP-S|a0h0k0|sm0fl0HE0fr0
+  - AK-47|USP-S|a1h1k1|sm1fl1HE1fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### CT · lossReward $2400 · roundStartMoney $3650 · retained AK-47
+
+```text
+support:   OBSERVED · exact_n 1 · effective_n 20.1 · nearest $0 · estimate family
+economy:   entropy 0.625 bits
+spend:     p25 $300 · median $500 · p75 $800
+next:      no-spend $6050 · after-median-spend $5550 · T plant $
+primary:   M4A1-S:42%;M4A4:37%;AK-47:9%
+equip:     armor 91% · helmet 58% · kit 66%
+utility:   smoke 74% · flash>=1 68% · flash2 7% · HE 58% · fire 68%
+loadout top3 (mass 0.796):
+  - M4A1-S|USP-S|a1h1k1|sm1fl1HE1fr1
+  - M4A4|USP-S|a1h1k1|sm1fl1HE1fr1
+  - M4A4|USP-S|a1h0k1|sm1fl1HE1fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### CT · lossReward $2400 · roundStartMoney $3650 · retained M4A4
+
+```text
+support:   OBSERVED · exact_n 1 · effective_n 20.1 · nearest $0 · estimate family
+economy:   entropy 0.625 bits
+spend:     p25 $300 · median $500 · p75 $800
+next:      no-spend $6050 · after-median-spend $5550 · T plant $
+primary:   M4A1-S:42%;M4A4:37%;AK-47:9%
+equip:     armor 91% · helmet 58% · kit 66%
+utility:   smoke 74% · flash>=1 68% · flash2 7% · HE 58% · fire 68%
+loadout top3 (mass 0.796):
+  - M4A1-S|USP-S|a1h1k1|sm1fl1HE1fr1
+  - M4A4|USP-S|a1h1k1|sm1fl1HE1fr1
+  - M4A4|USP-S|a1h0k1|sm1fl1HE1fr1
+```
+
+**HUMAN POLICY DECISION:**
+[blank]
+
+### CT · lossReward $2400 · roundStartMoney $3300 · retained AWP
+
+```text
+support:   OBSERVED · exact_n 1 · effective_n 20.5 · nearest $0 · estimate exact
+economy:   entropy 0.841 bits
+spend:     p25 $0 · median $300 · p75 $700
+next:      no-spend $5700 · after-median-spend $5400 · T plant $
+primary:   AWP:73%;none:27%
+equip:     armor 73% · helmet 37% · kit 16%
+utility:   smoke 52% · flash>=1 33% · flash2 8% · HE 34% · fire 18%
+loadout top3 (mass 0.798):
+  - none|USP-S|a0h0k0|sm0fl0HE0fr0
+  - AWP|USP-S|a1h1k0|sm1fl1HE1fr1
+  - AWP|USP-S|a1h1k0|sm1fl0HE1fr0
 ```
 
 **HUMAN POLICY DECISION:**

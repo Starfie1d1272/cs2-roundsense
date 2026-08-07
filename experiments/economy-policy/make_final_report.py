@@ -146,8 +146,9 @@ md.append("- roundStartMoney live 获取 NEEDS RUNTIME VALIDATION（freeze 首�
 md.append("")
 md.append("## HUMAN POLICY DECISIONS")
 md.append("")
-md.append("- policy-review-table.csv / policy-review-atlas.md：仅 supported states（{} cards 覆盖 {} rows）。".format(
-    sum(1 for r in PR), len(PR)))
+md.append("- policy-review-table.csv：{} supported review-table rows（仅 OBSERVED/INTERPOLATED/INTERPOLATED_WIDE + purchase 非 LOW_SUPPORT）。".format(len(PR)))
+md.append("- policy-review-atlas.md：{} 张人工 review cards（no-retained 关键金额 + retained rifle/SMG/AWP 代表 states——非全量覆盖，供人工审阅）。".format(
+    sum(1 for _ in open(f"{RESULTS}/policy-review-atlas.md") if _.startswith("### "))))
 md.append("- HUMAN POLICY DECISION 字段留空——由人工逐卡填写。")
 md.append("")
 md.append("## RUNTIME VALIDATIONS")

@@ -1,8 +1,8 @@
-representation,leaves,grouped_oof_log_loss,grouped_oof_accuracy,grouped_oof_macroF1,mode
-surface_exact_lookup_OOF,-1,1.1807,0.8224,,generalization_OOF
-rule_tree_30leaves_OOF,30,0.4654,0.8216,0.7205,generalization_OOF
-rule_tree_60leaves_OOF,60,0.4794,0.8246,0.7291,generalization_OOF
-rule_tree_100leaves_OOF,100,0.5067,0.8248,0.7302,generalization_OOF
-rule_tree_30leaves_full,30,,,,compression_fidelity
-rule_tree_60leaves_full,60,,,,compression_fidelity
-rule_tree_100leaves_full,100,,,,compression_fidelity
+representation,leaves,grouped_oof_log_loss,grouped_oof_accuracy,grouped_oof_macroF1,avg_kl_bits,avg_tv,label_agreement,mode
+naive_empirical_exact_cell_lookup_OOF,-1,1.1807,0.8224,,,,,generalization_OOF
+rule_tree_30leaves_OOF,30,0.4654,0.8216,0.7205,,,,generalization_OOF
+rule_tree_60leaves_OOF,60,0.4794,0.8246,0.7291,,,,generalization_OOF
+rule_tree_100leaves_OOF,100,0.5067,0.8248,0.7302,,,,generalization_OOF
+rule_tree_30leaves_full,30,,,,0.1662,0.0848,0.9368,compression_fidelity
+rule_tree_60leaves_full,60,,,,0.1374,0.0707,0.9433,compression_fidelity
+rule_tree_100leaves_full,100,,,,0.1231,0.0634,0.9549,compression_fidelity
