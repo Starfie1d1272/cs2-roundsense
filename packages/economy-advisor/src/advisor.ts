@@ -1,5 +1,11 @@
 import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
-import { DEFAULT_RULES, type EconomyRules, price } from "./rules.js";
+import {
+  DEFAULT_RULES,
+  type EconomyRules,
+  price,
+  weaponClassOf,
+  ITEM_TO_WEAPON,
+} from "./rules.js";
 import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
 import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
@@ -12,21 +18,39 @@ export function smgFor(side: Side): ItemId {
   return side === "T" ? "mac10" : "mp9";
 }
 
-/** Same rifle family definition as goal semantics (not re-invented here). */
-const RIFLE_FAMILY = ["ak47", "m4a4", "m4a1s", "galil", "famas"];
-const SMG_FAMILY = ["mac10", "mp9", "mp7", "mp5sd", "ump45", "p90", "bizon"];
-const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+/** Side-specific budget rifle (V2 tier 1). */
+export function budgetRifleFor(side: Side): ItemId {
+  return side === "T" ? "galil" : "famas";
+}
 
+/** Side-specific paid pistol (V2 tier 3). */
+export function sidePistolFor(side: Side): ItemId {
+  return side === "T" ? "tec9" : "fiveseven";
+}
+
+/** Canonical weapon classes (from the weapon table — sg553/aug included). */
 function isRifle(item: ItemId): boolean {
-  return RIFLE_FAMILY.includes(item);
+  return weaponClassOf(item) === "rifle";
 }
 
 function isSmg(item: ItemId): boolean {
-  return SMG_FAMILY.includes(item);
+  return weaponClassOf(item) === "smg";
+}
+
+function isSniper(item: ItemId): boolean {
+  return weaponClassOf(item) === "sniper";
 }
 
 function isGrenade(item: ItemId): boolean {
   return (GRENADES as readonly string[]).includes(item);
+}
+
+/** Paid (non-default) pistols that can be bought as a secondary. */
+export const PAID_PISTOLS = ["p250", "dual", "tec9", "cz75", "fiveseven", "deagle", "r8"] as const;
+const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+
+function isPaidPistol(item: ItemId): boolean {
+  return (PAID_PISTOLS as readonly string[]).includes(item);
 }
 
 /** Post-purchase loadout = current inventory + planned purchases. */
@@ -35,6 +59,7 @@ export interface PostLoadout {
   secondary?: ItemId;
   armor: number;
   hasHelmet: boolean;
+  hasDefuseKit: boolean;
   grenades: ItemId[];
 }
 
@@ -48,15 +73,17 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
     secondary: inventory.secondary,
     armor: inventory.armor,
     hasHelmet: inventory.hasHelmet,
+    hasDefuseKit: inventory.hasDefuseKit,
     grenades: [...inventory.grenades],
   };
   for (const p of purchases) {
-    if (isRifle(p.item) || isSmg(p.item) || p.item === "awp") loadout.primary = p.item;
-    else if (p.item === "deagle") loadout.secondary = "deagle";
+    if (isRifle(p.item) || isSmg(p.item) || isSniper(p.item)) loadout.primary = p.item;
+    else if (isPaidPistol(p.item)) loadout.secondary = p.item;
     else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
       loadout.armor = 100;
       if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
-    } else if (isGrenade(p.item)) {
+    } else if (p.item === "defuse_kit") loadout.hasDefuseKit = true;
+    else if (isGrenade(p.item)) {
       for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
     }
   }
@@ -143,11 +170,18 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
       if (!hasSmg) add(item);
       targetCost += price(rules, item);
     } else if (item === "awp") {
+      // AWP is an exact-match primary (no other sniper substitutes)
       if (inventory.primary !== "awp") add("awp");
       targetCost += price(rules, "awp");
-    } else if (item === "deagle") {
-      if (inventory.secondary !== "deagle") add("deagle");
-      targetCost += price(rules, "deagle");
+    } else if (isSniper(item)) {
+      // other snipers (ssg08/scar20/g3sg1): any sniper primary satisfies
+      const hasSniper = inventory.primary !== null && inventory.primary !== undefined && isSniper(inventory.primary);
+      if (!hasSniper) add(item);
+      targetCost += price(rules, item);
+    } else if (isPaidPistol(item)) {
+      // exact secondary match (tec9/fiveseven/p250/deagle/...)
+      if (inventory.secondary !== item) add(item);
+      targetCost += price(rules, item);
     } else if (item === "kevlar") {
       // "具有护甲" — not a forced 100-armor refill; any armor satisfies it
       if (!hasArmor) add("kevlar");
@@ -155,6 +189,10 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     } else if (item === "kevlar_helmet") {
       if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
       targetCost += price(rules, "kevlar_helmet");
+    } else if (item === "defuse_kit") {
+      // CT-only kit (side legality enforced by callers); inventory-aware
+      if (!inventory.hasDefuseKit) add("defuse_kit");
+      targetCost += price(rules, "defuse_kit");
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
       if (owned > 0) ownedGrenades.set(item, owned - 1);

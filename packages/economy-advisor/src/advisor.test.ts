@@ -396,7 +396,7 @@ describe("armor condition handling (Review Fix)", () => {
 
 describe("goal fulfillment semantics (Final Convergence)", () => {
   const loadout = (over: Partial<import("./advisor.js").PostLoadout>): import("./advisor.js").PostLoadout => ({
-    primary: null, armor: 0, hasHelmet: false, grenades: [], ...over,
+    primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [], ...over,
   });
 
   it("AWP + armor → fulfills awp", () => {

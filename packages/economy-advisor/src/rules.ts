@@ -141,6 +141,29 @@ const WEAPON_TO_ITEM: Readonly<Record<string, ItemId>> = (() => {
   return rev;
 })();
 
+/** Canonical weapon class derived from the weapon table (no hand-written
+ * class table). weaponId → class (e.g. weapon_sg556 → "rifle"). */
+export const WEAPON_CLASS_BY_ID: Readonly<Record<string, string>> = (() => {
+  const out: Record<string, string> = {};
+  for (const [wid, meta] of Object.entries(WP.weapons)) {
+    out[wid] = meta.class;
+  }
+  return out;
+})();
+
+/**
+ * Canonical weapon class of an ItemId (via ITEM_TO_WEAPON → weapon table).
+ * - sg553 / aug resolve to "rifle" (canonical table — fixes the old
+ *   hand-written RIFLE_FAMILY that excluded them)
+ * - ssg08 / awp resolve to "sniper" (NOT rifle — consistent with the
+ *   professional evidence taxonomy)
+ * Non-weapon items (kevlar, grenades, defuse_kit) → undefined.
+ */
+export function weaponClassOf(item: ItemId): string | undefined {
+  const wid = ITEM_TO_WEAPON[item];
+  return wid ? WEAPON_CLASS_BY_ID[wid] : undefined;
+}
+
 /**
  * Resolve a GSI `player.weapons[*].name` value (e.g. "weapon_sg556") back to
  * the canonical ItemId. Single source of truth lives here (ITEM_TO_WEAPON).
