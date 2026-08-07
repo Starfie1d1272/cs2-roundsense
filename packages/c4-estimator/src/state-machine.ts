@@ -74,16 +74,26 @@ export class C4StateMachine {
       this.reset("map gameover", obs);
       return;
     }
-    if (
+    const roundChanged =
       obs.roundNumber !== undefined &&
       this.st.roundNumber !== null &&
-      obs.roundNumber !== this.st.roundNumber
-    ) {
+      obs.roundNumber !== this.st.roundNumber;
+    // Real GSI contract (Windows build 14174): `round.phase="over"` payloads
+    // already carry the NEXT round number in map.round. Terminal bomb state
+    // (exploded/defused) still belongs to the round we were tracking, so an
+    // `over` with a new number must NOT reset nor adopt the new identity —
+    // terminal processing below comes first. The new round identity is
+    // adopted only by the next non-over observation (freezetime/live).
+    if (roundChanged && obs.roundPhase !== "over") {
       this.reset(`round ${this.st.roundNumber} -> ${obs.roundNumber}`, obs);
-      this.st.roundNumber = obs.roundNumber;
-      return;
+      this.st.roundNumber = obs.roundNumber ?? null;
+      // Do NOT return here: this same observation is the first evidence of
+      // the new round. Let it flow into baseline establishment below — a
+      // freezetime observation re-baselines the new round, while a straight
+      // live/planted with no prior observation of the round stays guarded
+      // and yields baseline_only (mid-round protection preserved).
     }
-    if (obs.roundNumber !== undefined) this.st.roundNumber = obs.roundNumber;
+    if (obs.roundNumber !== undefined && obs.roundPhase !== "over") this.st.roundNumber = obs.roundNumber;
 
     // ── 2. Baseline establishment ───────────────────────────────────────────
     // A planted signal is only trusted if we have independent proof the round
@@ -212,7 +222,10 @@ export class C4StateMachine {
   private emit(e: Omit<C4Event, "roundNumber">, obs: C4Observation): void {
     const event: C4Event = {
       ...e,
-      roundNumber: obs.roundNumber ?? this.st.roundNumber,
+      // The tracked round identity wins over obs.roundNumber: on an `over`
+      // payload map.round already holds the NEXT round number, while the
+      // terminal event belongs to the tracked round.
+      roundNumber: this.st.roundNumber ?? obs.roundNumber ?? null,
       atMonotonicNs: obs.receivedAtMonotonicNs,
       atWallClock: obs.receivedAtWallClock,
     };
