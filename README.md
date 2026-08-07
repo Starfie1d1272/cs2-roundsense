@@ -6,6 +6,9 @@ Game State Integration（GSI），在终端给出两件事：
 - **C4 状态**：检测安放、估算剩余爆炸时间；
 - **个人经济建议**：按当前现金 / 连败 / 装备 / 下一轮目标给出购买方案（推荐 / 强起 / 保枪）。
 
+经济策略已用冻结的 IEM Cologne Major 2026 语料做过行为验证（见
+`docs/cologne-purchase-policy-audit.md`）；职业决策仅作为行为参考，不是最优真值。
+
 ## 结构
 
 ```text
