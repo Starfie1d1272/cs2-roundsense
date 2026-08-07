@@ -8,6 +8,10 @@ import { estimateRemainingDefault, type C4Event } from "@roundsense/c4-estimator
  * Domain truth stays in C4StateMachine: this layer never fabricates an
  * outcome. When the local estimate reaches zero the interval stops (no
  * endless "0.0s" spam) and the real terminal event decides the outcome.
+ *
+ * The only mutable C4 state here is the timer handle; plantedAtMonotonicNs
+ * is taken from the `planted` event and passed down as an immutable closure
+ * argument (never copied into a field).
  */
 export interface C4PresenterOptions {
   /** Injectable clock for countdown math (defaults to process.hrtime.bigint). */
@@ -21,19 +25,18 @@ export interface C4PresenterOptions {
 
 export class C4Presenter {
   private timer: unknown = null;
-  private plantedAtNs: bigint | null = null;
 
   constructor(private readonly opts: C4PresenterOptions) {}
 
   handleEvent(e: C4Event): void {
     if (e.type === "planted" && e.plantedAtMonotonicNs !== undefined) {
-      this.stopTimer(); // clear any previous timer WITHOUT touching the new value
-      this.plantedAtNs = e.plantedAtMonotonicNs;
-      this.printNow();
+      this.stopTimer(); // clear any previous timer
+      const plantedAtNs = e.plantedAtMonotonicNs;
+      this.render(plantedAtNs);
       const schedule = this.opts.schedule ?? ((fn: () => void, ms: number) => setInterval(fn, ms));
-      this.timer = schedule(() => this.tick(), 500);
+      this.timer = schedule(() => this.tick(plantedAtNs), 500);
     } else if (e.type === "baseline_only") {
-      // joined mid-round: plantedAt is unknown — never start a fake 41s timer
+      this.stopTimer(); // defensive: never keep a timer while joined mid-round
       this.opts.onOutput("C4 PLANTED — remaining time unknown (joined mid-round)");
     } else if (e.type === "defused" || e.type === "exploded" || e.type === "round_over" || e.type === "reset") {
       this.stopTimer();
@@ -48,27 +51,25 @@ export class C4Presenter {
     return this.timer !== null;
   }
 
-  stopTimer(): void {
+  private stopTimer(): void {
     if (this.timer !== null) {
       const cancel = this.opts.cancel ?? ((h: unknown) => clearInterval(h as NodeJS.Timeout));
       cancel(this.timer);
       this.timer = null;
     }
-    this.plantedAtNs = null;
   }
 
   private nowNs(): bigint {
     return this.opts.nowNs ? this.opts.nowNs() : process.hrtime.bigint();
   }
 
-  private printNow(): void {
-    if (this.plantedAtNs === null) return;
-    this.opts.onOutput(`C4 PLANTED — ${this.remainingText(this.nowNs())}`);
+  private render(plantedAtNs: bigint): void {
+    const out = estimateRemainingDefault(plantedAtNs, this.nowNs());
+    this.opts.onOutput(`C4 PLANTED — ${(Math.max(0, out.remainingMs) / 1000).toFixed(1)}s remaining`);
   }
 
-  private tick(): void {
-    if (this.plantedAtNs === null) return;
-    const out = estimateRemainingDefault(this.plantedAtNs, this.nowNs());
+  private tick(plantedAtNs: bigint): void {
+    const out = estimateRemainingDefault(plantedAtNs, this.nowNs());
     if (out.remainingMs <= 0) {
       // local estimate hit zero: stop refreshing; do NOT print "exploded" as
       // a domain fact — the real GSI terminal event decides the outcome.
@@ -76,10 +77,5 @@ export class C4Presenter {
       return;
     }
     this.opts.onOutput(`C4 PLANTED — ${(out.remainingMs / 1000).toFixed(1)}s remaining`);
-  }
-
-  private remainingText(nowNs: bigint): string {
-    const out = estimateRemainingDefault(this.plantedAtNs!, nowNs);
-    return `${(Math.max(0, out.remainingMs) / 1000).toFixed(1)}s remaining`;
   }
 }

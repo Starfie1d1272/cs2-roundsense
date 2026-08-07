@@ -24,22 +24,25 @@ const goal: NextRoundGoal = (NEXT_ROUND_GOALS as readonly string[]).includes(goa
 
 const presenter = new C4Presenter({ onOutput: (line) => console.log(`[${new Date().toLocaleTimeString()}] ${line}`) });
 const machine = new C4StateMachine((e) => presenter.handleEvent(e));
-let lastAdviceAt = 0;
+let lastAdviceAtNs: bigint | null = null;
 
 const receiver = createGsiReceiver({
   token,
   onPayload: (receipt) => {
     machine.observe(toC4Observation(receipt));
 
-    // Advice line: at most every 5s while a payload provides player state
-    const now = Date.now();
+    // Advice line: payload-driven throttle, at most every 5s measured on the
+    // receipt's monotonic clock (wall clock is only for display).
     const advice = tick(receipt.payload, { nextRoundGoal: goal });
-    if (advice && now - lastAdviceAt >= 5000) {
-      lastAdviceAt = now;
+    if (
+      advice &&
+      (lastAdviceAtNs === null || receipt.receivedAtMonotonicNs - lastAdviceAtNs >= 5_000_000_000n)
+    ) {
+      lastAdviceAtNs = receipt.receivedAtMonotonicNs;
       const ls = advice.lossStreakSource === "gsi" ? `loss=${advice.lossStreak}` : `loss=${advice.lossStreak}(assumed)`;
       const rec = advice.recommended ? `推荐: ${advice.recommended.label} $${advice.recommended.totalCost}` : "推荐: 无（资金不足）";
       const alts = advice.alternatives.slice(0, 2).map((x) => `${x.label} $${x.totalCost}`).join(" | ");
-      console.log(`[${new Date(now).toLocaleTimeString()}] ${advice.side} r${advice.roundNumber} money=$${advice.money} ${ls} goal=${advice.goal}`);
+      console.log(`[${new Date(receipt.receivedAtWallClock).toLocaleTimeString()}] ${advice.side} r${advice.roundNumber} money=$${advice.money} ${ls} goal=${advice.goal}`);
       console.log(`    ${rec}`);
       if (alts) console.log(`    备选: ${alts}`);
       if (advice.breaksGoal) console.log(`    ⚠ ${advice.breaksGoal}`);
