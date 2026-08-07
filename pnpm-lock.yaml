@@ -44,6 +44,9 @@ importers:
       '@roundsense/demo-oracle':
         specifier: workspace:*
         version: link:../../packages/demo-oracle
+      '@roundsense/economy-advisor':
+        specifier: workspace:*
+        version: link:../../packages/economy-advisor
       cs2-demo-format:
         specifier: ^3.1.0
         version: 3.1.0(zod@3.25.76)

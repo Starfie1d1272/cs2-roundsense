@@ -4,7 +4,7 @@ import type {
   PlayerEconomyRow,
   RoundRow,
 } from "./adapter.js";
-import { lossCountsForPackage } from "./loss-bonus-state.js";
+import { lossCountsForPackage, type LossBonusOptions } from "./loss-bonus-state.js";
 
 /**
  * Ground-truth queries over a v3 package (P1).
@@ -103,17 +103,17 @@ export function roundTruth(pkg: ParsedDemoPackage): RoundTruthRow[] {
 }
 
 /**
- * Team-level loss-bonus count per round — SINGLE SOURCE OF TRUTH lives in
- * ./loss-bonus-state.ts (standard model: mp_starting_losses=1, payout =
- * min(3400, 1400+500×count), half resets at r13 and each OT half; win
- * decrement UNRESOLVED — candidate models & evidence in that module).
- *
- * This wrapper keeps the legacy Map<string, number> shape ("round:teamA").
- * Values 0..3 are exact; 4 = capped interval [4, ∞).
+ * Modeled loss counts per round (NOT "truth" — win decrement is unresolved
+ * and the caller must select a candidate model explicitly). Keeps the
+ * legacy Map<string, number> shape ("round:teamA"). Values 0..3 exact under
+ * the model; 4 = model saturation (mp_consecutive_loss_max=4 assumption).
  */
-export function teamLossStreakPerRound(pkg: ParsedDemoPackage): Map<string, number> {
+export function modeledLossCountsPerRound(
+  pkg: ParsedDemoPackage,
+  opts: LossBonusOptions,
+): Map<string, number> {
   const out = new Map<string, number>();
-  for (const [r, v] of lossCountsForPackage(pkg, { winDecrement: "count-dep" })) {
+  for (const [r, v] of lossCountsForPackage(pkg, opts)) {
     out.set(`${r}:teamA`, v.teamA);
     out.set(`${r}:teamB`, v.teamB);
   }

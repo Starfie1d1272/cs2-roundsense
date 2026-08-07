@@ -48,6 +48,8 @@
     "zeus": "weapon_taser",
     "knife": "weapon_knife",
     "knife_karambit": "weapon_knife",
+    "knife_butterfly": "weapon_knife",
+    "knife_t": "weapon_knife",
     "hegrenade": "weapon_hegrenade",
     "molotov": "weapon_molotov",
     "incgrenade": "weapon_incgrenade",
@@ -87,7 +89,9 @@
       "weaponType": "WEAPONTYPE_KNIFE",
       "aliases": [
         "knife",
-        "knife_karambit"
+        "knife_karambit",
+        "knife_butterfly",
+        "knife_t"
       ]
     },
     "weapon_deagle": {

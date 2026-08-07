@@ -99,7 +99,6 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       lossStreak: input.lossStreak,
       kills: input.killsThisRound,
       bombPlantedThisRound: input.bombPlantedThisRound ?? false,
-      pistolRound: input.roundNumber === 1 || input.roundNumber === 13, // C10 (MR12: r13 = second-half pistol)
       ctTeamKillsOnTs: input.ctTeamKillsOnTs, // C5: CT shared team award
       rules,
     };
@@ -136,7 +135,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       input.inventory.survivedLastRound
         ? "本回合存活：保留装备下回合无需重购（未折价）"
         : "若本回合阵亡，装备不保留",
-      "奖金数值为 provisional（见规则文件 sources/notes）",
+      "数值规则（回合奖励/连败奖金/价格）已通过语料整数账本验证（rules.status=verified, statusScope=numeric-rules）；lossStreak 实时来源（GSI consecutive_round_losses）仍 runtime-unverified；若调用方提供 lossStreak，投影按该输入计算；win transition 未决不影响本投影",
     ];
 
     return {

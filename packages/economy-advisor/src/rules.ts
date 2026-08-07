@@ -37,6 +37,8 @@ export const economyRulesSchema = z.object({
     plantBonusPlayer: z.number().int().nonnegative(),
     defuseBonusPlayer: z.number().int().nonnegative(),
     ctTeamKillReward: z.number().int().nonnegative(),
+    /** −$300 per teamkill (cash_player_killed_teammate) — single source */
+    tkPenalty: z.number().int().nonnegative(),
   }),
   /** class-level kill rewards are DERIVED from the weapon table at load
    * time (mode of the class's weapons); no hand-written duplicates. */

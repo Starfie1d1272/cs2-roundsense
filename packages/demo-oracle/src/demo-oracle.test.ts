@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ROUND_TYPES } from "@roundsense/shared-types";
 import { economyTypeSchema } from "cs2-demo-format";
 import { loadDemoPackage } from "./adapter.js";
-import { bombTruth, economyTruth, roundTruth, teamLossStreakPerRound } from "./truth.js";
+import { bombTruth, economyTruth, roundTruth, modeledLossCountsPerRound } from "./truth.js";
 import { gapReport } from "./gaps.js";
 
-const TINY = join(process.cwd(), "fixtures", "demo-format", "tiny-v3.zip");
+const TINY = join(dirname(fileURLToPath(import.meta.url)), "../../../fixtures/demo-format/tiny-v3.zip");
 
 describe("demo-oracle adapter", () => {
   it("parses the committed tiny v3 package", async () => {
@@ -51,7 +52,7 @@ describe("demo-oracle truth queries", () => {
 
   it("derives team loss counts from round winners (standard model, count-dep)", async () => {
     const pkg = await loadDemoPackage(TINY);
-    const streaks = teamLossStreakPerRound(pkg);
+    const streaks = modeledLossCountsPerRound(pkg, { winDecrement: "count-dep" });
     // consistency: the wrapper agrees with the canonical simulate() on every round
     const { simulateLossCounts } = await import("./loss-bonus-state.js");
     const sim = simulateLossCounts(pkg.files.rounds, { winDecrement: "count-dep" });

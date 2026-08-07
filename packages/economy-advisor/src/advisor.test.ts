@@ -64,10 +64,10 @@ describe("projection", () => {
     expect(ct.lossWithPlant).toBe(ct.loss);
   });
 
-  it("pistol-round loss pays 1900 instead of the streak table (C10)", () => {
-    const base = { money: 2000, spendNow: 0, side: "T" as const, lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
-    const pistol = projectNextRoundMoney({ ...base, pistolRound: true });
-    const regular = projectNextRoundMoney({ ...base, pistolRound: false });
+  it("first loss of a half pays 1900 via lossStreak=1 (mp_starting_losses=1)", () => {
+    const base = { money: 2000, spendNow: 0, side: "T" as const, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
+    const pistol = projectNextRoundMoney({ ...base, lossStreak: 1 });
+    const regular = projectNextRoundMoney({ ...base, lossStreak: 0 });
     expect(pistol.loss).toBe(regular.loss + 500); // 1900 vs 1400
     expect(pistol.loss).toBe(2000 + 1900);
   });

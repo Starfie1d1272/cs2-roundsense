@@ -1,5 +1,5 @@
 import { loadDemoPackage } from "./adapter.js";
-import { bombTruth, economyTruth, roundTruth, teamLossStreakPerRound } from "./truth.js";
+import { bombTruth, economyTruth, roundTruth, modeledLossCountsPerRound } from "./truth.js";
 import { gapReport } from "./gaps.js";
 
 /**
@@ -29,7 +29,7 @@ export async function inspect(zipPath: string): Promise<void> {
     console.log(`  r${e.roundNumber} ${e.teamResult ?? "?"}: startMoney=${e.startMoney} spent=${e.moneySpent} eq=${e.equipmentValue} type=${e.type} primary=${e.primaryWeapon ?? "-"} secondary=${e.secondaryWeapon}`);
   }
 
-  const streaks = teamLossStreakPerRound(pkg);
+  const streaks = modeledLossCountsPerRound(pkg, { winDecrement: "count-dep" });
   console.log(`lossStreak: r1 teamA=${streaks.get("1:teamA")} teamB=${streaks.get("1:teamB")}  r2 teamA=${streaks.get("2:teamA")} teamB=${streaks.get("2:teamB")}`);
 
   console.log("gaps:");

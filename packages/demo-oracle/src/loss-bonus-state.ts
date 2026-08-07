@@ -12,10 +12,12 @@
  * payout(lossCount) = min(3400, 1400 + 500 × lossCount)
  *
  * State representation:
- *   count = 0..3 exact; count = 4 means "capped": internal state ≥ 4 is NOT
- *   identifiable from payouts (3400 is the max tier) — treat as an interval
- *   [4, ∞). Payouts at 3400 must never be used to infer an exact internal
- *   count (see docs/experiments/loss-counter-runtime.md).
+ *   MODEL layer: scalar 0..4, saturated at 4 per mp_consecutive_loss_max=4
+ *   (a MODEL assumption — the scalar is not an epistemic interval).
+ *   OBSERVATION layer: payout 3400 is NOT uniquely identifiable to an
+ *   internal count (≥4 collapses); payoutTierOf(3400) returns null.
+ *   Payouts at 3400 must never be used to infer an exact internal count
+ *   (see docs/experiments/loss-counter-runtime.md).
  *
  * Win decrement is UNRESOLVED at rule level (no convar exposes it; game code
  * not public). Final corpus audit (2026-08-06, 202 replay matches, 77 clean
@@ -28,10 +30,10 @@
  *     (previousLossPayoutTier + 1 − nextLossPayoutTier)
  *   - capped state (count ≥ 4): NO window exists (3400 unidentifiable) —
  *     cap decrement remains runtime-unverified
- * The `winDecrement` option selects among candidate models; default
- * `count-dep` matches the corpus-derived non-cap decrement (2) and timeout
- * (2); its cap branch (cap −1) is provisional. None is certified without a
- * direct GSI/netvar read (controlled test planned).
+ * The win decrement model is UNRESOLVED; every cross-win simulation must
+ * select a candidate model EXPLICITLY (no hidden default).
+ * None is certified without a direct GSI/netvar read (controlled test
+ * planned).
  *
  * Half resets: MR12 second half at r13; each OT half every 3 rounds from
  * r25 (r25, r28, r31, …). The reset round's opener ALSO resets economy to
@@ -43,10 +45,12 @@ export const MP_STARTING_LOSSES = 1;
 export const LOSS_BONUS_BASE = 1400;
 export const LOSS_BONUS_INCREMENT = 500;
 export const LOSS_BONUS_CAP = 3400;
-/** count values ≥ this are the capped interval [4, ∞) */
+/** MODEL saturation bound (mp_consecutive_loss_max=4). A model assumption:
+ * the scalar 4 is NOT an epistemic interval [4,∞) — observationally the
+ * 3400 payout only tells you the count is ≥ 4. */
 export const CAP_COUNT = 4;
 
-export type LossCount = number; // 0..3 exact, ≥4 = capped interval
+export type LossCount = number; // 0..3 exact under the model; 4 = model saturation
 
 export type WinType = "elim" | "bomb" | "timeout";
 
@@ -63,22 +67,24 @@ export function lossBonusPayout(count: LossCount | number): number {
 
 export interface LossBonusOptions {
   /**
-   * Win decrement model. UNRESOLVED — corpus hypotheses only.
-   *  - "standard-1": win −1 always (matches cfg spirit, fails qf4-m3 r6)
-   *  - "timeout-2": time_ran_out win −2, others −1 (QF1-m1)
+   * Win decrement model — REQUIRED. UNRESOLVED; corpus hypotheses only.
+   *  - "standard-1": win −1 always
+   *  - "timeout-2": time_ran_out win −2, others −1
    *  - "count-dep": timeout −2; normal −1 at cap (count ≥ 4), else −2
    *  - "all-2": every win −2
+   * Callers must pass it explicitly; there is no default model.
    */
-  winDecrement?: "standard-1" | "timeout-2" | "count-dep" | "all-2";
+  winDecrement: "standard-1" | "timeout-2" | "count-dep" | "all-2";
   /** rounds at which counters reset to mp_starting_losses (default MR12+OT) */
   resetRounds?: (roundNumber: number) => boolean;
   initialCount?: number;
 }
 
-export const DEFAULT_LOSS_OPTIONS: Required<Omit<LossBonusOptions, "resetRounds">> & {
+/** Defaults for the SOURCE-VERIFIED primitives only (no win model). */
+export const DEFAULT_LOSS_OPTIONS: {
+  initialCount: number;
   resetRounds: (halfRound: number) => boolean;
 } = {
-  winDecrement: "count-dep",
   initialCount: MP_STARTING_LOSSES,
   resetRounds: (r) => r === 13 || (r >= 25 && (r - 25) % 3 === 0),
 };
@@ -98,7 +104,7 @@ export function isResetRound(roundNumber: number, resetRounds: (r: number) => bo
  * payout tier + 1 (see candidateInternalWinDecrement).
  */
 export function payoutTierOf(payout: number): number | null {
-  if (payout >= LOSS_BONUS_CAP) return null;
+  if (payout === LOSS_BONUS_CAP) return null; // observationally unidentifiable
   const tier = (payout - LOSS_BONUS_BASE) / LOSS_BONUS_INCREMENT;
   if (!Number.isInteger(tier) || tier < 0) throw new Error(`non-table loss payout: ${payout}`);
   return tier;
@@ -116,7 +122,7 @@ export function candidateInternalWinDecrement(prevTier: number, nextTier: number
 
 /** Advance the counter after one round for the winning team. */
 export function nextLossCountAfterWin(prev: LossCount, winType: WinType, opts: LossBonusOptions): LossCount {
-  const model = opts.winDecrement ?? DEFAULT_LOSS_OPTIONS.winDecrement;
+  const model = opts.winDecrement;
   let dec: number;
   switch (model) {
     case "standard-1":
@@ -152,7 +158,7 @@ export interface LossCountsAtRound {
  */
 export function simulateLossCounts(
   rounds: readonly { roundNumber: number; winnerTeamKey: string; endReason: string }[],
-  opts: LossBonusOptions = {},
+  opts: LossBonusOptions,
 ): Map<number, LossCountsAtRound> {
   const resetRounds = opts.resetRounds ?? DEFAULT_LOSS_OPTIONS.resetRounds;
   const initial = opts.initialCount ?? DEFAULT_LOSS_OPTIONS.initialCount;
@@ -173,8 +179,8 @@ export function simulateLossCounts(
   return out;
 }
 
-/** Demo-package convenience wrapper. */
-export function lossCountsForPackage(pkg: ParsedDemoPackage, opts: LossBonusOptions = {}): Map<number, LossCountsAtRound> {
+/** Demo-package convenience wrapper. The win-decrement model is REQUIRED. */
+export function lossCountsForPackage(pkg: ParsedDemoPackage, opts: LossBonusOptions): Map<number, LossCountsAtRound> {
   const rounds = [...pkg.files.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
   return simulateLossCounts(rounds, opts);
 }

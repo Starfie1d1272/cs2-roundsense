@@ -205,6 +205,8 @@ const ALIASES: Record<string, string> = {
   zeus: "weapon_taser",
   knife: "weapon_knife",
   knife_karambit: "weapon_knife", // karambit is a knife skin — kill = knife 1500
+  knife_butterfly: "weapon_knife", // butterfly knife skin
+  knife_t: "weapon_knife", // default T knife
   hegrenade: "weapon_hegrenade",
   molotov: "weapon_molotov",
   incgrenade: "weapon_incgrenade",

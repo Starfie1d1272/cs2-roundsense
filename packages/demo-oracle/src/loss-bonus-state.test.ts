@@ -24,7 +24,7 @@ describe("loss-bonus-state (single source of truth, C2)", () => {
       R(1, "teamA", "t_win"), // teamB loses pistol round
       R(2, "teamA", "target_bombed"), // teamB loses again
       R(3, "teamA", "t_win"),
-    ]);
+    ], { winDecrement: "count-dep" });
     expect(sim.get(1)!.teamB).toBe(1); // payout 1900
     expect(sim.get(2)!.teamB).toBe(2); // payout 2400
     expect(sim.get(3)!.teamB).toBe(3); // payout 2900
@@ -92,7 +92,7 @@ describe("loss-bonus-state (single source of truth, C2)", () => {
       R(24, "teamB", "bomb_defused"), // teamA loses before OT: count 2
       R(25, "teamA", "t_win"), // OT half reset → teamB count 1
       R(28, "teamA", "t_win"), // second OT half reset → teamB count 1
-    ]);
+    ], { winDecrement: "count-dep" });
     expect(sim.get(12)!.teamA).toBe(1); // before r12 (half-start count)
     expect(sim.get(13)!.teamB).toBe(1); // half reset → pistol loss pays 1900
     expect(sim.get(24)!.teamA).toBe(0); // r13 win (teamA) dropped its count to 0
@@ -127,6 +127,8 @@ describe("payoutTierOf", () => {
     expect(payoutTierOf(1900)).toBe(1);
     expect(payoutTierOf(2400)).toBe(2);
     expect(payoutTierOf(2900)).toBe(3);
+    expect(() => payoutTierOf(3401)).toThrow();
+    expect(() => payoutTierOf(5000)).toThrow();
   });
 
   it("returns null for the capped payout (3400) — NOT a unique tier", () => {

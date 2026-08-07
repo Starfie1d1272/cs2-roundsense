@@ -11,9 +11,9 @@ import type { KillAttribution, ProjectionBranches } from "./types.js";
  * Semantics:
  * - `lossStreak` is the team's consecutive losses BEFORE this round (GSI
  *   `consecutive_round_losses`); the loss bonus index follows the fandom
- *   table "Losing (loss count: N)" (C2, corpus-verified).
- * - A PISTOL-ROUND loss pays $1900 instead of the streak table (C10,
- *   corpus-verified): pass `pistolRound = roundNumber === 1 || 14`.
+ *   table "Losing (loss count: N)" (C2, corpus-verified). With
+ *   mp_starting_losses=1 the first loss of a half has lossStreak=1 and
+ *   naturally pays $1900 — no pistol-round special case.
  * - `lossWithPlant` applies only to T with a plant this round (C3,
  *   corpus-approximate $600).
  * - The projection does NOT model: T surviving a time-out loss (no reward,
@@ -27,8 +27,6 @@ export interface ProjectionInput {
   lossStreak: number;
   kills: KillAttribution[];
   bombPlantedThisRound: boolean;
-  /** current round is a pistol round (1 or 14) — loss pays 1900 (C10) */
-  pistolRound?: boolean;
   /** CT team kills of T this round — every CT player gets +$50 each (C5,
    *  corpus-verified 2026-08-06; server-config dependent, see rules notes) */
   ctTeamKillsOnTs?: number;
@@ -41,7 +39,7 @@ export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranche
     input.side === "CT" ? rules.roundRewards.ctTeamKillReward * (input.ctTeamKillsOnTs ?? 0) : 0;
   const base = (reward: number) =>
     Math.min(rules.maxMoney, Math.max(0, input.money - input.spendNow + reward + teamAward + killRewardsTotal(input)));
-  const lossReward = input.pistolRound ? 1900 : lossBonus(rules, input.lossStreak);
+  const lossReward = lossBonus(rules, input.lossStreak);
   const loss = base(lossReward);
   const lossWithPlant =
     input.side === "T" && input.bombPlantedThisRound ? base(lossReward + rules.roundRewards.plantBonusT) : loss;

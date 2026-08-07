@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@roundsense/demo-oracle": "workspace:*",
+    "@roundsense/economy-advisor": "workspace:*",
     "cs2-demo-format": "^3.1.0"
   }
 }
