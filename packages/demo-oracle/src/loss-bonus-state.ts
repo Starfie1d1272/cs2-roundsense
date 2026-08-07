@@ -36,8 +36,10 @@
  * planned).
  *
  * Half resets: MR12 second half at r13; each OT half every 3 rounds from
- * r25 (r25, r28, r31, …). The reset round's opener ALSO resets economy to
- * $800 — the income-difference ledger must skip those rounds.
+ * r25 (r25, r28, r31, …). The reset round's opener has a NON-INCOME cash
+ * reset (regulation: $800; OT: server/match profile — mp_overtime_startmoney
+ * 10000 or carry-over, corpus 42/42) — the income-difference ledger must
+ * skip those rounds.
  */
 import type { ParsedDemoPackage, RoundRow } from "./adapter.js";
 
@@ -185,8 +187,9 @@ export function lossCountsForPackage(pkg: ParsedDemoPackage, opts: LossBonusOpti
   return simulateLossCounts(rounds, opts);
 }
 
-/** Round opener whose startMoney is a reset (economy back to $800) — the
- * income-difference ledger must skip these rounds. */
+/** Round opener whose startMoney is a NON-INCOME reset (regulation $800; OT
+ * = server/match profile) — the income-difference ledger must skip these
+ * rounds. Loss counters reset independently (universal rule). */
 export function isEconomyResetRound(roundNumber: number): boolean {
   return roundNumber === 13 || (roundNumber >= 25 && (roundNumber - 25) % 3 === 0);
 }
