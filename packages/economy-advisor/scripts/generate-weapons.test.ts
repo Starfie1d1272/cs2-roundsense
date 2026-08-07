@@ -60,20 +60,21 @@ describe("weapons.vdata generation", () => {
 });
 
 describe("knife event-name completeness (CSWeaponNameID.h)", () => {
-  // Sentinel list of every knife/bayonet enum entry at GameTracking-CS2
-  // 2e606a0b. If Valve adds a new knife ID, knifeEventNamesFromHeader emits
-  // it and this test FAILS — the alias map must be regenerated, never
-  // silently incomplete.
-  const KNIFE_IDS = [
-    "bayonet", "knife", "knife_butterfly", "knife_canis", "knife_cord", "knife_css",
-    "knife_falchion", "knife_flip", "knife_gut", "knife_gypsy_jackknife",
-    "knife_karambit", "knife_kukri", "knife_m9_bayonet", "knife_outdoor",
-    "knife_push", "knife_skeleton", "knife_stiletto", "knife_survival_bowie",
-    "knife_t", "knife_tactical", "knife_ursus", "knife_widowmaker",
-  ];
+  // Pinned REAL enum fixture extracted from GameTracking-CS2 2e606a0b
+  // DumpSource2/schemas/client/CSWeaponNameID.h (fixtures/csweaponnameid/
+  // knife-ids.txt). When the GameTracking revision is upgraded, diff this
+  // fixture: a new knife ID appears here → the derived-alias test FAILS
+  // until the generator output is regenerated. This is the honest version
+  // of "new Valve knife IDs expose the gap" — it requires the pinned
+  // fixture input, not magic.
+  const KNIFE_IDS = readFileSync(
+    resolve(import.meta.dirname, "../../../fixtures/csweaponnameid/knife-ids.txt"),
+    "utf8",
+  ).split("\n").map((s) => s.trim()).filter(Boolean).map((id) => id.replace("WEAPONID_", "").toLowerCase());
   const header = KNIFE_IDS.map((id) => `WEAPONID_${id.toUpperCase()},`).join("\n");
 
-  it("derives exactly the current knife/bayonet family from the enum", () => {
+  it("derives exactly the pinned knife/bayonet family from the real enum fixture", () => {
+    expect(KNIFE_IDS.length).toBeGreaterThanOrEqual(22); // 22 at 2e606a0b
     expect(knifeEventNamesFromHeader(header)).toEqual([...KNIFE_IDS].sort());
   });
 

@@ -67,14 +67,14 @@
     "forceMinSpend": 2000
   },
   "corpusValidation": {
-    "method": "L1 integer income ledger (startMoney − moneySpent reconstruction) + L4 replay-native cash-transition ledger (8 Hz replay money stream, per-transition event attribution)",
+    "method": "L1 integer income ledger (startMoney − moneySpent reconstruction) + L4 replay-native cash-transition ledger (8 Hz replay money stream, STRICT per-transition attribution: unknown by default, exact actor+tick+amount or exact event-sum required)",
     "run": "2026-08-07, Cologne 202 replay matches + 59 mini (no replay)",
     "results": {
       "L1": "summary-ledger exact reconciliation rate 91.0% (202 replay 90.6%) — method limitation, NOT rule accuracy",
-      "L1-nonzero-decomp": "3653/3653 replay-explained (summaryFieldLimitation: buy-window purchase/refund absent from moneySpent snapshot); 887 noReplay; 0 real unexplained; 0 sampling ambiguous",
-      "L4": "85,599 cash transitions, 100.0% explained (69.6% exact + 30.4% compound); $0 unexplained; 8 Hz aliasing fully decomposable",
+      "L1-nonzero-decomp": "3653/3653 replay-clean (summaryFieldLimitation: buy-window transactions absent from moneySpent snapshot); 887 noReplay",
+      "L4": "93,506 cash transitions (all replay rounds): 95.2% exact event attribution (89.0% exact + 6.2% compound-exact), 4.6% buy-window (direction known), 0.1% sampling-ambiguous (90), 0.02% unexplained (20: kills.json attribution gaps, unknown -50 mechanism)",
       "L3": "time_ran_out T survivor: 354 samples, 0 loss-payout violations",
-      "OT": "84 OT halves: 42 reset to 10000 (mp_overtime_startmoney), 42 carry-over — server/match profile, 12500 not observed"
+      "OT": "62 OT halves (Cologne): strict alternating pattern — odd openers (r25/r31/r37/r43) carry-over, even openers (r28/r34/r40/r46) reset to 10000; 0 exceptions; 12500 not observed; server/match profile"
     }
   },
   "notes": {
