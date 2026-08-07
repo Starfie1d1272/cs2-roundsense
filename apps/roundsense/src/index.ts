@@ -22,6 +22,19 @@ const port = args.includes("--port") ? Number(args[args.indexOf("--port") + 1]) 
 const goalArg = args.includes("--goal") ? args[args.indexOf("--goal") + 1] : "rifle_armor";
 const goal: NextRoundGoal = (NEXT_ROUND_GOALS as readonly string[]).includes(goalArg) ? (goalArg as NextRoundGoal) : "rifle_armor";
 
+/** App-level item display names (UI concern — NOT economy domain rules). */
+const ITEM_DISPLAY: Record<string, string> = {
+  ak47: "AK47", m4a4: "M4A4", m4a1s: "M4A1-S", galil: "Galil", famas: "FAMAS",
+  awp: "AWP", sg553: "SG553", aug: "AUG", ssg08: "SSG08",
+  mac10: "MAC-10", mp9: "MP9", mp7: "MP7", mp5sd: "MP5-SD", ump45: "UMP45", p90: "P90", bizon: "PP-Bizon",
+  deagle: "沙鹰", kevlar: "半甲", kevlar_helmet: "头盔升级", smoke: "烟雾弹", flash: "闪光弹", he: "手雷", molotov: "燃烧瓶", incendiary: "燃烧弹",
+};
+
+function purchaseText(items: { item: string; quantity: number }[]): string {
+  if (items.length === 0) return "无需购买";
+  return items.map((p) => `${ITEM_DISPLAY[p.item] ?? p.item}${p.quantity > 1 ? `×${p.quantity}` : ""}`).join("、");
+}
+
 const presenter = new C4Presenter({ onOutput: (line) => console.log(`[${new Date().toLocaleTimeString()}] ${line}`) });
 const machine = new C4StateMachine((e) => presenter.handleEvent(e));
 let lastAdviceAtNs: bigint | null = null;
@@ -44,6 +57,7 @@ const receiver = createGsiReceiver({
       const alts = advice.alternatives.slice(0, 2).map((x) => `${x.label} $${x.totalCost}`).join(" | ");
       console.log(`[${new Date(receipt.receivedAtWallClock).toLocaleTimeString()}] ${advice.side} r${advice.roundNumber} money=$${advice.money} ${ls} goal=${advice.goal}`);
       console.log(`    ${rec}`);
+      if (advice.recommended) console.log(`    需买: ${purchaseText(advice.recommended.purchases)}`);
       if (alts) console.log(`    备选: ${alts}`);
       if (advice.breaksGoal) console.log(`    ⚠ ${advice.breaksGoal}`);
     }

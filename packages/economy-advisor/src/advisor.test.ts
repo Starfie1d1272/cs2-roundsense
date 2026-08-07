@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_RULES, economyRulesSchema, lossBonus, price } from "./rules.js";
 import { projectNextRoundMoney, killRewardsTotal, goalTargetCost } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
-import { recommend } from "./advisor.js";
-import type { AdvisorInput } from "./types.js";
+import { recommend, fulfillsLoadoutGoal, resultingLoadout, planPurchases } from "./advisor.js";
+import type { AdvisorInput, InventoryState } from "./types.js";
 
 function input(partial: Partial<AdvisorInput>): AdvisorInput {
   return {
@@ -209,5 +209,138 @@ describe("recommend()", () => {
     const out = recommend(input({ side: "CT", money: 4000, nextRoundGoal: "rifle_armor" }));
     const rifle = out.recommended!.purchases.find((p) => p.item === "m4a4" || p.item === "ak47");
     expect(rifle?.item).toBe("m4a4");
+  });
+});
+
+describe("inventory-aware planning (Batch 2)", () => {
+  const rifleInv: InventoryState = { primary: "m4a4", hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+  const rifleArmorInv: InventoryState = { primary: "m4a4", hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+  const rifleHelmetInv: InventoryState = { primary: "m4a4", hasArmor: true, hasHelmet: true, hasDefuseKit: false, grenades: [] };
+  const awpArmorInv: InventoryState = { primary: "awp", hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+
+  const findScheme = (out: ReturnType<typeof recommend>, id: string) =>
+    [out.recommended, ...out.alternatives].find((s) => s?.id === id) ?? null;
+
+  it("1. empty inventory preserves baseline behavior", () => {
+    // empty inventory: target == incremental — direct planner check
+    const plan = planPurchases(
+      { primary: null, hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] },
+      [
+        { item: "ak47", quantity: 1 },
+        { item: "kevlar_helmet", quantity: 1 },
+      ],
+      DEFAULT_RULES,
+    );
+    expect(plan.purchases.map((p) => p.item)).toEqual(expect.arrayContaining(["ak47", "kevlar_helmet"]));
+    expect(plan.totalCost).toBe(3700);
+    expect(plan.targetCost).toBe(3700);
+    // recommend() still offers it as an unaffordable plan at $3400
+    const out = recommend(input({ money: 3400, nextRoundGoal: "rifle_armor" }));
+    expect(out.recommended!.totalCost).toBeLessThanOrEqual(3400);
+  });
+
+  it("2. owns rifle, target rifle+armor → rifle removed from purchases", () => {
+    const out = recommend(input({ money: 2000, inventory: rifleInv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet");
+    expect(plan).not.toBeNull();
+    expect(plan!.purchases.map((p) => p.item)).not.toContain("ak47");
+    expect(plan!.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(plan!.totalCost).toBe(1000); // no armor yet → full helmet price
+    expect(plan!.targetCost).toBe(3700); // combat value unchanged
+  });
+
+  it("3. owns rifle + armor, target rifle+helmet → only helmet upgrade, $350", () => {
+    const out = recommend(input({ money: 500, inventory: rifleArmorInv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet");
+    expect(plan!.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(plan!.totalCost).toBe(350);
+    // B6: incremental affordability — $500 covers the $350 upgrade
+    expect(plan!.affordable).toBe(true);
+  });
+
+  it("4. owns rifle + helmet, target rifle+helmet → $0", () => {
+    const out = recommend(input({ money: 100, inventory: rifleHelmetInv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet");
+    expect(plan!.purchases).toEqual([]);
+    expect(plan!.totalCost).toBe(0);
+    expect(plan!.affordable).toBe(true);
+  });
+
+  it("5. owns smoke, target smoke+flash → flash only", () => {
+    const inv: InventoryState = { ...rifleArmorInv, grenades: ["smoke"] };
+    const out = recommend(input({ money: 2000, inventory: inv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet-util");
+    expect(plan).not.toBeNull();
+    expect(plan!.purchases.map((p) => p.item)).not.toContain("smoke");
+    expect(plan!.purchases).toEqual(expect.arrayContaining([{ item: "flash", quantity: 1 }]));
+  });
+
+  it("6. owns flash×2, target smoke+flash → smoke only (multiset)", () => {
+    const inv: InventoryState = { ...rifleArmorInv, grenades: ["flash", "flash"] };
+    const out = recommend(input({ money: 2000, inventory: inv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet-util");
+    expect(plan!.purchases.map((p) => p.item)).not.toContain("flash");
+    expect(plan!.purchases).toEqual(expect.arrayContaining([{ item: "smoke", quantity: 1 }]));
+  });
+
+  it("7. planPurchases subtracts grenade quantities (multiset, no set dedupe)", () => {
+    const target = [
+      { item: "smoke" as const, quantity: 1 },
+      { item: "flash" as const, quantity: 1 },
+    ];
+    const haveTwoFlashes = planPurchases({ ...rifleArmorInv, grenades: ["flash", "flash"] }, target, DEFAULT_RULES);
+    expect(haveTwoFlashes.purchases).toEqual([{ item: "smoke", quantity: 1 }]);
+    const haveSmoke = planPurchases({ ...rifleArmorInv, grenades: ["smoke"] }, target, DEFAULT_RULES);
+    expect(haveSmoke.purchases).toEqual([{ item: "flash", quantity: 1 }]);
+    const haveBoth = planPurchases({ ...rifleArmorInv, grenades: ["smoke", "flash"] }, target, DEFAULT_RULES);
+    expect(haveBoth.purchases).toEqual([]);
+  });
+
+  it("8. resulting-loadout goal fulfillment (B5)", () => {
+    // already have rifle, buying kevlar → rifle_armor fulfilled
+    const withKevlar = resultingLoadout(rifleInv, [{ item: "kevlar", quantity: 1 }]);
+    expect(fulfillsLoadoutGoal("rifle_armor", withKevlar)).toBe(true);
+    // already have rifle + armor, buy nothing → still fulfilled
+    expect(fulfillsLoadoutGoal("rifle_armor", resultingLoadout(rifleArmorInv, []))).toBe(true);
+    // AWP + armor → awp goal fulfilled
+    expect(fulfillsLoadoutGoal("awp", resultingLoadout(awpArmorInv, []))).toBe(true);
+    // armor only, buy nothing → NOT fulfilled
+    const armorOnly = resultingLoadout({ primary: null, hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] }, []);
+    expect(fulfillsLoadoutGoal("rifle_armor", armorOnly)).toBe(false);
+  });
+
+  it("9. breaking goal: buying only kevlar with an owned rifle does NOT break rifle_armor", () => {
+    const out = recommend(input({ money: 700, inventory: rifleInv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-kevlar");
+    expect(plan).not.toBeNull();
+    expect(plan!.purchases).toEqual([{ item: "kevlar", quantity: 1 }]);
+    expect(plan!.totalCost).toBe(650);
+    expect(plan!.affordable).toBe(true);
+    expect(plan!.breaksGoal).toBe(false); // post-purchase loadout has rifle+armor
+  });
+
+  it("10. ranking: owning part of a strong bundle must not demote it", () => {
+    const empty = recommend(input({ money: 4000, nextRoundGoal: "rifle_armor" }));
+    const partial = recommend(input({ money: 4000, inventory: rifleArmorInv, nextRoundGoal: "rifle_armor" }));
+    // owning gear may make STRONGER bundles affordable (util becomes
+    // affordable) — the recommended combat value must never go DOWN
+    expect(partial.recommended!.targetCost).toBeGreaterThanOrEqual(empty.recommended!.targetCost);
+    // partial inventory only changes actual spend for the same target
+    const emptyPlan = findScheme(empty, empty.recommended!.id);
+    const partialPlan = findScheme(partial, empty.recommended!.id);
+    if (partialPlan) {
+      expect(partialPlan.totalCost).toBeLessThanOrEqual(emptyPlan!.totalCost);
+    }
+  });
+
+  it("B9: already have M4 + armor → displayed purchases = helmet upgrade only, $350", () => {
+    const out = recommend(input({ money: 1000, inventory: rifleArmorInv, nextRoundGoal: "rifle_armor" }));
+    const plan = findScheme(out, "rifle-helmet");
+    expect(plan!.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(plan!.totalCost).toBe(350);
+  });
+
+  it("helmet upgrade cost is derived as price(kevlar_helmet) − price(kevlar) = $350", () => {
+    expect(price(DEFAULT_RULES, "kevlar_helmet") - price(DEFAULT_RULES, "kevlar")).toBe(350);
   });
 });

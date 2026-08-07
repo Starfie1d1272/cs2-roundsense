@@ -2,7 +2,7 @@ import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
 import { DEFAULT_RULES, type EconomyRules, price } from "./rules.js";
 import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
-import type { AdvisorInput, AdvisorOutput, PurchaseItem, Scheme } from "./types.js";
+import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
 
 export function rifleFor(side: Side): ItemId {
   return side === "T" ? "ak47" : "m4a4";
@@ -12,18 +12,157 @@ export function smgFor(side: Side): ItemId {
   return side === "T" ? "mac10" : "mp9";
 }
 
-/** True when the purchase list itself fulfills the next-round goal. */
-function fulfillsGoalCheck(goal: NextRoundGoal, items: ItemId[]): boolean {
-  const rifles = new Set(["ak47", "m4a4", "m4a1s", "galil", "famas"]);
+/** Same rifle family definition as goal semantics (not re-invented here). */
+const RIFLE_FAMILY = ["ak47", "m4a4", "m4a1s", "galil", "famas"];
+const SMG_FAMILY = ["mac10", "mp9", "mp7", "mp5sd", "ump45", "p90", "bizon"];
+const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+
+function isRifle(item: ItemId): boolean {
+  return RIFLE_FAMILY.includes(item);
+}
+
+function isSmg(item: ItemId): boolean {
+  return SMG_FAMILY.includes(item);
+}
+
+function isGrenade(item: ItemId): boolean {
+  return (GRENADES as readonly string[]).includes(item);
+}
+
+/** Post-purchase loadout = current inventory + planned purchases. */
+export interface PostLoadout {
+  primary: ItemId | null;
+  secondary?: ItemId;
+  hasArmor: boolean;
+  hasHelmet: boolean;
+  grenades: ItemId[];
+}
+
+/**
+ * Resulting loadout after applying the purchases to the current inventory.
+ * Goal fulfillment is judged on THIS, never on the purchase list alone.
+ */
+export function resultingLoadout(inventory: InventoryState, purchases: PurchaseItem[]): PostLoadout {
+  const loadout: PostLoadout = {
+    primary: inventory.primary ?? null,
+    secondary: inventory.secondary,
+    hasArmor: inventory.hasArmor,
+    hasHelmet: inventory.hasHelmet,
+    grenades: [...inventory.grenades],
+  };
+  for (const p of purchases) {
+    if (isRifle(p.item) || isSmg(p.item) || p.item === "awp") loadout.primary = p.item;
+    else if (p.item === "deagle") loadout.secondary = "deagle";
+    else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
+      loadout.hasArmor = true;
+      if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
+    } else if (isGrenade(p.item)) {
+      for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
+    }
+  }
+  return loadout;
+}
+
+/**
+ * True when the POST-PURCHASE loadout fulfills the next-round goal
+ * (existing inventory counts — e.g. already owning a rifle means buying
+ * only armor still fulfills rifle_armor).
+ */
+export function fulfillsLoadoutGoal(goal: NextRoundGoal, loadout: PostLoadout): boolean {
   switch (goal) {
     case "awp":
-      return items.includes("awp");
+      return loadout.primary === "awp";
     case "rifle_armor":
     case "rifle_util":
-      return items.some((i) => rifles.has(i)) && (items.includes("kevlar") || items.includes("kevlar_helmet"));
+      return loadout.primary !== null && isRifle(loadout.primary) && loadout.hasArmor;
     case "max_combat_now":
       return false;
   }
+}
+
+/** Incremental unit cost of one purchased item given the current inventory.
+ * kevlar_helmet upgrade from existing armor costs price(helmet) - price(vest)
+ * = $350 (observed Windows build 14174: vest→vesthelm money delta −350). */
+function armorIncrementalUnit(rules: EconomyRules, inventory: InventoryState, item: ItemId): number {
+  if (item === "kevlar_helmet" && inventory.hasArmor && !inventory.hasHelmet) {
+    return price(rules, "kevlar_helmet") - price(rules, "kevlar");
+  }
+  return price(rules, item);
+}
+
+export interface PurchasePlan {
+  /** What must actually be bought given the current inventory. */
+  purchases: PurchaseItem[];
+  /** Incremental spend (actual money needed now). */
+  totalCost: number;
+  /** Full target value with an empty inventory (combat value, ranking). */
+  targetCost: number;
+}
+
+/**
+ * Plan the purchases from the current inventory to the resolved target
+ * loadout. Target items are the bundle template items AFTER side resolution.
+ * Item-by-item satisfaction:
+ * - rifle family: satisfied by ANY current rifle primary
+ * - SMG family: satisfied by ANY current SMG primary
+ * - awp: only exact current primary === "awp"
+ * - deagle: exact secondary match
+ * - kevlar/kevlar_helmet: armor/helmet state with incremental upgrade cost
+ * - grenades: multiset subtraction (quantity matters, no set dedupe)
+ */
+export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules): PurchasePlan {
+  const purchases = new Map<ItemId, number>();
+  let targetCost = 0;
+  const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
+
+  const hasRifle = inventory.primary !== null && inventory.primary !== undefined && isRifle(inventory.primary);
+  const hasSmg = inventory.primary !== null && inventory.primary !== undefined && isSmg(inventory.primary);
+
+  const ownedGrenades = new Map<ItemId, number>();
+  for (const g of inventory.grenades) ownedGrenades.set(g, (ownedGrenades.get(g) ?? 0) + 1);
+
+  const consume = (item: ItemId) => {
+    if (isRifle(item)) {
+      if (!hasRifle) add(item);
+      targetCost += price(rules, item);
+    } else if (isSmg(item)) {
+      if (!hasSmg) add(item);
+      targetCost += price(rules, item);
+    } else if (item === "awp") {
+      if (inventory.primary !== "awp") add("awp");
+      targetCost += price(rules, "awp");
+    } else if (item === "deagle") {
+      if (inventory.secondary !== "deagle") add("deagle");
+      targetCost += price(rules, "deagle");
+    } else if (item === "kevlar") {
+      if (!inventory.hasArmor) add("kevlar");
+      targetCost += price(rules, "kevlar");
+    } else if (item === "kevlar_helmet") {
+      if (!inventory.hasHelmet) add("kevlar_helmet");
+      targetCost += price(rules, "kevlar_helmet");
+    } else if (isGrenade(item)) {
+      const owned = ownedGrenades.get(item) ?? 0;
+      if (owned > 0) ownedGrenades.set(item, owned - 1);
+      else add(item);
+      targetCost += price(rules, item);
+    }
+    // unknown target item → no guessing, buy nothing, count nothing
+  };
+
+  for (const t of targetItems) {
+    for (let i = 0; i < t.quantity; i++) consume(t.item);
+  }
+
+  let totalCost = 0;
+  for (const [item, qty] of purchases) {
+    totalCost += armorIncrementalUnit(rules, inventory, item) * qty;
+  }
+
+  return {
+    purchases: [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
+    totalCost,
+    targetCost,
+  };
 }
 
 interface BundleTemplate {
@@ -89,8 +228,9 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
   const templates = BUNDLES[input.nextRoundGoal];
 
   const schemes: Scheme[] = templates.map((template) => {
-    const purchases = resolveItems(rules, input.side, template.items);
-    const totalCost = costOf(rules, purchases);
+    const targetItems = resolveItems(rules, input.side, template.items);
+    const plan = planPurchases(input.inventory, targetItems, rules);
+    const { purchases, totalCost, targetCost } = plan;
     const affordable = totalCost <= input.money;
     const projectionInput: ProjectionInput = {
       money: input.money,
@@ -110,8 +250,10 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
     let breaksGoalReason: string | undefined;
     if (goal !== "max_combat_now" && totalCost > 0) {
       const target = goalTargetCost(rules, goal, input.side);
-      const fulfillsGoal = fulfillsGoalCheck(goal, purchases.map((p) => p.item));
-      if (!fulfillsGoal && projections.loss < target) {
+      // goal fulfillment is judged on the POST-PURCHASE loadout (existing
+      // inventory counts), never on the purchase list alone
+      const fulfills = fulfillsLoadoutGoal(goal, resultingLoadout(input.inventory, purchases));
+      if (!fulfills && projections.loss < target) {
         breaksGoal = true;
         breaksGoalReason = `失败分支下回合 ${projections.loss} < 目标成本 ${target}（${goal}）`;
       }
@@ -121,8 +263,8 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       ? null
       : goalTargetCost(rules, input.nextRoundGoal, input.side);
     const basis = [
-      `${template.label} 花费 $${totalCost}（当前 $${input.money}）`,
-      `回合类型判定: ${roundType}`,
+      `${template.label} 目标价值 $${targetCost}（本次需买 $${totalCost}，当前 $${input.money}）`,
+      `本次购买类型: ${roundType}`,
       breaksGoal
         ? `⚠ 破坏目标: ${breaksGoalReason}`
         : totalCost === 0 && goalTarget !== null && projections.loss < goalTarget
@@ -142,6 +284,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       character: "recommended", // reassigned below
       purchases,
       totalCost,
+      targetCost,
       roundType,
       affordable,
       projections,
@@ -153,13 +296,16 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
   });
 
   const affordableSchemes = schemes.filter((s) => s.affordable);
-  const nonSave = affordableSchemes.filter((s) => s.totalCost > 0);
+  // A plan has combat value when its TARGET loadout is worth something —
+  // incremental spend may be $0 because the player already owns the gear,
+  // which must not demote the plan.
+  const nonSave = affordableSchemes.filter((s) => s.targetCost > 0);
 
   // Goal-aware recommended selection:
   // - awp goal with unaffordable AWP → the SAVE bundle is the recommended plan
-  //   (spending now would risk the AWP next round); most-expensive spend is
+  //   (spending now would risk the AWP next round); most valuable target is
   //   the aggressive alternative.
-  // - other goals → most combat-valuable affordable bundle (max cost),
+  // - other goals → most combat-valuable affordable bundle (max targetCost),
   //   falling back to the cheapest (usually save) when nothing is affordable.
   let recommended: Scheme | null;
   const awpAffordable = affordableSchemes.some((s) => s.id.startsWith("awp-"));
@@ -168,13 +314,13 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
   } else {
     recommended =
       nonSave.length > 0
-        ? [...nonSave].sort((a, b) => b.totalCost - a.totalCost)[0]!
+        ? [...nonSave].sort((a, b) => b.targetCost - a.targetCost)[0]!
         : affordableSchemes[0] ?? null;
   }
 
   const rest = affordableSchemes.filter((s) => s !== recommended);
-  const aggressive = [...rest].sort((a, b) => b.totalCost - a.totalCost)[0] ?? null;
-  const conservative = [...rest].sort((a, b) => a.totalCost - b.totalCost)[0] ?? null;
+  const aggressive = [...rest].sort((a, b) => b.targetCost - a.targetCost)[0] ?? null;
+  const conservative = [...rest].sort((a, b) => a.targetCost - b.targetCost)[0] ?? null;
 
   if (recommended) recommended.character = "recommended";
   if (aggressive) aggressive.character = "aggressive";

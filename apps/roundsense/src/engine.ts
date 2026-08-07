@@ -28,7 +28,16 @@ export interface AdviceTick {
   lossStreak: number;
   lossStreakSource: "gsi" | "assumed-1";
   goal: NextRoundGoal;
-  recommended: { character: string; label: string; totalCost: number } | null;
+  recommended: {
+    character: string;
+    label: string;
+    /** actual required purchases from the current inventory */
+    purchases: { item: ItemId; quantity: number }[];
+    /** incremental spend */
+    totalCost: number;
+    /** full target value (empty inventory) */
+    targetCost: number;
+  } | null;
   alternatives: { character: string; label: string; totalCost: number }[];
   breaksGoal: string | null;
 }
@@ -143,7 +152,13 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
     lossStreakSource: lossStreakGsi !== undefined ? "gsi" : "assumed-1",
     goal: out.goal,
     recommended: out.recommended
-      ? { character: out.recommended.character, label: out.recommended.label, totalCost: out.recommended.totalCost }
+      ? {
+          character: out.recommended.character,
+          label: out.recommended.label,
+          purchases: out.recommended.purchases,
+          totalCost: out.recommended.totalCost,
+          targetCost: out.recommended.targetCost,
+        }
       : null,
     alternatives: out.alternatives.map((s) => ({ character: s.character, label: s.label, totalCost: s.totalCost })),
     breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,

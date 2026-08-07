@@ -55,8 +55,12 @@ export interface Scheme {
   id: string;
   label: string;
   character: "recommended" | "aggressive" | "conservative";
+  /** what must ACTUALLY be bought from the current inventory */
   purchases: PurchaseItem[];
+  /** incremental spend (actual money needed now) */
   totalCost: number;
+  /** full target value with an empty inventory (combat value / ranking) */
+  targetCost: number;
   roundType: RoundType;
   affordable: boolean;
   projections: ProjectionBranches;
