@@ -11,7 +11,9 @@ export interface KillAttribution {
 export interface InventoryState {
   primary?: ItemId | null;
   secondary?: ItemId;
-  hasArmor: boolean;
+  /** current armor value (GSI player.state.armor, 0..100); numeric — the
+   * boolean is derived as armor > 0, never stored */
+  armor: number;
   hasHelmet: boolean;
   hasDefuseKit: boolean;
   /** grenades carried as a multiset (flash ×2 → two entries) */

@@ -39,9 +39,12 @@ decision from this.
 ## 3. Inventory representation — OBSERVED
 
 - kevlar: `player.state.armor` 0→100 on buy; **never** in `player.weapons`; $650.
-- helmet upgrade (vesthelm) from existing armor: `player.state.helmet`
-  false→true; **never** in `player.weapons`; money delta **−$350**
-  (= price(kevlar_helmet) − price(kevlar)).
+- vesthelm upgrade — Windows runtime-observed ONLY for the full-armor case:
+  **armor=100, helmet=false → vesthelm purchase → helmet=true → money delta
+  −$350** (= price(kevlar_helmet) − price(kevlar)). Do NOT extend this to
+  damaged armor: buying kevlar_helmet with armor<100 is the documented
+  full-price purchase (kevlar_helmet $1000 per the pinned weapon table /
+  public game rule), not a $350 upgrade.
 - defuse kit: **`player.state.defusekit = true`** (boolean, added to the GSI
   schema); `player.weapons` carries no entry; money delta −$400.
 - smoke: `weapon_smokegrenade` type=Grenade state=active `ammo_reserve=1`; −$300.

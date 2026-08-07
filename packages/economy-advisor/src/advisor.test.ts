@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_RULES, economyRulesSchema, lossBonus, price } from "./rules.js";
+import { DEFAULT_RULES, economyRulesSchema, lossBonus, price, weaponIdToItem } from "./rules.js";
 import { projectNextRoundMoney, killRewardsTotal, goalTargetCost } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
 import { recommend, fulfillsLoadoutGoal, resultingLoadout, planPurchases } from "./advisor.js";
@@ -11,7 +11,7 @@ function input(partial: Partial<AdvisorInput>): AdvisorInput {
     roundNumber: 2,
     money: 3400,
     lossStreak: 0,
-    inventory: { hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] },
+    inventory: { armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] },
     killsThisRound: [],
     bombPlantedThisRound: false,
     nextRoundGoal: "rifle_armor",
@@ -213,10 +213,10 @@ describe("recommend()", () => {
 });
 
 describe("inventory-aware planning (Batch 2)", () => {
-  const rifleInv: InventoryState = { primary: "m4a4", hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] };
-  const rifleArmorInv: InventoryState = { primary: "m4a4", hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] };
-  const rifleHelmetInv: InventoryState = { primary: "m4a4", hasArmor: true, hasHelmet: true, hasDefuseKit: false, grenades: [] };
-  const awpArmorInv: InventoryState = { primary: "awp", hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+  const rifleInv: InventoryState = { primary: "m4a4", armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+  const rifleArmorInv: InventoryState = { primary: "m4a4", armor: 100, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+  const rifleHelmetInv: InventoryState = { primary: "m4a4", armor: 100, hasHelmet: true, hasDefuseKit: false, grenades: [] };
+  const awpArmorInv: InventoryState = { primary: "awp", armor: 100, hasHelmet: false, hasDefuseKit: false, grenades: [] };
 
   const findScheme = (out: ReturnType<typeof recommend>, id: string) =>
     [out.recommended, ...out.alternatives].find((s) => s?.id === id) ?? null;
@@ -224,7 +224,7 @@ describe("inventory-aware planning (Batch 2)", () => {
   it("1. empty inventory preserves baseline behavior", () => {
     // empty inventory: target == incremental — direct planner check
     const plan = planPurchases(
-      { primary: null, hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] },
+      { primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] },
       [
         { item: "ak47", quantity: 1 },
         { item: "kevlar_helmet", quantity: 1 },
@@ -305,7 +305,7 @@ describe("inventory-aware planning (Batch 2)", () => {
     // AWP + armor → awp goal fulfilled
     expect(fulfillsLoadoutGoal("awp", resultingLoadout(awpArmorInv, []))).toBe(true);
     // armor only, buy nothing → NOT fulfilled
-    const armorOnly = resultingLoadout({ primary: null, hasArmor: true, hasHelmet: false, hasDefuseKit: false, grenades: [] }, []);
+    const armorOnly = resultingLoadout({ primary: null, armor: 100, hasHelmet: false, hasDefuseKit: false, grenades: [] }, []);
     expect(fulfillsLoadoutGoal("rifle_armor", armorOnly)).toBe(false);
   });
 
@@ -342,5 +342,77 @@ describe("inventory-aware planning (Batch 2)", () => {
 
   it("helmet upgrade cost is derived as price(kevlar_helmet) − price(kevlar) = $350", () => {
     expect(price(DEFAULT_RULES, "kevlar_helmet") - price(DEFAULT_RULES, "kevlar")).toBe(350);
+  });
+});
+
+describe("armor condition handling (Review Fix)", () => {
+  const inv = (armor: number, helmet: boolean): InventoryState => ({ primary: "m4a4", armor, hasHelmet: helmet, hasDefuseKit: false, grenades: [] });
+  const target = [{ item: "kevlar_helmet" as const, quantity: 1 }];
+
+  it("1. armor=0 helmet=false, target helmet → full $1000", () => {
+    const plan = planPurchases(inv(0, false), target, DEFAULT_RULES);
+    expect(plan.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(plan.totalCost).toBe(1000);
+  });
+
+  it("2. armor=100 helmet=false, target helmet → $350 upgrade (runtime-observed case)", () => {
+    const plan = planPurchases(inv(100, false), target, DEFAULT_RULES);
+    expect(plan.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(plan.totalCost).toBe(350);
+  });
+
+  it("3. armor=99 helmet=false, target helmet → full $1000 (damaged armor is NOT the $350 case)", () => {
+    expect(planPurchases(inv(99, false), target, DEFAULT_RULES).totalCost).toBe(1000);
+  });
+
+  it("4. armor=50 helmet=false, target helmet → full $1000", () => {
+    expect(planPurchases(inv(50, false), target, DEFAULT_RULES).totalCost).toBe(1000);
+  });
+
+  it("5. armor=50 helmet=true, target helmet → $0 (already protected)", () => {
+    const plan = planPurchases(inv(50, true), target, DEFAULT_RULES);
+    expect(plan.purchases).toEqual([]);
+    expect(plan.totalCost).toBe(0);
+  });
+
+  it("6. armor=50 helmet=false, target kevlar only → $0 (any armor satisfies kevlar)", () => {
+    const plan = planPurchases(inv(50, false), [{ item: "kevlar" as const, quantity: 1 }], DEFAULT_RULES);
+    expect(plan.purchases).toEqual([]);
+    expect(plan.totalCost).toBe(0);
+  });
+
+  it("7. resultingLoadout: armor 50 + full-suit purchase → armor 100 + helmet true", () => {
+    const loadout = resultingLoadout(inv(50, false), [{ item: "kevlar_helmet", quantity: 1 }]);
+    expect(loadout.armor).toBe(100);
+    expect(loadout.hasHelmet).toBe(true);
+    expect(fulfillsLoadoutGoal("rifle_armor", loadout)).toBe(true);
+  });
+
+  it("8. runtime case: rifle + armor=100 + $500, rifle+helmet target → affordable $350", () => {
+    const out = recommend(input({ money: 500, inventory: inv(100, false), nextRoundGoal: "rifle_armor" }));
+    const plan = [out.recommended, ...out.alternatives].find((s) => s?.id === "rifle-helmet")!;
+    expect(plan.totalCost).toBe(350);
+    expect(plan.affordable).toBe(true);
+  });
+});
+
+describe("weapon mapping completeness (Review Fix)", () => {
+  it("all canonical firearm weapon ids resolve via weaponIdToItem (single source of truth)", () => {
+    const expected: [string, string][] = [
+      ["weapon_sg556", "sg553"], ["weapon_aug", "aug"], ["weapon_ssg08", "ssg08"],
+      ["weapon_scar20", "scar20"], ["weapon_g3sg1", "g3sg1"],
+      ["weapon_mp7", "mp7"], ["weapon_mp5sd", "mp5sd"], ["weapon_ump45", "ump45"],
+      ["weapon_p90", "p90"], ["weapon_bizon", "bizon"],
+      ["weapon_nova", "nova"], ["weapon_sawedoff", "sawedoff"], ["weapon_mag7", "mag7"],
+      ["weapon_xm1014", "xm1014"], ["weapon_m249", "m249"], ["weapon_negev", "negev"],
+      ["weapon_revolver", "r8"],
+    ];
+    for (const [wid, item] of expected) {
+      expect(weaponIdToItem(wid)).toBe(item);
+    }
+    // existing core ones still resolve
+    expect(weaponIdToItem("weapon_ak47")).toBe("ak47");
+    expect(weaponIdToItem("weapon_mp9")).toBe("mp9");
+    expect(weaponIdToItem("weapon_m4a1_silencer")).toBe("m4a1s");
   });
 });

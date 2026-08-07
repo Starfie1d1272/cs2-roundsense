@@ -120,7 +120,7 @@ export function killReward(
 }
 
 /** Item → weapon-table id for weapon items; non-weapons stay in rules.prices. */
-const ITEM_TO_WEAPON: Partial<Record<ItemId, string>> = {
+export const ITEM_TO_WEAPON: Readonly<Partial<Record<ItemId, string>>> = {
   ak47: "weapon_ak47", m4a4: "weapon_m4a1", m4a1s: "weapon_m4a1_silencer", galil: "weapon_galilar",
   famas: "weapon_famas", sg553: "weapon_sg556", aug: "weapon_aug", ssg08: "weapon_ssg08",
   awp: "weapon_awp", scar20: "weapon_scar20", g3sg1: "weapon_g3sg1", mac10: "weapon_mac10",
@@ -131,6 +131,23 @@ const ITEM_TO_WEAPON: Partial<Record<ItemId, string>> = {
   dual: "weapon_elite", tec9: "weapon_tec9", cz75: "weapon_cz75a", fiveseven: "weapon_fiveseven",
   deagle: "weapon_deagle", r8: "weapon_revolver", zeus: "weapon_taser",
 };
+
+/** Canonical weapon id (weapon-table key) → ItemId reverse mapping. */
+const WEAPON_TO_ITEM: Readonly<Record<string, ItemId>> = (() => {
+  const rev: Record<string, ItemId> = {};
+  for (const [item, wid] of Object.entries(ITEM_TO_WEAPON)) {
+    if (wid !== undefined) rev[wid] = item as ItemId;
+  }
+  return rev;
+})();
+
+/**
+ * Resolve a GSI `player.weapons[*].name` value (e.g. "weapon_sg556") back to
+ * the canonical ItemId. Single source of truth lives here (ITEM_TO_WEAPON).
+ */
+export function weaponIdToItem(weaponId: string): ItemId | undefined {
+  return WEAPON_TO_ITEM[weaponId];
+}
 
 export function price(rules: EconomyRules, item: ItemId): number {
   const wid = ITEM_TO_WEAPON[item];

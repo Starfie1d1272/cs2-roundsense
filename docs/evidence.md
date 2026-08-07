@@ -13,9 +13,11 @@ See `docs/runtime-checks.md` for the raw protocol and payload-level detail.
   GSI index 1 → $1900, index 2 → $2400 (2/2 exact hits). Indices 0/3/4 and
   capped state not payout-verified in controlled runtime.
 - Inventory: armor/helmet live in `player.state` (never `player.weapons`);
-  vest $650, vest→helmet upgrade $350 = price(helmet)−price(vest);
-  defuse kit = `player.state.defusekit` boolean (−$400); grenade quantity
-  = `ammo_reserve` on the single weapon entry (flash ×2 → reserve 2).
+  vest $650; vest→helmet upgrade −$350 runtime-observed ONLY for
+  armor=100, helmet=false (damaged armor pays the full $1000 per the
+  documented game rule); defuse kit = `player.state.defusekit` boolean
+  (−$400); grenade quantity = `ammo_reserve` on the single weapon entry
+  (flash ×2 → reserve 2).
 - C4: 4 receive-to-receive planted→exploded samples, 38.56–39.49 s —
   samples only, fuse stays 41000 ms (corpus).
 

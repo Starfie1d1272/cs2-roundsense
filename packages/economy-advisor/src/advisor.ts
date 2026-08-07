@@ -33,7 +33,7 @@ function isGrenade(item: ItemId): boolean {
 export interface PostLoadout {
   primary: ItemId | null;
   secondary?: ItemId;
-  hasArmor: boolean;
+  armor: number;
   hasHelmet: boolean;
   grenades: ItemId[];
 }
@@ -46,7 +46,7 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
   const loadout: PostLoadout = {
     primary: inventory.primary ?? null,
     secondary: inventory.secondary,
-    hasArmor: inventory.hasArmor,
+    armor: inventory.armor,
     hasHelmet: inventory.hasHelmet,
     grenades: [...inventory.grenades],
   };
@@ -54,7 +54,7 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
     if (isRifle(p.item) || isSmg(p.item) || p.item === "awp") loadout.primary = p.item;
     else if (p.item === "deagle") loadout.secondary = "deagle";
     else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
-      loadout.hasArmor = true;
+      loadout.armor = 100;
       if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
     } else if (isGrenade(p.item)) {
       for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
@@ -74,17 +74,19 @@ export function fulfillsLoadoutGoal(goal: NextRoundGoal, loadout: PostLoadout): 
       return loadout.primary === "awp";
     case "rifle_armor":
     case "rifle_util":
-      return loadout.primary !== null && isRifle(loadout.primary) && loadout.hasArmor;
+      return loadout.primary !== null && isRifle(loadout.primary) && loadout.armor > 0;
     case "max_combat_now":
       return false;
   }
 }
 
 /** Incremental unit cost of one purchased item given the current inventory.
- * kevlar_helmet upgrade from existing armor costs price(helmet) - price(vest)
- * = $350 (observed Windows build 14174: vest→vesthelm money delta −350). */
+ * kevlar_helmet upgrade from FULL armor (armor === 100, no helmet) costs
+ * price(helmet) - price(vest) = $350 (Windows build 14174: armor=100,
+ * helmet=false → vesthelm → money delta −350). Damaged/no armor pays the
+ * full $1000 — the observed $350 case must NOT be extended to any armor. */
 function armorIncrementalUnit(rules: EconomyRules, inventory: InventoryState, item: ItemId): number {
-  if (item === "kevlar_helmet" && inventory.hasArmor && !inventory.hasHelmet) {
+  if (item === "kevlar_helmet" && inventory.armor === 100 && !inventory.hasHelmet) {
     return price(rules, "kevlar_helmet") - price(rules, "kevlar");
   }
   return price(rules, item);
@@ -115,6 +117,7 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
   let targetCost = 0;
   const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
 
+  const hasArmor = inventory.armor > 0; // local derived value, not stored
   const hasRifle = inventory.primary !== null && inventory.primary !== undefined && isRifle(inventory.primary);
   const hasSmg = inventory.primary !== null && inventory.primary !== undefined && isSmg(inventory.primary);
 
@@ -135,10 +138,11 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
       if (inventory.secondary !== "deagle") add("deagle");
       targetCost += price(rules, "deagle");
     } else if (item === "kevlar") {
-      if (!inventory.hasArmor) add("kevlar");
+      // "具有护甲" — not a forced 100-armor refill; any armor satisfies it
+      if (!hasArmor) add("kevlar");
       targetCost += price(rules, "kevlar");
     } else if (item === "kevlar_helmet") {
-      if (!inventory.hasHelmet) add("kevlar_helmet");
+      if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
       targetCost += price(rules, "kevlar_helmet");
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
