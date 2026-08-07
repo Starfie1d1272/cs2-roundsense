@@ -59,6 +59,9 @@ importers:
 
   packages/demo-oracle:
     dependencies:
+      '@roundsense/economy-advisor':
+        specifier: workspace:*
+        version: link:../economy-advisor
       '@roundsense/shared-types':
         specifier: workspace:*
         version: link:../shared-types

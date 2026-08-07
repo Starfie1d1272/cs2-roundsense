@@ -29,6 +29,7 @@ import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadDemoPackage, loadDemoPackageDir, type ParsedDemoPackage } from "@roundsense/demo-oracle";
 import { lossCountsForPackage, lossBonusPayout } from "@roundsense/demo-oracle";
+import { extractTransitions, classifyTransition, summarizeLedger } from "@roundsense/demo-oracle";
 import { DEFAULT_RULES, killReward } from "@roundsense/economy-advisor";
 import { decodeDelta } from "cs2-demo-format/parser";
 
@@ -66,6 +67,14 @@ interface Stats {
   settlement: { checked: number; buyPhaseOk: number; nextStartOk: number };
   /** L3 time_ran_out T-survivor invariant */
   tSurvivor: { checked: number; lossPayoutViolations: number };
+  /** L4 replay-native cash transitions (classified) */
+  l4: { transitions: number; explainedExact: number; compoundExplained: number; samplingAmbiguous: number; unexplained: number; dollarWeighted: number; dollarUnexplained: number; playerRoundsWithUnexplained: number; perCategory: Record<string, number> };
+  /** L1-nonzero decomposition over replay matches */
+  l4Decomp: { checked: number; summaryFieldLimitation: number; replayUnexplained: number; samplingAmbiguous: number; noReplay: number };
+  /** OT half-opener cash profile (server/match profile, NOT universal rule) */
+  ot: { halves: number; reset10000: number; carryOver: number; other: number };
+  /** ambiguous settlement deltas (diagnostic) */
+  ambDeltas: Map<number, number>;
   /** unknown weapons seen (weapon → count), all matches */
   unknownWeapons: Map<string, number>;
 }
@@ -87,6 +96,24 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, zipName = "?"): void {
   }
 
   const roundByNumber = new Map(rounds.map((r) => [r.roundNumber, r]));
+  // OT half-opener cash profile: per (round), is everyone at 10000 (reset via
+  // mp_overtime_startmoney) or carried over from the previous round?
+  {
+    const otByRound = new Map<number, Set<number>>();
+    for (const row of playerEconomies) {
+      if (row.roundNumber >= 25 && (row.roundNumber - 25) % 3 === 0) {
+        let set = otByRound.get(row.roundNumber);
+        if (!set) { set = new Set(); otByRound.set(row.roundNumber, set); }
+        set.add(row.startMoney);
+      }
+    }
+    for (const [, vals] of otByRound) {
+      s.ot.halves++;
+      if (vals.size === 1 && [...vals][0] === 10000) s.ot.reset10000++;
+      else if (vals.size > 1) s.ot.carryOver++;
+      else s.ot.other++;
+    }
+  }
   // per-match loss simulation — local, explicit model (no global cache)
   const lossSim = lossCountsForPackage(pkg, { winDecrement: LOSS_WIN_MODEL });
   const stdLossCountAt = (roundNumber: number, teamKey: string): number => {
@@ -267,6 +294,75 @@ function analyze(pkg: ParsedDemoPackage, s: Stats, zipName = "?"): void {
         }
       }
 
+      // ── L4 replay-native cash-transition ledger (per player-round) ──────────
+      // Every observed cash change in the prev-round replay segment is
+      // classified against real events; this is the direct-cash truth path.
+      // L1-nonzero decomposition rides along: if the replay ledger is fully
+      // explained while the summary formula residual != 0, the mismatch is a
+      // summary-field reconstruction limitation, not an economy-rule error.
+      let l4Unexplained = false;
+      let l4Ambiguous = false;
+      if (replay && !zipName.startsWith("dir:")) {
+        const rrPrev = replay.rounds.find((x) => x.roundNumber === r - 1);
+        const track = rrPrev?.players.find((t) => t.playerIndex === playerIndex);
+        if (track && rrPrev) {
+          const rKills = prevKills;
+          const rBombs = bombsByRound.get(r - 1) ?? [];
+          const plant = rBombs.find((b) => b.type === "planted") ?? null;
+          const defuse = rBombs.find((b) => b.type === "defused") ?? null;
+          const deathTick = deathTickByRound.get(r - 1)?.get(playerIndex) ?? null;
+          const ctx = {
+            roundNumber: r - 1,
+            endReason: prev.endReason,
+            winnerTeamKey: prev.winnerTeamKey,
+            playerTeamKey: teamKey,
+            endTick: prev.endTick,
+            isT: prevSide === "t",
+            isOvertimeOpener: r - 1 >= 25 && (r - 1 - 25) % 3 === 0,
+            deadAtEnd: deathTick !== null && deathTick <= prev.endTick,
+            tEliminated: tEliminatedPrev,
+            plantHappened: plant !== null,
+            planterIndex: plant?.actorIndex ?? null,
+            defuserIndex: defuse?.actorIndex ?? null,
+            kills: rKills.map((k) => ({ tick: k.tick, killer: k.killerIndex, victim: k.victimIndex, weapon: k.weapon })),
+            myTeamKills: rKills.filter((k) => k.killerIndex === playerIndex && k.victimIndex !== null && teamByPlayer.get(k.victimIndex) === teamKey).map((k) => ({ tick: k.tick, weapon: k.weapon })),
+          };
+          const money = decodeDelta(track.money);
+          if (money.length >= 2) {
+            const transitions = extractTransitions(money, rrPrev.startTick, rrPrev.tickStep);
+            for (const t of transitions) {
+              const cls = classifyTransition(t, ctx);
+              s.l4.transitions++;
+              s.l4.perCategory[cls.category] = (s.l4.perCategory[cls.category] ?? 0) + 1;
+              s.l4.dollarWeighted += Math.abs(t.delta);
+              if (cls.category === "unexplained") {
+                s.l4.unexplained++;
+                s.l4.dollarUnexplained += Math.abs(t.delta);
+                l4Unexplained = true;
+              } else if (cls.category === "sampling_ambiguous") {
+                s.l4.samplingAmbiguous++;
+                s.ambDeltas.set(t.delta, (s.ambDeltas.get(t.delta) ?? 0) + 1);
+                l4Ambiguous = true;
+              } else if (cls.category === "compound_transition") {
+                s.l4.compoundExplained++;
+              } else {
+                s.l4.explainedExact++;
+              }
+            }
+          }
+        }
+      }
+      if (residual !== 0) {
+        // L1-nonzero decomposition
+        if (replay && !zipName.startsWith("dir:")) {
+          s.l4Decomp.checked++;
+          if (l4Unexplained) s.l4Decomp.replayUnexplained++;
+          else if (l4Ambiguous) s.l4Decomp.samplingAmbiguous++;
+          else s.l4Decomp.summaryFieldLimitation++;
+        } else {
+          s.l4Decomp.noReplay++;
+        }
+      }
       s.samples.push({
         residual,
         won,
@@ -326,6 +422,24 @@ function report(s: Stats): void {
     }
   }
 
+  // ── L4 replay-native cash-transition ledger ────────────────────────────────
+  if (s.l4.transitions > 0) {
+    const t = s.l4.transitions;
+    const pct = (n: number) => `${n} (${((100 * n) / t).toFixed(1)}%)`;
+    console.log(`L4-CASH: transitions=${t} exact=${pct(s.l4.explainedExact)} compound=${pct(s.l4.compoundExplained)} samplingAmbiguous=${pct(s.l4.samplingAmbiguous)} unexplained=${pct(s.l4.unexplained)}`);
+    console.log(`L4-CASH: \$weighted=\$${s.l4.dollarWeighted} \$unexplained=\$${s.l4.dollarUnexplained} (${((100 * s.l4.dollarUnexplained) / Math.max(1, s.l4.dollarWeighted)).toFixed(2)}%) playerRoundsWithUnexplained=${s.l4.playerRoundsWithUnexplained}`);
+    console.log(`L4-CASH: explainability (exact+compound) = ${((100 * (s.l4.explainedExact + s.l4.compoundExplained)) / t).toFixed(1)}%`);
+    console.log(`L4-CASH: ambiguous deltas: ${[...s.ambDeltas.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([d, c]) => `${d}×${c}`).join(", ")}`);
+  } else {
+    console.log("L4-CASH: no replay transitions in input");
+  }
+  // L1-nonzero decomposition (replay matches only)
+  if (s.l4Decomp.checked > 0) {
+    const d = s.l4Decomp;
+    console.log(`L1-NONZERO-DECOMP (replay matches): total=${d.checked} summaryFieldLimitation=${d.summaryFieldLimitation} replayUnexplained=${d.replayUnexplained} samplingAmbiguous=${d.samplingAmbiguous} noReplay=${d.noReplay}`);
+  }
+  // OT cash profile (server/match profile — universal rule only defines WHEN)
+  console.log(`OT-PROFILE: halves=${s.ot.halves} reset10000=${s.ot.reset10000} carryOver=${s.ot.carryOver} other=${s.ot.other}`);
   // ── L2 replay settlement ────────────────────────────────────────────────────
   if (s.settlement.checked > 0) {
     console.log(`REPLAY-SETTLE: checked=${s.settlement.checked} buyPhase firstCash==start−spent: ${s.settlement.buyPhaseOk}/${s.settlement.checked} (${((100 * s.settlement.buyPhaseOk) / s.settlement.checked).toFixed(1)}%), lastCash==nextStart: ${s.settlement.nextStartOk}/${s.settlement.checked} (${((100 * s.settlement.nextStartOk) / s.settlement.checked).toFixed(1)}%)`);
@@ -372,7 +486,12 @@ async function main(): Promise<void> {
   const s: Stats = {
     samples: [], fuseMs: [], fuseDistinct: new Map(), matches: 0, rounds: 0,
     cappedExcluded: 0, settlement: { checked: 0, buyPhaseOk: 0, nextStartOk: 0 },
-    tSurvivor: { checked: 0, lossPayoutViolations: 0 }, unknownWeapons: new Map(),
+    tSurvivor: { checked: 0, lossPayoutViolations: 0 },
+    l4: { transitions: 0, explainedExact: 0, compoundExplained: 0, samplingAmbiguous: 0, unexplained: 0, dollarWeighted: 0, dollarUnexplained: 0, playerRoundsWithUnexplained: 0, perCategory: {} },
+    l4Decomp: { checked: 0, summaryFieldLimitation: 0, replayUnexplained: 0, samplingAmbiguous: 0, noReplay: 0 },
+    ot: { halves: 0, reset10000: 0, carryOver: 0, other: 0 },
+    ambDeltas: new Map(),
+    unknownWeapons: new Map(),
   };
   for (const f of files) {
     try {
@@ -418,6 +537,8 @@ async function main(): Promise<void> {
       residualDistribution: residualDist,
       settlement: s.settlement,
       timeRanOutTSurvivor: s.tSurvivor,
+      l4Cash: s.l4,
+      l1NonzeroDecomp: s.l4Decomp,
       unknownWeapons: Object.fromEntries([...s.unknownWeapons.entries()].sort((a, b) => b[1] - a[1])),
       generatedAt: new Date().toISOString(),
     };

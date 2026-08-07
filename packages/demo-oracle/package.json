@@ -9,7 +9,8 @@
   "dependencies": {
     "@roundsense/shared-types": "workspace:*",
     "cs2-demo-format": "^3.1.0",
-    "zod": "^3.25.0"
+    "zod": "^3.25.0",
+    "@roundsense/economy-advisor": "workspace:*"
   },
   "scripts": {
     "inspect": "tsx src/cli.ts"
