@@ -20,6 +20,8 @@
  *   elimination → explicit (--target-side ct|t).
  */
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export interface CellRow {
   round: number;
@@ -147,4 +149,7 @@ async function main(): Promise<void> {
   console.log(JSON.stringify({ cells }, null, 2));
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// run only when invoked directly (tsx), not when imported by tests
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
