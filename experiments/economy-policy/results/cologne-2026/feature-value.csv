@@ -1,25 +1,25 @@
-feature_level,target,grouped_log_loss_bits
-money,format_state,0.7432
-money,helmet,0.7014
-money,kit,0.3345
-money,smoke,0.6581
-+side,format_state,0.7815
-+side,helmet,0.6234
-+side,kit,0.2469
-+side,smoke,0.6994
-+lossReward,format_state,1.125
-+lossReward,helmet,0.8879
-+lossReward,kit,0.4335
-+lossReward,smoke,0.9342
-+retained,format_state,1.125
-+retained,helmet,0.8879
-+retained,kit,0.4335
-+retained,smoke,0.9342
-+armor/helmet,format_state,1.1646
-+armor/helmet,helmet,0.9188
-+armor/helmet,kit,0.46
-+armor/helmet,smoke,0.9874
-+roundstage,format_state,2.4802
-+roundstage,helmet,2.024
-+roundstage,kit,0.968
-+roundstage,smoke,2.2226
+feature_level,target,grouped_oof_log_loss_bits,coverage
+B0 money,format_state,0.8234,0.9431
+B0 money,helmet,0.648,0.9431
+B0 money,kit,0.3867,0.9431
+B0 money,smoke,0.6066,0.9431
+B1 +side,format_state,0.8435,0.9431
+B1 +side,helmet,0.5811,0.9431
+B1 +side,kit,0.297,0.9431
+B1 +side,smoke,0.6144,0.9431
+B2 +lossReward,format_state,0.8613,0.9431
+B2 +lossReward,helmet,0.5582,0.9431
+B2 +lossReward,kit,0.2992,0.9431
+B2 +lossReward,smoke,0.643,0.9431
+B3 +retained family,format_state,0.8453,0.9431
+B3 +retained family,helmet,0.5693,0.9431
+B3 +retained family,kit,0.2983,0.9431
+B3 +retained family,smoke,0.6533,0.9431
+B4 +pre-decision armor/helmet,format_state,0.8456,0.9431
+B4 +pre-decision armor/helmet,helmet,0.5679,0.9431
+B4 +pre-decision armor/helmet,kit,0.3012,0.9431
+B4 +pre-decision armor/helmet,smoke,0.6549,0.9431
+B5 +roundstage,format_state,0.8619,0.9431
+B5 +roundstage,helmet,0.5768,0.9431
+B5 +roundstage,kit,0.3045,0.9431
+B5 +roundstage,smoke,0.6626,0.9431

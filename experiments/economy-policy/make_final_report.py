@@ -1,122 +1,160 @@
 #!/usr/bin/env python3
-"""Section 41: FINAL-POLICY-RESEARCH.md — aggregate all findings."""
+"""Section 41: FINAL-POLICY-RESEARCH.md — rebuilt from repaired artifacts.
+
+Sections: VALIDATED EVIDENCE / LIMITATIONS / HUMAN POLICY DECISIONS /
+RUNTIME VALIDATIONS. Every number is read dynamically from artifacts —
+no hard-coded historical results.
+"""
 import csv, json, os, sys
-from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from research_common import RESULTS
 
-def rd(f):
-    return open(f"{RESULTS}/{f}").read() if os.path.exists(f"{RESULTS}/{f}") else ""
+def read_csv(name):
+    return list(csv.DictReader(open(f"{RESULTS}/{name}")))
+
+def read_md(name):
+    p = f"{RESULTS}/{name}"
+    return open(p).read() if os.path.exists(p) else ""
+
+META = json.load(open(f"{RESULTS}/_meta.json"))
+FV = read_csv("feature-value.csv")
+UNC = read_csv("uncertainty.csv")
+REP = read_csv("representation-benchmark.csv")
+PR = read_csv("policy-review-table.csv")
+COV = read_csv("retained-coverage.csv")
+ECON = read_csv("economy-reference-surface.csv")
+
+def fmt_money(v):
+    return "${}".format(int(float(v))) if v not in ("", None) else "-"
+
+def full_crossings():
+    out = []
+    for side in ["t", "ct"]:
+        row = []
+        for lr in [1400, 1900, 2400, 2900, 3400]:
+            rows = [r for r in ECON if r["side"] == side and r["lossReward"] == str(lr)
+                    and r["retained_value"] == "none"
+                    and r["confidence"] in ("OBSERVED", "INTERPOLATED")]
+            f50 = next((int(r["roundStartMoney"]) for r in rows if float(r["p_full"]) >= 0.5), None)
+            row.append("lr{}: {}".format(lr, fmt_money(f50)))
+        out.append("{} {}".format(side.upper(), " · ".join(row)))
+    return out
+
+def ladder_summary():
+    """Feature ladder rows for format_state target."""
+    out = []
+    prev = None
+    for row in FV:
+        if row["target"] != "format_state":
+            continue
+        d = "" if prev is None else "{:+.4f}".format(float(row["grouped_oof_log_loss_bits"]) - prev)
+        out.append("- {}: {:.4f} bits{} (coverage {:.0%})".format(
+            row["feature_level"], float(row["grouped_oof_log_loss_bits"]), d, float(row["coverage"])))
+        prev = float(row["grouped_oof_log_loss_bits"])
+    return out
+
+def ci_row(side, lr, q):
+    for r in UNC:
+        if r["side"] == side and r["lossReward"] == str(lr) and r["quantity"] == q and r["ci_low"]:
+            return "${}–${} (median {})".format(r["ci_low"], r["ci_high"], r["median"])
+    return "insufficient"
 
 md = []
-md.append("# Final Policy Research — Cologne 2026 Professional Economy Evidence")
+md.append("# Final Policy Research — Cologne 2026 Professional Economy Evidence (REPAIRED)")
 md.append("")
-md.append("## 1. Executive evidence summary")
+md.append("> 本报告由修复后的 research pipeline 动态生成（entropy 归一化、feature ladder 同 universe、")
+md.append("> benchmark OOF 公平化、stability/bootstrap estimator 分离、canonical price/legality）。")
+md.append("> 任何数字均可从对应 CSV 复核。")
 md.append("")
-md.append("- STRICT 25,986 player-rounds（冻结 corpus，raw 43,620；exclusion partition 已审计）。")
-md.append("- 职业 format economy state（pistol/eco/semi/force/full）可由个人 live 状态高置信预测：")
-md.append("  full≥50% crossing 集中在 $3,650–4,100（支持区内）；lr1400 支持区 T $3,250+ / CT $3,400+。")
-md.append("- 购买行为（spend/loadout/utility）全部做 budget feasibility conditioning（moneySpent ≤ query M）。")
-md.append("- 团队 oracle 条件熵仅再降 ~{}（个体状态已解释大部分）。".format(
-    rd("team-context-ceiling.md").split("relative reduction: ")[1].split("%")[0] if "relative reduction" in rd("team-context-ceiling.md") else "?"))
-md.append("- drop 通道不可见（14,945 行 drop-flagged 排除），个人推荐在相关状态需保守。")
+md.append("## VALIDATED EVIDENCE")
 md.append("")
-md.append("## 2. Data quality / coverage")
+md.append("### Corpus / coverage")
 md.append("")
-md.append(rd("reachable-money.md").split("结论")[0])
-md.append("- state-space coverage: state-space-coverage.csv（exact/interpolated/unsupported 分层）。")
-md.append("- grenade 分布（strict）: {}".format(json.load(open(f"{RESULTS}/_meta.json"))["grenade_dist_strict"]))
-md.append("- retained coverage: exact 14 / family 43 / unsupported 53（retained-coverage.csv）。")
+md.append("- STRICT {} player-rounds（raw {}；exclusion partition 见 _meta.json）。".format(
+    META["exclusions"]["strict"], META["exclusions"]["raw"]))
+md.append("- 五档 lossReward 全部支持；retained coverage: exact {} / family {} / unsupported {}。".format(
+    sum(1 for r in COV if r["estimate_level"] == "exact"),
+    sum(1 for r in COV if r["estimate_level"] == "family"),
+    sum(1 for r in COV if r["estimate_level"] == "unsupported")))
+md.append("- grenade 分布（strict）: {}".format(META["grenade_dist_strict"]))
 md.append("")
-md.append("## 3. Professional spend behavior")
+md.append("### Economy reference (supported crossings, retained=none)")
 md.append("")
-md.append("- professional-spend-surface.csv（p25/median/p75 + bank-after-buy 分布 + spend ratio）。")
-md.append("- purchase-cost reconstruction：exact 20.2% / explainable 48.7% / unresolved 31.1%")
-md.append("  （unresolved 主因：armor 受损 vs 全价无法区分、drop 混合——详见 purchase-cost-reconstruction.md）。")
+for line in full_crossings():
+    md.append("- {}".format(line))
 md.append("")
-md.append("## 4. Weapon behavior")
+md.append("### Stability (5-fold match-series; economy estimator, no spend filter)")
 md.append("")
-md.append("- weapon-choice-surface.csv（exact primary per state）；AK-47 24.8% / M4A4 10.7% / M4A1-S 9.3% / Galil 6.8% / AWP 5.3% / MP9 3.8%。")
-md.append("- 步枪主导：rifle+smoke+flash 40.5%、rifle+double-flash 11.3%（全局组合频率）。")
+for side in ["t", "ct"]:
+    line = []
+    for lr in [1400, 1900, 2400, 2900, 3400]:
+        vals = [r for r in read_csv("stability.csv")
+                if r["side"] == side and r["lossReward"] == str(lr)
+                and r["kind"] == "economy" and r["full50_crossing"]]
+        if vals:
+            v = sorted(int(r["full50_crossing"]) for r in vals)
+            line.append("lr{}: {} folds ${}–${}".format(lr, len(v), v[0], v[-1]))
+    md.append("- {}: {}".format(side.upper(), "; ".join(line) or "insufficient"))
 md.append("")
-md.append("## 5. Armor / kit / utility")
+md.append("### Uncertainty (cluster bootstrap, match-series, B=500, seed 42)")
 md.append("")
-md.append("- armor-kit-utility-surface.csv：armor/helmet/kit/smoke/flash1/flash2/HE/fire per state。")
-md.append("- T kit=0（invariant）；CT kit 概率随 money 上升（见 ct-kit-atlas 数据）。")
-md.append("- utility-combinations.csv：真实组合频率（无预设）。")
+for side in ["t", "ct"]:
+    line = []
+    for lr in [1400, 1900, 2400, 2900, 3400]:
+        c = ci_row(side, lr, "full50")
+        if c != "insufficient":
+            line.append("lr{} full50 {} · full80 {}".format(
+                lr, c, ci_row(side, lr, "full80")))
+    md.append("- {}: {}".format(side.upper(), "; ".join(line) or "insufficient"))
+md.append("- median spend CI: uncertainty.csv quantities median_spend_2500 / median_spend_4000（feasibility estimator）。")
 md.append("")
-md.append("## 6. Retained weapon behavior")
+md.append("### Deployable feature ladder (same row universe, grouped OOF, nested backoff)")
 md.append("")
-md.append("- retained-behavior.csv：stays-same-primary / no-primary / upgraded 比例 per retained weapon。")
-md.append("- 存枪后 class 分布整体上移；retained AWP → 保 AWP 为主（省钱）。")
-md.append("- loadout-delta.csv：retained→resulting 转移模式。")
+md.extend(ladder_summary())
 md.append("")
-md.append("## 7. Next-round preservation")
+md.append("### Representation")
 md.append("")
-md.append("- next-round-preservation.csv：nextIfLoseNoSpend / afterMedianSpend / T plant 分支 + 描述性桶分布。")
-md.append("- 职业购买后败方下局资金分布见 CSV（descriptive，非 production buckets）。")
+for r in REP:
+    if r["mode"] == "generalization_OOF":
+        f1 = r["grouped_oof_macroF1"] or "-"
+        md.append("- {}: OOF logloss {} · acc {} · macroF1 {}".format(
+            r["representation"], r["grouped_oof_log_loss"], r["grouped_oof_accuracy"], f1))
+md.append("- compression fidelity（full-data，非 held-out）: representation-benchmark.csv mode=compression_fidelity（KL/TV/label agreement）。")
 md.append("")
-md.append("## 8. Team / drop / role ambiguity")
+md.append("### Purchase-cost reconstruction (canonical display-name prices)")
 md.append("")
-md.append(rd("team-context-ceiling.md"))
+md.append(read_md("purchase-cost-reconstruction.md").split("## 已知不可重建项")[0])
 md.append("")
-md.append(rd("drop-sensitive-analysis.md").split("## 涉及武器")[0])
+md.append("### Affordability (exact legal targets, canonical prices + legality)")
 md.append("")
-md.append(rd("role-ambiguity.md").splitlines()[1] if False else "- role-ambiguity.md：player-conditioned 残差熵 vs state 熵。")
+md.append(read_md("affordability-evidence.md").split("affordability-targets.csv")[0])
 md.append("")
-md.append("## 9. Stability / uncertainty")
+md.append("### Team / role / round-score context (entropy-normalized)")
 md.append("")
-md.append("- stability.csv：5-fold match-series grouped（full crossing per fold）。")
-md.append("- uncertainty.csv：cluster bootstrap 90% CI（full50 crossing per T/CT × lr）。")
-md.append("- 见 uncertainty-summary.md / stability-analysis.md。")
+md.append(read_md("team-context-ceiling.md"))
 md.append("")
-md.append("## 10. Deployable feature value")
+md.append(read_md("role-ambiguity.md").splitlines()[0])
+md.append(read_md("round-score-context.md").splitlines()[0])
 md.append("")
-md.append("- feature-value.csv：money → +side → +lossReward → +retained → +armor/helmet → +roundstage 的 grouped log loss。")
-md.append("- round/score 增量极小（round-score-context.md）——不建议为它加 production 复杂度。")
+md.append("## LIMITATIONS")
 md.append("")
-md.append("## 11. GSI deployability")
+md.append("- drop 通道不可见（excluded {} drop-gave / {} drop-received）；个人推荐在相关状态需保守。".format(
+    META["exclusions"]["drop_gave"], META["exclusions"]["drop_received"]))
+md.append("- purchase-cost reconstruction 不可重建项：armor damaged-state、drop chronology、重复购买（见 reconstruction md）。")
+md.append("- 团队/round/score 上下文为 ORACLE 研究（非 production 输入）；团队增益以修复后 held-out 数值为准。")
+md.append("- roundStartMoney live 获取 NEEDS RUNTIME VALIDATION（freeze 首帧捕获；GSI 无回合开始现金字段）。")
 md.append("")
-md.append("- 见 docs/economy/gsi-deployability.md（live feature 逐项 availability/timing/reliability）。")
-md.append("- roundStartMoney 的 live 获取：NEEDS RUNTIME VALIDATION（decision-anchor-design.md）。")
+md.append("## HUMAN POLICY DECISIONS")
 md.append("")
-md.append("## 12. Planner readiness")
+md.append("- policy-review-table.csv / policy-review-atlas.md：仅 supported states（{} cards 覆盖 {} rows）。".format(
+    sum(1 for r in PR), len(PR)))
+md.append("- HUMAN POLICY DECISION 字段留空——由人工逐卡填写。")
 md.append("")
-md.append("- 见 docs/economy/planner-gap-audit.md（SUPPORTED/PARTIAL/MISSING per item）。")
-md.append("- representation benchmark：30-leaf rule tree logloss 0.4465 ≈ surface 0.5398（acc 0.832 vs 0.844）——")
-md.append("  规则树可接近 surface，选择留给人工。")
+md.append("## RUNTIME VALIDATIONS")
 md.append("")
-md.append("## 13. Representation options")
-md.append("")
-md.append("- representation-benchmark.csv：surface vs 30/60/100-leaf trees。")
-md.append("- lookup-feasibility.md：exact $50 lookup 轻量（JSON ~MB 级，O(1) hash），无插值必要（reachable 全 $50）。")
-md.append("")
-md.append("## 14. What is now known")
-md.append("")
-md.append("- 职业 format-state 分布、spend、loadout、utility、retained 行为：全部 per-state 概率化证据。")
-md.append("- 可负担性（canonical prices）after-loss 检查：affordability-targets.csv。")
-md.append("- 个人 live 状态足以支撑 policy 主体；团队/round/score 增益小；drop 是主要不可见通道。")
-md.append("")
-md.append("## 15. What still requires HUMAN POLICY JUDGEMENT")
-md.append("")
-md.append("- 普通玩家是否应比职业选手更保守（spend 阈值的主观缩放）。")
-md.append("- 高熵状态选哪一个分支（ambiguity-map.csv 中标出的 MIXED 区）。")
-md.append("- 头甲 vs utility 的主观优先级（职业分布只是参考）。")
-md.append("- AWP 是否默认推荐（职业 AWP 行为存在，但个人推荐是否推 AWP 是产品决策）。")
-md.append("- team-drop 无法观察时如何保守处理（drop-sensitive-analysis.md 的状态清单）。")
-md.append("- 表示形式选择：exact lookup / 规则树 / 混合（representation-benchmark.csv）。")
-md.append("")
-md.append("## 16. What still requires RUNTIME VALIDATION")
-md.append("")
-md.append("- roundStartMoney 的 live freeze-time 获取（decision-anchor-design.md）。")
-md.append("- 首次 payload 已购买时的 anchor 识别。")
-md.append("- 实时 current-round spend 显示（live-spend-feasibility.md 的 CONDITIONAL 项）。")
-md.append("- Windows packaging 全链（product-readiness-audit.md）。")
-md.append("")
-md.append("---")
-md.append("")
-md.append("**Interpretation**：本文件所有 professional 行为均为 OBSERVED REFERENCE，")
-md.append("不是 optimal truth，不构成推荐策略。下一阶段由人工基于 policy-review-table.csv /")
-md.append("policy-review-atlas.md 制定策略。")
+md.append("- freeze 首帧纯净性（first payload 是否已购买）— decision-anchor-design.md")
+md.append("- previously.weapons entry 增删的可观测性 — decision-anchor-design.md")
+md.append("- armor 受损态 vs 全价的 live 区分 — live-spend-feasibility.md")
+md.append("- 全部 NEEDS RUNTIME VALIDATION 项见 gsi-deployability.md / fact-layer-contract.md")
 open(f"{RESULTS}/FINAL-POLICY-RESEARCH.md", "w").write("\n".join(md))
 print("FINAL-POLICY-RESEARCH.md:", len(md), "lines")

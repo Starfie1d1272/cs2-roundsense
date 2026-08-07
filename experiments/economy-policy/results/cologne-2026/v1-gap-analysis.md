@@ -1,15 +1,46 @@
 # V1 Gap Analysis
 
-production V1（bundle heuristic planner，rifle_armor 默认 goal）在关键状态的行为 vs 职业证据。
-V1 推荐来自当前 production advisor（只读调用）。
+production V1（bundle heuristic planner）在关键状态的行为 vs 职业证据。
+V1 推荐来自当前 production advisor（只读调用，未修改）。
+注：production roundType 为 4 类（eco/semi/force/full，totalCost=0 归 eco——与 format taxonomy
+的 pistol/save 语义不同）；rec_class 仅为 production 行为参考。
 
-## V1 spend vs professional spend（retained none）
+## V1 vs professional（retained none，$1000 步长状态）
 
-| side | lr | money | V1 cost | prof p25 | prof med | prof p75 |
-|---|---|---|---|---|---|---|
+| side | lr | money | V1 class | V1 cost | prof spend p25/med/p75 | prof primary top1 | prof armor | prof smoke |
+|---|---|---|---|---|---|---|---|---|
+| T | $1400 | $4000 | full | $3900 | $3900/3950/4000 | AK-47 50% | 100% | 96% |
+| T | $1400 | $5000 | full | $4400 | $4800/4800/4900 | AK-47 93% | 100% | 96% |
+| T | $1900 | $3000 | semi | $1900 | $800/2000/2750 | none 78% | 69% | 64% |
+| T | $1900 | $4000 | full | $3900 | $3700/3900/4000 | AK-47 43% | 95% | 76% |
+| T | $1900 | $5000 | full | $4400 | $4800/4800/4900 | AK-47 96% | 97% | 88% |
+| T | $2400 | $3000 | semi | $1900 | $700/2000/2800 | none 64% | 62% | 39% |
+| T | $2400 | $4000 | full | $3900 | $3700/3900/4000 | AK-47 43% | 96% | 78% |
+| T | $2400 | $5000 | full | $4400 | $4700/4800/4900 | AK-47 96% | 97% | 94% |
+| T | $2900 | $3000 | semi | $1900 | $800/1450/2050 | none 86% | 66% | 60% |
+| T | $2900 | $4000 | full | $3900 | $3800/3900/4000 | Galil AR 55% | 98% | 88% |
+| T | $2900 | $5000 | full | $4400 | $4800/4800/4900 | AK-47 99% | 100% | 90% |
+| T | $3400 | $3000 | semi | $1900 | $1150/1450/1800 | none 95% | 70% | 67% |
+| T | $3400 | $4000 | full | $3900 | $2250/3900/4000 | none 37% | 97% | 85% |
+| T | $3400 | $5000 | full | $4400 | $4800/4800/4900 | AK-47 97% | 100% | 92% |
+| CT | $1400 | $4000 | full | $3900 | $3850/3900/3900 | M4A1-S 29% | 100% | 74% |
+| CT | $1400 | $5000 | full | $4400 | $4850/4900/5000 | M4A4 49% | 100% | 97% |
+| CT | $1900 | $3000 | semi | $1900 | $900/2700/2900 | none 40% | 76% | 72% |
+| CT | $1900 | $4000 | full | $3900 | $2600/3750/3850 | M4A1-S 32% | 87% | 73% |
+| CT | $1900 | $5000 | full | $4400 | $4700/4850/4850 | M4A4 46% | 93% | 84% |
+| CT | $2400 | $3000 | semi | $1900 | $700/1450/2750 | none 63% | 58% | 49% |
+| CT | $2400 | $4000 | full | $3900 | $1450/2500/3700 | none 38% | 74% | 62% |
+| CT | $2400 | $5000 | full | $4400 | $4500/4650/4850 | M4A1-S 45% | 99% | 93% |
+| CT | $2900 | $3000 | semi | $1900 | $300/1000/1450 | none 83% | 60% | 45% |
+| CT | $2900 | $4000 | full | $3900 | $1000/2600/3700 | none 43% | 74% | 61% |
+| CT | $2900 | $5000 | full | $4400 | $4850/4850/4900 | M4A4 53% | 96% | 95% |
+| CT | $3400 | $3000 | semi | $1900 | $1000/1450/1650 | none 91% | 71% | 72% |
+| CT | $3400 | $4000 | full | $3900 | $2100/2600/3850 | none 31% | 94% | 74% |
+| CT | $3400 | $5000 | full | $4400 | $4850/4850/4900 | M4A4 53% | 100% | 98% |
 
 ## 观察（仅描述）
 
 - V1 推荐 cost 与职业 median spend 的差 = 现有 heuristic 到 evidence-backed policy 的距离（部分状态）。
 - V1 的 bundle 结构（固定模板 + 增量）无法表达职业的 utility 混合（见 conditional-loadouts）。
-- 完整 per-state 对比见 v1-gap.csv（240 行：side/lr/retained/money/goal/rec_class/rec_cost/rec_purchases）。
+- V1 eco 类含 save 行为（totalCost=0）；对照职业 format eco/save 时需注意语义差。
+- 完整 per-state 对比见 v1-gap.csv（side/lr/retained/money/goal/rec_class/rec_cost/rec_purchases）。

@@ -1,5 +1,8 @@
-representation,leaves,grouped_log_loss,grouped_accuracy
-surface_exact_lookup,-1,0.5398,0.8441
-rule_tree_30leaves,30,0.4465,0.8321
-rule_tree_60leaves,60,0.4599,0.8357
-rule_tree_100leaves,100,0.4986,0.8365
+representation,leaves,grouped_oof_log_loss,grouped_oof_accuracy,grouped_oof_macroF1,mode
+surface_exact_lookup_OOF,-1,1.1807,0.8224,,generalization_OOF
+rule_tree_30leaves_OOF,30,0.4654,0.8216,0.7205,generalization_OOF
+rule_tree_60leaves_OOF,60,0.4794,0.8246,0.7291,generalization_OOF
+rule_tree_100leaves_OOF,100,0.5067,0.8248,0.7302,generalization_OOF
+rule_tree_30leaves_full,30,,,,compression_fidelity
+rule_tree_60leaves_full,60,,,,compression_fidelity
+rule_tree_100leaves_full,100,,,,compression_fidelity

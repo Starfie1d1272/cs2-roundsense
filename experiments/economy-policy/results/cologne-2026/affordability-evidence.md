@@ -1,15 +1,38 @@
 # Affordability Evidence
 
 每行：职业实际购买后若本回合输掉，nextIfLoseAfterSpend = min(16000, start - spent + lossReward)。
-1 = 下一局可负担该 target（canonical prices，便宜侧武器）。
+1 = 下一局可负担该 exact legal target（canonical prices + canonical side legality）。
 
-target costs: rifle+armor $2450, rifle+helmet $2800, rifle+armor+smoke+flash $2950, rifle+armor+smoke+2flash $3150, awp+armor $5400, awp+armor+smoke+flash $5900, smg+armor $1700, paidpistol+armor $950
+## T legal targets
 
-affordability-targets.csv 全量；以下为按背景的负担率摘要（下一局可负担 rifle+armor 的占比）：
+- AK-47 + armor $3350
+- AK-47 + helmet $3700
+- AK-47 + armor + smoke + flash $3850
+- AK-47 + armor + smoke + 2flash $4050
+- Galil AR + armor $2450
+- Galil AR + helmet $2800
+- Galil AR + armor + smoke + flash $2950
+- Galil AR + armor + smoke + 2flash $3150
+- MAC-10 + armor $1700
+- AWP + armor $5400
+- AWP + armor + smoke + flash $5900
+- Tec-9 + armor $1150
+- Desert Eagle + armor $1350
 
-- T lr1900: 26% (n=3387)
-- T lr2400: 92% (n=2230)
-- T lr2900: 100% (n=1824)
-- CT lr1900: 22% (n=3075)
-- CT lr2400: 86% (n=1615)
-- CT lr2900: 100% (n=1105)
+## CT legal targets
+
+- FAMAS + armor $2600
+- FAMAS + helmet $2950
+- FAMAS + armor + smoke + flash $3100
+- FAMAS + armor + smoke + 2flash $3300
+- M4A4 + armor $3550
+- M4A4 + armor + smoke + flash $4050
+- M4A1-S + armor $3550
+- M4A1-S + armor + smoke + flash $4050
+- MP9 + armor $1900
+- AWP + armor $5400
+- AWP + armor + smoke + flash $5900
+- Five-SeveN + armor $1150
+- Desert Eagle + armor $1350
+
+affordability-targets.csv 全量（每行含 target_labels/costs/affordable_mask JSON）。

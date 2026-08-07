@@ -5,6 +5,7 @@ import csv, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from research_common import (load_rows, build_dataset, loss_reward, wquant, wprob,
                              wdist, weights_at, confidence_for, retained_pool,
+                             no_retained_pool,
                              DEFAULT_PISTOLS, PAID_PISTOLS, RESULTS)
 
 STRICT, FAMILY = build_dataset()
@@ -71,8 +72,14 @@ for side in ["t", "ct"]:
         for rv in [None] + sorted({r["correctedRetainedPrimary"] for r in STRICT
                                    if r["side"] == side and r["_lr"] == lr
                                    and r["correctedRetainedPrimary"] not in (None, "UNKNOWN")}):
-            pool, level = retained_pool(STRICT, FAMILY, side, lr, rv)
-            if pool is None:
+            if rv is None:
+                pool = no_retained_pool(STRICT, side, lr)
+                level = "none"
+            else:
+                pool, level = retained_pool(STRICT, FAMILY, side, lr, rv)
+                if pool is None:
+                    continue
+            if len(pool) < 30:
                 continue
             for M in range(800, 7601, 50):
                 feas = [(m, r) for m, r in pool if r["moneySpent"] <= M]
@@ -108,8 +115,9 @@ BUCKETS = [(0, 2000, "<2000"), (2000, 3000, "2000-2999"), (3000, 3500, "3000-349
            (5000, 99999, "5000+")]
 for side in ["t", "ct"]:
     for lr in [1400, 1900, 2400, 2900, 3400]:
-        pool, level = retained_pool(STRICT, FAMILY, side, lr, None)
-        if pool is None:
+        pool = no_retained_pool(STRICT, side, lr)
+        level = "none"
+        if len(pool) < 30:
             continue
         for M in range(800, 7601, 50):
             feas = [(m, r) for m, r in pool if r["moneySpent"] <= M]

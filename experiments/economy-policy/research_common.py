@@ -149,7 +149,8 @@ def wdist(rows, ws, keyfn):
     return {k: v / tot for k, v in agg.items()}
 
 def retained_pool(STRICT, FAMILY, side, lr, retained):
-    """exact -> family -> None (unsupported). NEVER no-retained fallback."""
+    """exact -> family -> None (unsupported). NEVER no-retained fallback.
+    Only for REAL exact retained weapons."""
     if retained in (None, "UNKNOWN"):
         return None, "unsupported"
     exact = [(r["startMoney"], r) for r in STRICT
@@ -165,6 +166,31 @@ def retained_pool(STRICT, FAMILY, side, lr, retained):
     if len(fam_rows) >= 40:
         return fam_rows, "family"
     return None, "unsupported"
+
+def no_retained_pool(STRICT, side, lr):
+    """The no-retained state (correctedRetainedPrimary is None).
+    NEVER call retained_pool(..., None) — it returns unsupported."""
+    return [(r["startMoney"], r) for r in STRICT
+            if r["side"] == side and r["_lr"] == lr
+            and r["correctedRetainedPrimary"] is None]
+
+def entropy_from_counts(counts):
+    """Normalized entropy from RAW COUNTS (never raw counts into entropy()).
+    Returns bits in [0, log2(n_classes)]."""
+    total = sum(counts.values())
+    if total <= 0:
+        return 0.0
+    ps = [v / total for v in counts.values() if v > 0]
+    return -sum(p * math.log2(p) for p in ps)
+
+def entropy_from_probs(ps):
+    """Entropy from a probability distribution (values must already sum to 1)."""
+    return -sum(p * math.log2(p) for p in ps if p > 0)
+
+def load_prices(results_dir=None):
+    """Canonical prices JSON (exported by export_prices.ts)."""
+    d = results_dir or RESULTS
+    return json.load(open(f"{d}/_prices.json"))
 
 DEFAULT_PISTOLS = {"Glock-18", "USP-S", "P2000"}
 PAID_PISTOLS = {"P250", "Dual Berettas", "Tec-9", "CZ75-Auto", "Five-SeveN", "Desert Eagle", "R8 Revolver"}

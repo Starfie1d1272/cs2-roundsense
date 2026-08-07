@@ -1,8 +1,8 @@
 # Role Ambiguity
 
-- state-conditioned entropy: -2471.8659 bits
-- +player identity entropy: -6.7506 bits
-- irreducible role ambiguity ≈ -6.7506 bits (player-conditioned residual)
+- state-conditioned entropy: 0.5398 bits
+- +player identity entropy: 0.0775 bits
+- irreducible role ambiguity ≈ 0.0775 bits (player-conditioned residual)
 
 AWP/utility usage per player（自动统计，不贴角色标签）:
 - npl: n=337 awp=0% util2+=64%
