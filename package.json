@@ -11,8 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "recorder": "pnpm --filter @roundsense/gsi-recorder start",
-    "viewer": "pnpm --filter @roundsense/debug-viewer start",
-    "oracle:inspect": "pnpm --filter @roundsense/demo-oracle inspect"
+    "validate": "pnpm --filter @roundsense/tools validate"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

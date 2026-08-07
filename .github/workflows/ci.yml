@@ -21,5 +21,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       # validator smoke: repo-only tiny fixture (no large corpus in git);
-      # path is relative to the experiment package cwd under pnpm --filter
-      - run: pnpm --filter @roundsense/experiment-economy-ledger validate -- ../../fixtures/demo-format/tiny-v3.zip
+      # path is relative to the tools package cwd under pnpm --filter
+      - run: pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip

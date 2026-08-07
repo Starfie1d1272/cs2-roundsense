@@ -1,0 +1,17 @@
+{
+  "name": "@roundsense/tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "tsx validate-demo.ts"
+  },
+  "dependencies": {
+    "@roundsense/economy-advisor": "workspace:*",
+    "cs2-demo-format": "^3.1.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0"
+  }
+}

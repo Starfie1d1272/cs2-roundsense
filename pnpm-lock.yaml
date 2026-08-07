@@ -24,53 +24,42 @@ importers:
         specifier: ^4.1.8
         version: 4.1.10(@types/node@24.13.3)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(tsx@4.23.7))
 
-  apps/debug-viewer:
-    dependencies:
-      '@roundsense/c4-estimator':
-        specifier: workspace:*
-        version: link:../../packages/c4-estimator
-      '@roundsense/replay-harness':
-        specifier: workspace:*
-        version: link:../../packages/replay-harness
-
   apps/gsi-recorder:
     dependencies:
       '@roundsense/gsi-protocol':
         specifier: workspace:*
         version: link:../../packages/gsi-protocol
 
-  experiments/economy-ledger:
+  apps/roundsense:
     dependencies:
-      '@roundsense/demo-oracle':
+      '@roundsense/c4-estimator':
         specifier: workspace:*
-        version: link:../../packages/demo-oracle
+        version: link:../../packages/c4-estimator
       '@roundsense/economy-advisor':
         specifier: workspace:*
         version: link:../../packages/economy-advisor
-      cs2-demo-format:
-        specifier: ^3.1.0
-        version: 3.1.0(zod@3.25.76)
+      '@roundsense/gsi-protocol':
+        specifier: workspace:*
+        version: link:../../packages/gsi-protocol
+      '@roundsense/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.7
+      vitest:
+        specifier: ^4.1.8
+        version: 4.1.10(@types/node@24.13.3)(vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(tsx@4.23.7))
 
   packages/c4-estimator:
     dependencies:
       '@roundsense/shared-types':
         specifier: workspace:*
         version: link:../shared-types
-
-  packages/demo-oracle:
-    dependencies:
-      '@roundsense/economy-advisor':
-        specifier: workspace:*
-        version: link:../economy-advisor
-      '@roundsense/shared-types':
-        specifier: workspace:*
-        version: link:../shared-types
-      cs2-demo-format:
-        specifier: ^3.1.0
-        version: 3.1.0(zod@3.25.76)
-      zod:
-        specifier: ^3.25.0
-        version: 3.25.76
 
   packages/economy-advisor:
     dependencies:
@@ -100,6 +89,22 @@ importers:
         version: link:../shared-types
 
   packages/shared-types: {}
+
+  tools:
+    dependencies:
+      '@roundsense/economy-advisor':
+        specifier: workspace:*
+        version: link:../packages/economy-advisor
+      cs2-demo-format:
+        specifier: ^3.1.0
+        version: 3.1.0(zod@3.25.76)
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+    devDependencies:
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.7
 
 packages:
 
