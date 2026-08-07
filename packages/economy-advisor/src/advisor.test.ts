@@ -13,7 +13,6 @@ function input(partial: Partial<AdvisorInput>): AdvisorInput {
     lossStreak: 0,
     inventory: { armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] },
     killsThisRound: [],
-    bombPlantedThisRound: false,
     nextRoundGoal: "rifle_armor",
     ...partial,
   };
@@ -48,24 +47,23 @@ describe("projection", () => {
     // T wins pistol with $800 start, spent $650 (kevlar), 0 kills
     // r2 money = 800 - 650 + 3250 = 3400
     const branches = projectNextRoundMoney({
-      money: 3400, spendNow: 0, side: "T", lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES,
+      money: 3400, spendNow: 0, side: "T", lossStreak: 0, kills: [], rules: DEFAULT_RULES,
     });
     expect(branches.win).toBe(3400 + 3250);
     expect(branches.loss).toBe(3400 + 1400);
   });
 
-  it("loss with plant adds plantBonusT for T only (C3)", () => {
+  it("lossWithPlant is the hypothetical T loss-with-plant branch: T +plantBonusT, CT identical to loss", () => {
     const base = { money: 2000, spendNow: 0, side: "T" as const, lossStreak: 0, kills: [], rules: DEFAULT_RULES };
-    const withPlant = projectNextRoundMoney({ ...base, bombPlantedThisRound: true });
-    const without = projectNextRoundMoney({ ...base, bombPlantedThisRound: false });
-    expect(withPlant.lossWithPlant).toBe(without.lossWithPlant + DEFAULT_RULES.roundRewards.plantBonusT);
-    // CT never gets a plant bonus
-    const ct = projectNextRoundMoney({ ...base, side: "CT", bombPlantedThisRound: true });
+    const t = projectNextRoundMoney(base);
+    expect(t.lossWithPlant).toBe(t.loss + DEFAULT_RULES.roundRewards.plantBonusT);
+    // CT never gets a plant bonus — branch equals plain loss
+    const ct = projectNextRoundMoney({ ...base, side: "CT" });
     expect(ct.lossWithPlant).toBe(ct.loss);
   });
 
   it("first loss of a half pays 1900 via lossStreak=1 (mp_starting_losses=1)", () => {
-    const base = { money: 2000, spendNow: 0, side: "T" as const, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
+    const base = { money: 2000, spendNow: 0, side: "T" as const, kills: [], rules: DEFAULT_RULES };
     const pistol = projectNextRoundMoney({ ...base, lossStreak: 1 });
     const regular = projectNextRoundMoney({ ...base, lossStreak: 0 });
     expect(pistol.loss).toBe(regular.loss + 500); // 1900 vs 1400
@@ -73,7 +71,7 @@ describe("projection", () => {
   });
 
   it("CT team kill award adds $50/kill to every CT player's projection (C5)", () => {
-    const base = { money: 2000, spendNow: 0, side: "CT" as const, lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES };
+    const base = { money: 2000, spendNow: 0, side: "CT" as const, lossStreak: 0, kills: [], rules: DEFAULT_RULES };
     const noKills = projectNextRoundMoney({ ...base, ctTeamKillsOnTs: 0 });
     const withKills = projectNextRoundMoney({ ...base, ctTeamKillsOnTs: 3 });
     expect(withKills.win).toBe(noKills.win + 3 * DEFAULT_RULES.roundRewards.ctTeamKillReward);
@@ -92,14 +90,14 @@ describe("projection", () => {
     expect(killRewardsTotal({ kills, rules: DEFAULT_RULES })).toBe(700);
     expect(killRewardsTotal({ kills: [{ weaponClass: "sniper" as const, count: 1 }], rules: DEFAULT_RULES })).toBe(300);
     const branches = projectNextRoundMoney({
-      money: 1000, spendNow: 0, side: "T", lossStreak: 0, kills, bombPlantedThisRound: false, rules: DEFAULT_RULES,
+      money: 1000, spendNow: 0, side: "T", lossStreak: 0, kills, rules: DEFAULT_RULES,
     });
     expect(branches.win).toBe(1000 + 3250 + 700);
   });
 
   it("clamps at maxMoney 16000", () => {
     const branches = projectNextRoundMoney({
-      money: 15000, spendNow: 0, side: "T", lossStreak: 0, kills: [], bombPlantedThisRound: false, rules: DEFAULT_RULES,
+      money: 15000, spendNow: 0, side: "T", lossStreak: 0, kills: [], rules: DEFAULT_RULES,
     });
     expect(branches.win).toBe(16000);
   });
@@ -393,6 +391,55 @@ describe("armor condition handling (Review Fix)", () => {
     const plan = [out.recommended, ...out.alternatives].find((s) => s?.id === "rifle-helmet")!;
     expect(plan.totalCost).toBe(350);
     expect(plan.affordable).toBe(true);
+  });
+});
+
+describe("goal fulfillment semantics (Final Convergence)", () => {
+  const loadout = (over: Partial<import("./advisor.js").PostLoadout>): import("./advisor.js").PostLoadout => ({
+    primary: null, armor: 0, hasHelmet: false, grenades: [], ...over,
+  });
+
+  it("AWP + armor → fulfills awp", () => {
+    expect(fulfillsLoadoutGoal("awp", loadout({ primary: "awp", armor: 100 }))).toBe(true);
+  });
+
+  it("AWP + no armor → does NOT fulfill awp (cost = AWP + kevlar)", () => {
+    expect(fulfillsLoadoutGoal("awp", loadout({ primary: "awp", armor: 0 }))).toBe(false);
+  });
+
+  it("rifle + armor + smoke + flash → fulfills rifle_util", () => {
+    expect(fulfillsLoadoutGoal("rifle_util", loadout({ primary: "m4a4", armor: 100, grenades: ["smoke", "flash"] }))).toBe(true);
+  });
+
+  it("rifle + armor + smoke only → does NOT fulfill rifle_util", () => {
+    expect(fulfillsLoadoutGoal("rifle_util", loadout({ primary: "m4a4", armor: 100, grenades: ["smoke"] }))).toBe(false);
+  });
+
+  it("rifle + armor + flash only → does NOT fulfill rifle_util", () => {
+    expect(fulfillsLoadoutGoal("rifle_util", loadout({ primary: "m4a4", armor: 100, grenades: ["flash"] }))).toBe(false);
+  });
+
+  it("rifle + armor, no util → does NOT fulfill rifle_util", () => {
+    expect(fulfillsLoadoutGoal("rifle_util", loadout({ primary: "m4a4", armor: 100, grenades: [] }))).toBe(false);
+  });
+
+  it("rifle + armor → fulfills rifle_armor (helmet NOT required)", () => {
+    expect(fulfillsLoadoutGoal("rifle_armor", loadout({ primary: "m4a4", armor: 50 }))).toBe(true);
+  });
+
+  it("recommend(): rifle+armor already owned does NOT bypass rifle_util breaksGoal", () => {
+    // own rifle+armor but no util; a spending scheme (e.g. rifle-helmet-util
+    // partial) leaves projected loss below the rifle_util target
+    const inv: InventoryState = { primary: "m4a4", armor: 100, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+    const out = recommend(input({ money: 400, inventory: inv, nextRoundGoal: "rifle_util" }));
+    const target = goalTargetCost(DEFAULT_RULES, "rifle_util", "T");
+    for (const s of [out.recommended, ...out.alternatives]) {
+      if (s && s.totalCost > 0 && s.projections.loss < target) {
+        expect(s.breaksGoal).toBe(true);
+      }
+    }
+    // and there must be at least one spending scheme in this position
+    expect(out.recommended).not.toBeNull();
   });
 });
 

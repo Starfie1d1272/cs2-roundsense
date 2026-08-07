@@ -25,12 +25,10 @@ export interface AdvisorInput {
   roundNumber: number;
   /** current cash (live, from player_state.money) */
   money: number;
-  /** consecutive losses BEFORE this round (map.team_*.consecutive_round_losses) */
+  /** live loss-bonus index from map.team_*.consecutive_round_losses */
   lossStreak: number;
   inventory: InventoryState;
   killsThisRound: KillAttribution[];
-  /** T side only: bomb was planted this round (affects loss branch) */
-  bombPlantedThisRound?: boolean;
   /** CT side only: how many T the CT team eliminated this round — every CT
    *  player receives +$50 each (C5, corpus-verified 2026-08-06) */
   ctTeamKillsOnTs?: number;

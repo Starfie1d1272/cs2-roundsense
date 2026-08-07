@@ -71,10 +71,21 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
 export function fulfillsLoadoutGoal(goal: NextRoundGoal, loadout: PostLoadout): boolean {
   switch (goal) {
     case "awp":
-      return loadout.primary === "awp";
+      // cost definition is AWP + kevlar → armor is part of the goal
+      return loadout.primary === "awp" && loadout.armor > 0;
     case "rifle_armor":
-    case "rifle_util":
       return loadout.primary !== null && isRifle(loadout.primary) && loadout.armor > 0;
+    case "rifle_util": {
+      // cost definition is rifle + armor + smoke + flash
+      if (loadout.primary === null || !isRifle(loadout.primary) || loadout.armor <= 0) return false;
+      let smoke = 0;
+      let flash = 0;
+      for (const g of loadout.grenades) {
+        if (g === "smoke") smoke++;
+        else if (g === "flash") flash++;
+      }
+      return smoke >= 1 && flash >= 1;
+    }
     case "max_combat_now":
       return false;
   }
@@ -238,7 +249,6 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       side: input.side,
       lossStreak: input.lossStreak,
       kills: input.killsThisRound,
-      bombPlantedThisRound: input.bombPlantedThisRound ?? false,
       ctTeamKillsOnTs: input.ctTeamKillsOnTs, // C5: CT shared team award
       rules,
     };

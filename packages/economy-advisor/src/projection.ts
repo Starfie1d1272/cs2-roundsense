@@ -14,8 +14,10 @@ import type { KillAttribution, ProjectionBranches } from "./types.js";
  *   table "Losing (loss count: N)" (C2, corpus-verified). With
  *   mp_starting_losses=1 the first loss of a half has lossStreak=1 and
  *   naturally pays $1900 — no pistol-round special case.
- * - `lossWithPlant` applies only to T with a plant this round (C3,
- *   corpus-approximate $600).
+ * - `lossWithPlant` is a HYPOTHETICAL branch: “if T loses this round but
+ *   still plants the bomb”. It is not an observation of a current plant —
+ *   live advice only runs during freezetime, so no plant can be known yet.
+ *   T: loss + plantBonusT (corpus-approximate $600); CT: loss.
  * - The projection does NOT model: T surviving a time-out loss (no reward,
  *   C9), short-handed bonus, team-kill penalty, plant/defuse player bonus
  *   (+$300, C8) — these are recorded as assumptions in each scheme.
@@ -24,9 +26,9 @@ export interface ProjectionInput {
   money: number;
   spendNow: number;
   side: Side;
+  /** live loss-bonus index from map.team_*.consecutive_round_losses */
   lossStreak: number;
   kills: KillAttribution[];
-  bombPlantedThisRound: boolean;
   /** CT team kills of T this round — every CT player gets +$50 each (C5,
    *  corpus-verified 2026-08-06; server-config dependent, see rules notes) */
   ctTeamKillsOnTs?: number;
@@ -41,8 +43,10 @@ export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranche
     Math.min(rules.maxMoney, Math.max(0, input.money - input.spendNow + reward + teamAward + killRewardsTotal(input)));
   const lossReward = lossBonus(rules, input.lossStreak);
   const loss = base(lossReward);
+  // hypothetical T loss-with-plant branch — always available to T, whether or
+  // not a plant is actually in progress (freezetime advice has no bomb yet)
   const lossWithPlant =
-    input.side === "T" && input.bombPlantedThisRound ? base(lossReward + rules.roundRewards.plantBonusT) : loss;
+    input.side === "T" ? base(lossReward + rules.roundRewards.plantBonusT) : loss;
   return {
     win: base(rules.roundRewards.winByElimination),
     winBomb: base(rules.roundRewards.winByBombDetonation),
