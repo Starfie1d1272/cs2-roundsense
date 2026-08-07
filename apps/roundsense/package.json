@@ -1,0 +1,20 @@
+{
+  "name": "@roundsense/roundsense",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@roundsense/c4-estimator": "workspace:*",
+    "@roundsense/economy-advisor": "workspace:*",
+    "@roundsense/gsi-protocol": "workspace:*",
+    "@roundsense/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "vitest": "^4.1.8"
+  }
+}

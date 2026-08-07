@@ -52,10 +52,15 @@ export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranche
 }
 
 export function killRewardsTotal(input: Pick<ProjectionInput, "kills" | "rules">): number {
-  return input.kills.reduce(
-    (sum, k) => sum + killReward(input.rules, { weaponId: k.weaponId, fallbackClass: k.weaponClass }) * k.count,
-    0,
-  );
+  return input.kills.reduce((sum, k) => {
+    try {
+      return sum + killReward(input.rules, { weaponId: k.weaponId, fallbackClass: k.weaponClass }) * k.count;
+    } catch {
+      // GSI path: weapon class is unknown (assumption A10) — reward unknown,
+      // do NOT guess; project 0 (conservative)
+      return sum;
+    }
+  }, 0);
 }
 
 /** Cost of a goal for the NEXT round (used by breaksGoal). Side-aware rifle price. */
