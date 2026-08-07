@@ -212,10 +212,6 @@ function resolveItems(rules: EconomyRules, side: Side, items: ItemId[]): Purchas
   return [...count.entries()].map(([item, quantity]) => ({ item, quantity }));
 }
 
-function costOf(rules: EconomyRules, purchases: PurchaseItem[]): number {
-  return purchases.reduce((sum, p) => sum + price(rules, p.item) * p.quantity, 0);
-}
-
 /**
  * Goal-constrained purchase advisor (P0-B).
  *
