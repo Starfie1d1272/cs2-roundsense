@@ -1,7 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { NdjsonWriter, renderGsiCfg, generateToken } from "@roundsense/gsi-protocol";
-import { createGsiReceiver } from "./server.js";
+import { createGsiReceiver, NdjsonWriter, renderGsiCfg, generateToken, sanitizePayload } from "@roundsense/gsi-protocol";
 
 interface CliArgs {
   port: number;
@@ -68,8 +67,22 @@ async function main() {
 
   const handle = createGsiReceiver({
     token,
-    writer,
-    onRecord: (seq) => console.log(`[recv] seq=${seq} → ${outPath}`),
+    onPayload: (receipt) => {
+      const seq = writer.write({
+        receivedAtWallClock: receipt.receivedAtWallClock,
+        receivedAtMonotonicNs: receipt.receivedAtMonotonicNs.toString(),
+        providerTimestamp: receipt.payload.provider?.timestamp,
+        build: receipt.payload.provider
+          ? {
+              providerName: receipt.payload.provider.name,
+              appid: receipt.payload.provider.appid,
+              version: receipt.payload.provider.version,
+            }
+          : undefined,
+        payload: sanitizePayload(receipt.payload),
+      });
+      console.log(`[recv] seq=${seq} → ${outPath}`);
+    },
     onReject: (code, reason) => console.warn(`[reject] ${code} ${reason}`),
   });
 
