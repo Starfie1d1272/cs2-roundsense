@@ -4,6 +4,21 @@ All long-term findings from the demo-economy research phase. Numbers are
 reproducible via `pnpm validate` (`tools/validate-demo.ts`); the corpus
 itself is NOT in the repo. Git history preserves the full research process.
 
+## Runtime-observed (Windows build 14174, 2026-08-07)
+
+See `docs/runtime-checks.md` for the raw protocol and payload-level detail.
+
+- `consecutive_round_losses` sent on every in-game payload; loss → +1,
+  win → decrement observed (3→1, 1→0). Clean-loss payout discrimination:
+  GSI index 1 → $1900, index 2 → $2400 (2/2 exact hits). Indices 0/3/4 and
+  capped state not payout-verified in controlled runtime.
+- Inventory: armor/helmet live in `player.state` (never `player.weapons`);
+  vest $650, vest→helmet upgrade $350 = price(helmet)−price(vest);
+  defuse kit = `player.state.defusekit` boolean (−$400); grenade quantity
+  = `ammo_reserve` on the single weapon entry (flash ×2 → reserve 2).
+- C4: 4 receive-to-receive planted→exploded samples, 38.56–39.49 s —
+  samples only, fuse stays 41000 ms (corpus).
+
 ## Verified
 
 - Weapon prices/kill awards: generated from pinned GameTracking-CS2
