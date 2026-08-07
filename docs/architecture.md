@@ -44,7 +44,9 @@ experiments/economy-ledger
 - **规则唯一性**：每个事实只在一个权威位置（assumptions.md / 规则 JSON / 武器表 / loss-bonus-state.ts），其他位置只引用。
 - **证据分级**：source-verified / corpus-observed / runtime-unverified / provisional（见 assumptions.md 头部）。
 - **武器表生成**：`packages/economy-advisor/scripts/generate-weapons.ts` ← GameTracking-CS2 weapons.vdata（钉 commit `2e606a0b`）；生成结果可复现（逐字节一致）+ 一致性测试。
-- **验证方法**：整数账本对账（diff=0），无回归/OLS。
+- **验证方法**：L1 整数账本对账（summary 重建）+ **L4 replay-native cash ledger**（`demo-oracle/replay-ledger.ts`：逐现金变化事件归因；100% 解释），无回归/OLS。
+- **OT 现金**：server/match profile（`mp_overtime_startmoney` 10000 或 carry-over；语料 42/42），非 universal rule；loss counter 重置独立。
+- **武器 event-name**：生成器从 `CSWeaponNameID.h` 自动生成 22 个 knife/bayonet alias（哨兵测试防新增遗漏）。
 - **未决项**：win decrement（cap 分支）、buytime 精确截止、GSI consecutive_round_losses 可用性、moneySpent 毛/净——全部标 runtime-unverified 或 provisional，协议待执行。
 
 ## 3. 技术栈

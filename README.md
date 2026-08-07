@@ -2,8 +2,9 @@
 
 面向 CS2 普通玩家的**只读实时决策辅助研究项目**（非 HUD / 非直播 / 非 OBS / 非 Overlay）。
 当前状态：v0.1 研究基线已收敛——C4 安放时间估算（P0-A）、个人经济购买建议（P0-B）、
-demo 真值适配（P1）。**经济数值规则已通过语料整数账本验证；loss-counter win transition
-与 GSI runtime availability 仍待 Windows 实测。**
+demo 真值适配（P1）。**经济数值规则已通过语料验证：replay-native cash ledger 对
+科隆 202 场 85,599 次现金变化达到 100% 解释；L1 summary-ledger 对账率 91%（方法局限，
+非规则错误）；loss-counter win transition 与 GSI runtime availability 仍待 Windows 实测。**
 
 ## 快速开始
 

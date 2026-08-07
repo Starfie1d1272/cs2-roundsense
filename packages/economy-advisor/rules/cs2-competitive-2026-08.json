@@ -67,18 +67,14 @@
     "forceMinSpend": 2000
   },
   "corpusValidation": {
-    "method": "integer income ledger: income = startMoney(r) − startMoney(r−1) + moneySpent(r−1); modeled = round reward + loss bonus + plant/defuse + kill rewards (weapon table) + CT team award + TK; residual = income − modeled; diff=0 expected",
-    "run": "2026-08-06, 316 matches / 60325 samples (Cologne 202 + rival + Windows corpus); final: 89-90% diff=0, 100% integer residuals; remaining ±200/±500/±300 = buytime-tail moneySpent blind spot (4/1595), weapon-map edge cases, loss-counter cap boundary",
+    "method": "L1 integer income ledger (startMoney − moneySpent reconstruction) + L4 replay-native cash-transition ledger (8 Hz replay money stream, per-transition event attribution)",
+    "run": "2026-08-07, Cologne 202 replay matches + 59 mini (no replay)",
     "results": {
-      "winByElimination": "confirmed 3250",
-      "winByBomb": "confirmed 3500",
-      "lossBonusByStreak": "confirmed 1400/1900/2400/2900/3400 (mp_starting_losses=1, payout=min(3400,1400+500×count))",
-      "plantBonusT": "confirmed 600",
-      "plantBonusPlayer": "confirmed 300 (cash_player_bomb_planted 300)",
-      "killRewards": "weapon table (weapons.v2026-08-06.json, GameTracking-CS2 2e606a0b): awp 100, p90 300, cz75a 300, xm1014 600, knife 1500, smg 600; unknown weapons reported, never guessed",
-      "ctTeamKillReward": "confirmed 50×T-eliminated per CT (victim 口径, round-end settlement)",
-      "time_ran_out": "T survivors receive NO loss bonus (261 rounds audited, zero counter-examples); dead T receive the table payout",
-      "maxMoney": "cap filter active"
+      "L1": "summary-ledger exact reconciliation rate 91.0% (202 replay 90.6%) — method limitation, NOT rule accuracy",
+      "L1-nonzero-decomp": "3653/3653 replay-explained (summaryFieldLimitation: buy-window purchase/refund absent from moneySpent snapshot); 887 noReplay; 0 real unexplained; 0 sampling ambiguous",
+      "L4": "85,599 cash transitions, 100.0% explained (69.6% exact + 30.4% compound); $0 unexplained; 8 Hz aliasing fully decomposable",
+      "L3": "time_ran_out T survivor: 354 samples, 0 loss-payout violations",
+      "OT": "84 OT halves: 42 reset to 10000 (mp_overtime_startmoney), 42 carry-over — server/match profile, 12500 not observed"
     }
   },
   "notes": {
