@@ -65,8 +65,9 @@ const GSI_NAME_ALIASES: Record<string, ItemId> = {
 };
 
 /** GSI weapon `type` values observed live (Windows build 14174): SMGs send
- * "Submachine Gun", NOT "SMG" — match the real strings. */
-const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machinegun", "SniperRifle"];
+ * "Submachine Gun" and machine guns send "Machine Gun" — match the real
+ * strings. */
+const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machine Gun", "SniperRifle"];
 
 export function inventoryFrom(payload: GsiPayload): InventoryState {
   const state = payload.player?.state;
@@ -138,7 +139,6 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
     // Windows build 14174). Past round_kills are NOT future income — never
     // re-add them to the projection.
     killsThisRound: [],
-    bombPlantedThisRound: side === "T" && payload.round?.bomb === "planted",
     nextRoundGoal: opts.nextRoundGoal,
   };
   const out: AdvisorOutput = recommend(input);

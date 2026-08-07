@@ -126,6 +126,23 @@ describe("weapon mapping (C4)", () => {
     expect(inv.secondary).toBe("p2000");
   });
 
+  it("maps machine guns with real GSI type 'Machine Gun' (not 'Machinegun')", () => {
+    const m249 = basePayload({
+      player: {
+        ...basePayload().player!,
+        weapons: { a: { name: "weapon_m249", type: "Machine Gun", state: "active" } },
+      },
+    });
+    expect(inventoryFrom(m249).primary).toBe("m249");
+    const negev = basePayload({
+      player: {
+        ...basePayload().player!,
+        weapons: { a: { name: "weapon_negev", type: "Machine Gun", state: "active" } },
+      },
+    });
+    expect(inventoryFrom(negev).primary).toBe("negev");
+  });
+
   it("keeps primary null for an unknown weapon with a primary-looking type", () => {
     const p = basePayload({
       player: {
