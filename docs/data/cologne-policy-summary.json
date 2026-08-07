@@ -1,0 +1,269 @@
+{
+ "5a": {
+  "total_player_rounds": 43620,
+  "eligible": 41940,
+  "strict": 25986,
+  "excluded": {
+   "overtime": 1680,
+   "drop_gave": 9842,
+   "drop_received": 5103,
+   "loss_index_ambiguous": 1010
+  },
+  "maps": 202,
+  "money_p25": 3100,
+  "money_median": 4150,
+  "money_p75": 5600,
+  "loss_index_coverage": 1.0,
+  "drop_sensitive_rate": 0.3596744612563044
+ },
+ "5b_strict": {
+  "pro_class_in_any_goal": 0.8293,
+  "pro_primary_family_in_any_goal": 0.947,
+  "pro_class_in_default_top3": 0.7198
+ },
+ "5c_strict": {
+  "rifle_armor": {
+   "primary_family": 0.6699,
+   "exact_primary": 0.5084,
+   "grenade_core": 0.6144,
+   "armor_helmet": 0.6066,
+   "decision_class": 0.5543,
+   "top3_decision_class": 0.7198,
+   "top3_primary_family": 0.8334,
+   "top3_loadout_core": 0.2741,
+   "n": 25986
+  },
+  "rifle_util": {
+   "primary_family": 0.8125,
+   "exact_primary": 0.6531,
+   "grenade_core": 0.5458,
+   "armor_helmet": 0.5297,
+   "decision_class": 0.5883,
+   "top3_decision_class": 0.6847,
+   "top3_primary_family": 0.7975,
+   "top3_loadout_core": 0.2598,
+   "n": 25986
+  },
+  "awp": {
+   "primary_family": 0.4437,
+   "exact_primary": 0.4343,
+   "grenade_core": 0.3137,
+   "armor_helmet": 0.4103,
+   "decision_class": 0.1835,
+   "top3_decision_class": 0.6031,
+   "top3_primary_family": 0.182,
+   "top3_loadout_core": 0.1332,
+   "n": 25986
+  },
+  "max_combat_now": {
+   "primary_family": 0.7993,
+   "exact_primary": 0.6746,
+   "grenade_core": 0.6073,
+   "armor_helmet": 0.5266,
+   "decision_class": 0.5584,
+   "top3_decision_class": 0.6519,
+   "top3_primary_family": 0.7371,
+   "top3_loadout_core": 0.2716,
+   "n": 25986
+  },
+  "__default__": {
+   "primary_family": 0.6699,
+   "exact_primary": 0.5084,
+   "grenade_core": 0.6144,
+   "armor_helmet": 0.6066,
+   "decision_class": 0.5543,
+   "top3_decision_class": 0.7198,
+   "top3_primary_family": 0.8334,
+   "top3_loadout_core": 0.2741,
+   "n": 25986
+  }
+ },
+ "5d_default_strict": {
+  "mae": 820,
+  "median_ae": 650,
+  "p90_ae": 1700,
+  "mean_signed": -150,
+  "n": 25986
+ },
+ "5d_goal_segments_strict": {
+  "rifle_armor": {
+   "mae": 820,
+   "median_ae": 650,
+   "p90_ae": 1700,
+   "mean_signed": -150,
+   "n": 25986
+  },
+  "rifle_util": {
+   "mae": 738,
+   "median_ae": 600,
+   "p90_ae": 1550,
+   "mean_signed": -120,
+   "n": 25986
+  },
+  "awp": {
+   "mae": 2076,
+   "median_ae": 1450,
+   "p90_ae": 4600,
+   "mean_signed": -1520,
+   "n": 25986
+  },
+  "max_combat_now": {
+   "mae": 801,
+   "median_ae": 650,
+   "p90_ae": 1850,
+   "mean_signed": -209,
+   "n": 25986
+  }
+ },
+ "5d_segments_default": {
+  "CT": 878,
+  "T": 770,
+  "armor_no": 793,
+  "armor_yes": 922,
+  "loss_0": 826,
+  "loss_1": 768,
+  "loss_2": 1011,
+  "loss_3": 641,
+  "loss_4": 834,
+  "money_0-999": 640,
+  "money_1000-1999": 902,
+  "money_2000-2999": 1000,
+  "money_3000-3999": 821,
+  "money_4000+": 799,
+  "retained_AWP": 1872,
+  "retained_none": 835,
+  "retained_rifle": 707
+ },
+ "5e_strict": {
+  "rifle_armor": {
+   "grenade_multiset_mean_f1": 0.544,
+   "core_loadout_exact_rate": 0.3424
+  },
+  "rifle_util": {
+   "grenade_multiset_mean_f1": 0.537,
+   "core_loadout_exact_rate": 0.3219
+  },
+  "awp": {
+   "grenade_multiset_mean_f1": 0.313,
+   "core_loadout_exact_rate": 0.1383
+  },
+  "max_combat_now": {
+   "grenade_multiset_mean_f1": 0.616,
+   "core_loadout_exact_rate": 0.3322
+  }
+ },
+ "pro_distribution": {
+  "save": {
+   "count": 1782,
+   "rate": 0.0686
+  },
+  "eco": {
+   "count": 5105,
+   "rate": 0.1965
+  },
+  "force": {
+   "count": 1952,
+   "rate": 0.0751
+  },
+  "smg": {
+   "count": 1721,
+   "rate": 0.0662
+  },
+  "rifle": {
+   "count": 14044,
+   "rate": 0.5404
+  },
+  "awp": {
+   "count": 1382,
+   "rate": 0.0532
+  }
+ },
+ "diagnose_default": {
+  "candidate_failures": {
+   "pro_class_not_in_any_candidate": 7280
+  },
+  "ranking_failures": {
+   "class_present_but_not_top1": 4302
+  },
+  "ranking_reasons": {
+   "other_ranking": 4302
+  },
+  "top_pro_patterns": {
+   "rifle + smoke+flash": 10519,
+   "pistol force": 3579,
+   "rifle + double flash": 2930,
+   "rifle + kevlar only (helmet skip)": 2047,
+   "SMG + utility": 1530,
+   "rifle WITHOUT armor": 83
+  }
+ },
+ "mismatch_directions": [
+  [
+   "pro=eco -> rs=save",
+   2941
+  ],
+  [
+   "pro=save -> rs=smg",
+   1561
+  ],
+  [
+   "pro=eco -> rs=smg",
+   1513
+  ],
+  [
+   "pro=awp -> rs=rifle",
+   1308
+  ],
+  [
+   "pro=force -> rs=smg",
+   1291
+  ],
+  [
+   "pro=smg -> rs=rifle",
+   1013
+  ],
+  [
+   "pro=force -> rs=rifle",
+   610
+  ],
+  [
+   "pro=eco -> rs=rifle",
+   518
+  ],
+  [
+   "pro=rifle -> rs=smg",
+   484
+  ],
+  [
+   "pro=save -> rs=rifle",
+   183
+  ],
+  [
+   "pro=force -> rs=eco",
+   51
+  ],
+  [
+   "pro=awp -> rs=smg",
+   46
+  ],
+  [
+   "pro=eco -> rs=awp",
+   46
+  ],
+  [
+   "pro=save -> rs=eco",
+   11
+  ],
+  [
+   "pro=rifle -> rs=awp",
+   2
+  ]
+ ],
+ "_meta": {
+  "audit": "cologne-purchase-policy-audit",
+  "corpus": "IEM Cologne Major 2026 frozen event packages (cs2-demo-format/3.0, cs2df 3.1.0, demoparser2 0.41.3)",
+  "evaluation": "non-overtime player-rounds, STRICT-INDIVIDUAL subset",
+  "replay": "current main economy-advisor, 4 fixed goals",
+  "evidence_language": "OBSERVED/DERIVED/MODEL RESULT; professional behavior = expert behavioral reference, not optimal"
+ }
+}
