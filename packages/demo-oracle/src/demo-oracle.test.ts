@@ -49,12 +49,17 @@ describe("demo-oracle truth queries", () => {
     }
   });
 
-  it("derives team loss streaks from round winners (C2 semantics)", async () => {
+  it("derives team loss counts from round winners (standard model, count-dep)", async () => {
     const pkg = await loadDemoPackage(TINY);
     const streaks = teamLossStreakPerRound(pkg);
+    // consistency: the wrapper agrees with the canonical simulate() on every round
+    const { simulateLossCounts } = await import("./loss-bonus-state.js");
+    const sim = simulateLossCounts(pkg.files.rounds, { winDecrement: "count-dep" });
     for (const round of pkg.files.rounds) {
-      const a = streaks.get(`${round.roundNumber}:teamA`);
-      const b = streaks.get(`${round.roundNumber}:teamB`);
+      const a = streaks.get(`${round.roundNumber}:teamA`)!;
+      const b = streaks.get(`${round.roundNumber}:teamB`)!;
+      expect(a).toBe(sim.get(round.roundNumber)!.teamA);
+      expect(b).toBe(sim.get(round.roundNumber)!.teamB);
       expect(a).toBeGreaterThanOrEqual(0);
       expect(b).toBeGreaterThanOrEqual(0);
     }

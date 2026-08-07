@@ -172,6 +172,7 @@ const ALIASES: Record<string, string> = {
   hkp2000: "weapon_hkp2000",
   elite: "weapon_elite",
   tec9: "weapon_tec9",
+  p250: "weapon_p250",
   cz75a: "weapon_cz75a",
   cz75: "weapon_cz75a",
   fiveseven: "weapon_fiveseven",
@@ -203,6 +204,7 @@ const ALIASES: Record<string, string> = {
   taser: "weapon_taser",
   zeus: "weapon_taser",
   knife: "weapon_knife",
+  knife_karambit: "weapon_knife", // karambit is a knife skin — kill = knife 1500
   hegrenade: "weapon_hegrenade",
   molotov: "weapon_molotov",
   incgrenade: "weapon_incgrenade",

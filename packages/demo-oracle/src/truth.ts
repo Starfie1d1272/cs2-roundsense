@@ -4,6 +4,7 @@ import type {
   PlayerEconomyRow,
   RoundRow,
 } from "./adapter.js";
+import { lossCountsForPackage } from "./loss-bonus-state.js";
 
 /**
  * Ground-truth queries over a v3 package (P1).
@@ -101,33 +102,20 @@ export function roundTruth(pkg: ParsedDemoPackage): RoundTruthRow[] {
   }));
 }
 
-/** Team-level loss streak per round, derived from consecutive losses (C2).
- * Streaks RESET at the half switch (MR12: round 15 starts the second half).
+/**
+ * Team-level loss-bonus count per round — SINGLE SOURCE OF TRUTH lives in
+ * ./loss-bonus-state.ts (standard model: mp_starting_losses=1, payout =
+ * min(3400, 1400+500×count), half resets at r13 and each OT half; win
+ * decrement UNRESOLVED — candidate models & evidence in that module).
  *
- * CORPUS-verified 2026-08-06 (Cologne QF1-m1 manual ledger):
- *  - PISTOL-round loss (r1/r13) pays $1900 flat (C10); counter += 2;
- *  - a WIN decrements the counter by ONE (min 0), it does NOT reset.
- *    Verified sequence (CT): r1 pistol loss (cnt 2) → r2 loss LOSS[2]=2400 →
- *    r3 loss 2900 → r4 loss 3400 → win (4→3) → next loss LOSS[3]=2900. */
+ * This wrapper keeps the legacy Map<string, number> shape ("round:teamA").
+ * Values 0..3 are exact; 4 = capped interval [4, ∞).
+ */
 export function teamLossStreakPerRound(pkg: ParsedDemoPackage): Map<string, number> {
   const out = new Map<string, number>();
-  const streak = { teamA: 0, teamB: 0 };
-  for (const round of pkg.files.rounds) {
-    if (round.roundNumber === 13) {
-      // second half begins (MR12: r1-12 / r13-24): loss counters reset to 0 (C2)
-      streak.teamA = 0;
-      streak.teamB = 0;
-    }
-    out.set(`${round.roundNumber}:teamA`, streak.teamA);
-    out.set(`${round.roundNumber}:teamB`, streak.teamB);
-    const inc = round.roundNumber === 1 || round.roundNumber === 13 ? 2 : 1; // pistol loss = 2 losses
-    if (round.winnerTeamKey === "teamA") {
-      streak.teamA = Math.max(0, streak.teamA - (round.endReason === "time_ran_out" ? 2 : 1)); // timeout win: −2 (corpus-verified)
-      streak.teamB = Math.min(4, streak.teamB + inc);
-    } else {
-      streak.teamB = Math.max(0, streak.teamB - (round.endReason === "time_ran_out" ? 2 : 1));
-      streak.teamA = Math.min(4, streak.teamA + inc);
-    }
+  for (const [r, v] of lossCountsForPackage(pkg, { winDecrement: "count-dep" })) {
+    out.set(`${r}:teamA`, v.teamA);
+    out.set(`${r}:teamB`, v.teamB);
   }
   return out;
 }

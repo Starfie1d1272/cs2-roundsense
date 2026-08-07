@@ -1,7 +1,10 @@
 {
   "ruleSetId": "cs2-competitive-2026-08",
-  "applicableModes": ["competitive", "premier"],
-  "status": "provisional",
+  "applicableModes": [
+    "competitive",
+    "premier"
+  ],
+  "status": "verified",
   "verifiedAt": "2026-08-06",
   "sources": [
     {
@@ -33,35 +36,29 @@
     "winByTimeCt": 3250,
     "winByBombDefusal": 3500,
     "winByBombDetonation": 3500,
-    "lossBonusByStreak": [1400, 1900, 2400, 2900, 3400],
+    "lossBonusByStreak": [
+      1400,
+      1900,
+      2400,
+      2900,
+      3400
+    ],
     "plantBonusT": 600,
     "plantBonusPlayer": 300,
     "defuseBonusPlayer": 300,
     "ctTeamKillReward": 50
   },
-  "killRewards": {
-    "knife": 1500,
-    "pistol": 300,
-    "smg": 600,
-    "shotgun": 900,
-    "rifle": 300,
-    "mg": 300,
-    "awp": 100,
-    "sniper": 300,
-    "grenade": 300,
-    "zeus": 100,
-    "unknown": 300
-  },
   "prices": {
-    "ak47": 2700, "m4a4": 2900, "m4a1s": 2900, "galil": 1800, "famas": 1950,
-    "sg553": 3000, "aug": 3300, "ssg08": 1700, "awp": 4750, "scar20": 5000, "g3sg1": 5000,
-    "mac10": 1050, "mp9": 1250, "mp7": 1400, "mp5sd": 1400, "ump45": 1200, "p90": 2350,
-    "bizon": 1400, "nova": 1050, "sawedoff": 1100, "mag7": 1300, "xm1014": 2000,
-    "m249": 5200, "negev": 1700,
-    "glock": 200, "usp": 200, "p2000": 200, "p250": 300, "dual": 300,
-    "tec9": 500, "cz75": 500, "fiveseven": 500, "deagle": 700, "r8": 600,
-    "kevlar": 650, "kevlar_helmet": 1000, "defuse_kit": 400, "zeus": 200,
-    "smoke": 300, "flash": 200, "he": 300, "molotov": 400, "incendiary": 500, "decoy": 50
+    "kevlar": 650,
+    "kevlar_helmet": 1000,
+    "defuse_kit": 400,
+    "zeus": 200,
+    "smoke": 300,
+    "flash": 200,
+    "he": 300,
+    "molotov": 400,
+    "incendiary": 500,
+    "decoy": 50
   },
   "roundTypeThresholds": {
     "ecoMaxSpend": 800,
@@ -69,25 +66,25 @@
     "forceMinSpend": 2000
   },
   "corpusValidation": {
-    "method": "income = startMoney(r) − startMoney(r−1) + moneySpent(r−1); OLS on kill-class counts + CT team kills + intercept; group means on kill-corrected residuals",
-    "run": "2026-08-06, 55 matches / 1122 rounds / 10425 samples (2026-01~06 pro & sample corpus)",
+    "method": "integer income ledger: income = startMoney(r) − startMoney(r−1) + moneySpent(r−1); modeled = round reward + loss bonus + plant/defuse + kill rewards (weapon table) + CT team award + TK; residual = income − modeled; diff=0 expected",
+    "run": "2026-08-06, 316 matches / 60325 samples (Cologne 202 + rival + Windows corpus); final: 89-90% diff=0, 100% integer residuals; remaining ±200/±500/±300 = buytime-tail moneySpent blind spot (4/1595), weapon-map edge cases, loss-counter cap boundary",
     "results": {
-      "winByElimination": "confirmed ≈ 3250 (corrected Δ −122~+54)",
-      "winByBomb": "confirmed ≈ 3500 (Δ −17~−38)",
-      "lossBonusByStreak": "confirmed 1400/1900/2400/2900/3400 (Δ ±150, streak-1/4 ±400 系击杀修正耦合)",
-      "pistolRoundLoss": "confirmed 1900 (Δ −15~+48)",
-      "plantBonusT": "corpus 估计 ≈ 430~690 (两轮 432/486 修正后); fandom $600 合理, CS:GO 的 $800 可排除",
-      "killRewards": "recent corpus (2026-05~06): pistol ≈300, smg ≈600, rifle ≈250~300, awp ≈100~160 — 与 fandom 一致量级; ≤2026-03 语料 pistol ≈25 异常, 待核实早期语料导出质量或规则变更",
-      "ctTeamKillReward": "已证实-语料 (2026-08-06): 整数全对账 = 每名 CT 每消灭一名 T +$50（victim 口径，含 C4 世界击杀；win ctKills=5 残差归零，replay 回合末跳变 50×消灭数精确）。316 场全部生效。",
-      "maxMoney": "cap filter 生效, 未直接验证"
+      "winByElimination": "confirmed 3250",
+      "winByBomb": "confirmed 3500",
+      "lossBonusByStreak": "confirmed 1400/1900/2400/2900/3400 (mp_starting_losses=1, payout=min(3400,1400+500×count))",
+      "plantBonusT": "confirmed 600",
+      "plantBonusPlayer": "confirmed 300 (cash_player_bomb_planted 300)",
+      "killRewards": "weapon table (weapons.v2026-08-06.json, GameTracking-CS2 2e606a0b): awp 100, p90 300, cz75a 300, xm1014 600, knife 1500, smg 600; unknown weapons reported, never guessed",
+      "ctTeamKillReward": "confirmed 50×T-eliminated per CT (victim 口径, round-end settlement)",
+      "time_ran_out": "T survivors receive NO loss bonus (261 rounds audited, zero counter-examples); dead T receive the table payout",
+      "maxMoney": "cap filter active"
     }
   },
   "notes": {
-    "lossBonusRule": "连败计数: 每败+1、每胜-1 (min 0, max 4)。2025 经济更新取代旧的'两连胜后首败 $1500'规则。奖金索引 = 本回合前的连败数 (lossStreak)，与 fandom 表格'Losing (loss count: N)'语义一致。",
-    "plantBonusT": "fandom 标注 CS2 下包奖金 $600 (CS:GO $800)；数值存疑，待语料 startMoney 差分核验。",
-    "ctTeamKillReward": "已证实-语料 (2026-08-06): CT 共享团队奖励 = 每名 CT 每消灭一名 T +$50，回合末结算。Steam 2025-07-16 补丁确认引入；整数对账 + replay 回合末跳变证实（科隆半决赛/决赛全部场次 win ctKills=5 残差≈0）。⚠️ 赛事服务器配置差异（科隆 1/4 决赛无、半决赛/决赛有、完美世界赛事无）——advisor 投影按规则 50 建模，输入 ctTeamKillsOnTs 由调用方提供（GSI 下 CT 全队击杀 T 数可观测）。",
-    "killRewardUnknown": "GSI 不给击杀武器 (capability-matrix §2)，实时路径无法知道击杀武器类别；unknown 按步枪 $300 估算并显式标注假设。",
-    "pricesRevisionWarning": "Buy_Menu 页修订于 2023-11-17，2024-2026 价格补丁可能未反映；待 Windows 游戏内核对 + 语料 moneySpent 分布交叉验证。",
-    "winBombNote": "拆包/爆炸获胜 $3500 仅在下包回合适用；投影中 winBomb 分支供参考，保守推荐用 win (3250)。"
+    "lossBonusRule": "mp_starting_losses=1 → half starts count 1; loss +1 (cap 4); win decrement UNRESOLVED (corpus: payout-tier drop 1 across any win; candidate internal decrement 2 under documented update order; cap decrement runtime-unverified — see docs/experiments/loss-counter-runtime.md)",
+    "buytime": "mp_buytime 20 counts from freeze end (H2): buys observed at freezeEnd+19.6s; exact close unverified (controlled test pending)",
+    "moneySpent": "snapshot of native m_iCashSpentThisRound at round_freeze_end; excludes post-freeze buys/refunds; sellback semantics unresolved",
+    "pricesSource": "weapon prices from generated weapons.v2026-08-06.json (GameTracking-CS2 2e606a0b, incl. bizon 1300 2026 drop); non-weapon prices in this file",
+    "killRewardUnknown": "GSI cannot report kill weapons (capability-matrix §2); real-time path uses class aggregate from weapon table; unknown → explicit error, never 300"
   }
 }

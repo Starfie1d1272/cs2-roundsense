@@ -15,6 +15,7 @@
     "hkp2000": "weapon_hkp2000",
     "elite": "weapon_elite",
     "tec9": "weapon_tec9",
+    "p250": "weapon_p250",
     "cz75a": "weapon_cz75a",
     "cz75": "weapon_cz75a",
     "fiveseven": "weapon_fiveseven",
@@ -46,6 +47,7 @@
     "taser": "weapon_taser",
     "zeus": "weapon_taser",
     "knife": "weapon_knife",
+    "knife_karambit": "weapon_knife",
     "hegrenade": "weapon_hegrenade",
     "molotov": "weapon_molotov",
     "incgrenade": "weapon_incgrenade",
@@ -84,7 +86,8 @@
       "class": "knife",
       "weaponType": "WEAPONTYPE_KNIFE",
       "aliases": [
-        "knife"
+        "knife",
+        "knife_karambit"
       ]
     },
     "weapon_deagle": {
@@ -328,7 +331,9 @@
       "killAward": 300,
       "class": "pistol",
       "weaponType": "WEAPONTYPE_PISTOL",
-      "aliases": []
+      "aliases": [
+        "p250"
+      ]
     },
     "weapon_scar20": {
       "price": 5000,

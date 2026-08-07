@@ -1,8 +1,10 @@
 import type { ItemId, NextRoundGoal, RoundType, Side, WeaponClass } from "@roundsense/shared-types";
 
-/** Kill attribution input — GSI cannot report kill weapons live (assumption A10). */
+/** Kill attribution input — GSI cannot report kill weapons live (assumption A10);
+ * weaponId is optional (available from demo path only). */
 export interface KillAttribution {
   weaponClass: WeaponClass | "unknown";
+  weaponId?: string;
   count: number;
 }
 

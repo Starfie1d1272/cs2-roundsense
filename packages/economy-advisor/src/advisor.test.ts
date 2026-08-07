@@ -23,7 +23,7 @@ describe("rules file", () => {
   it("is a valid versioned rule set with sources", () => {
     const parsed = economyRulesSchema.parse(DEFAULT_RULES);
     expect(parsed.ruleSetId).toBe("cs2-competitive-2026-08");
-    expect(parsed.status).toBe("provisional");
+    expect(parsed.status).toBe("verified");
     expect(parsed.sources.length).toBeGreaterThanOrEqual(2);
     expect(parsed.roundRewards.lossBonusByStreak).toEqual([1400, 1900, 2400, 2900, 3400]);
     expect(parsed.maxMoney).toBe(16000);
@@ -84,8 +84,13 @@ describe("projection", () => {
   });
 
   it("kill rewards enter the projection (rifle $300, AWP $100)", () => {
-    const kills = [{ weaponClass: "rifle" as const, count: 2 }, { weaponClass: "awp" as const, count: 1 }];
+    // weaponId (demo path) beats class aggregate; class fallback for GSI path
+    const kills = [
+      { weaponClass: "rifle" as const, count: 2 },
+      { weaponId: "weapon_awp", weaponClass: "sniper" as const, count: 1 },
+    ];
     expect(killRewardsTotal({ kills, rules: DEFAULT_RULES })).toBe(700);
+    expect(killRewardsTotal({ kills: [{ weaponClass: "sniper" as const, count: 1 }], rules: DEFAULT_RULES })).toBe(300);
     const branches = projectNextRoundMoney({
       money: 1000, spendNow: 0, side: "T", lossStreak: 0, kills, bombPlantedThisRound: false, rules: DEFAULT_RULES,
     });
@@ -196,7 +201,7 @@ describe("recommend()", () => {
   it("exposes rule provenance in the output", () => {
     const out = recommend(input({ money: 3400 }));
     expect(out.rules.ruleSetId).toBe("cs2-competitive-2026-08");
-    expect(out.rules.status).toBe("provisional");
+    expect(out.rules.status).toBe("verified");
     expect(out.rules.sources.length).toBeGreaterThanOrEqual(2);
   });
 

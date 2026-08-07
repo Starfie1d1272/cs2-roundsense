@@ -1,6 +1,6 @@
 import type { Side } from "@roundsense/shared-types";
 import type { EconomyRules } from "./rules.js";
-import { killReward, lossBonus } from "./rules.js";
+import { killReward, lossBonus, price } from "./rules.js";
 import type { KillAttribution, ProjectionBranches } from "./types.js";
 
 /**
@@ -54,18 +54,21 @@ export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranche
 }
 
 export function killRewardsTotal(input: Pick<ProjectionInput, "kills" | "rules">): number {
-  return input.kills.reduce((sum, k) => sum + killReward(input.rules, k.weaponClass) * k.count, 0);
+  return input.kills.reduce(
+    (sum, k) => sum + killReward(input.rules, { weaponId: k.weaponId, fallbackClass: k.weaponClass }) * k.count,
+    0,
+  );
 }
 
 /** Cost of a goal for the NEXT round (used by breaksGoal). Side-aware rifle price. */
 export function goalTargetCost(rules: EconomyRules, goal: "awp" | "rifle_armor" | "rifle_util", side: Side): number {
-  const rifle = side === "T" ? rules.prices.ak47! : rules.prices.m4a4!;
+  const rifle = side === "T" ? price(rules, "ak47") : price(rules, "m4a4");
   switch (goal) {
     case "awp":
-      return rules.prices.awp! + rules.prices.kevlar!;
+      return price(rules, "awp") + price(rules, "kevlar");
     case "rifle_armor":
-      return rifle + rules.prices.kevlar_helmet!;
+      return rifle + price(rules, "kevlar_helmet");
     case "rifle_util":
-      return rifle + rules.prices.kevlar! + rules.prices.smoke! + rules.prices.flash!;
+      return rifle + price(rules, "kevlar") + price(rules, "smoke") + price(rules, "flash");
   }
 }
