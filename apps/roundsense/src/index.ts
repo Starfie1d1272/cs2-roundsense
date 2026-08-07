@@ -27,12 +27,20 @@ const ITEM_DISPLAY: Record<string, string> = {
   ak47: "AK47", m4a4: "M4A4", m4a1s: "M4A1-S", galil: "Galil", famas: "FAMAS",
   awp: "AWP", sg553: "SG553", aug: "AUG", ssg08: "SSG08",
   mac10: "MAC-10", mp9: "MP9", mp7: "MP7", mp5sd: "MP5-SD", ump45: "UMP45", p90: "P90", bizon: "PP-Bizon",
-  deagle: "沙鹰", kevlar: "半甲", kevlar_helmet: "头盔升级", smoke: "烟雾弹", flash: "闪光弹", he: "手雷", molotov: "燃烧瓶", incendiary: "燃烧弹",
+  deagle: "沙鹰", kevlar: "半甲", smoke: "烟雾弹", flash: "闪光弹", he: "手雷", molotov: "燃烧瓶", incendiary: "燃烧弹",
 };
 
-function purchaseText(items: { item: string; quantity: number }[]): string {
+/** armor-purchase wording depends on the CURRENT armor condition:
+ * full armor without helmet → "头盔升级" ($350 upgrade); otherwise a full
+ * kevlar_helmet purchase → "甲 + 头". */
+function armorItemDisplay(item: string, armor: number, helmet: boolean): string {
+  if (item === "kevlar_helmet") return armor === 100 && !helmet ? "头盔升级" : "甲 + 头";
+  return ITEM_DISPLAY[item] ?? item;
+}
+
+function purchaseText(items: { item: string; quantity: number }[], armor: number, helmet: boolean): string {
   if (items.length === 0) return "无需购买";
-  return items.map((p) => `${ITEM_DISPLAY[p.item] ?? p.item}${p.quantity > 1 ? `×${p.quantity}` : ""}`).join("、");
+  return items.map((p) => `${armorItemDisplay(p.item, armor, helmet)}${p.quantity > 1 ? `×${p.quantity}` : ""}`).join("、");
 }
 
 const presenter = new C4Presenter({ onOutput: (line) => console.log(`[${new Date().toLocaleTimeString()}] ${line}`) });
@@ -54,10 +62,10 @@ const receiver = createGsiReceiver({
       lastAdviceAtNs = receipt.receivedAtMonotonicNs;
       const ls = advice.lossStreakSource === "gsi" ? `loss=${advice.lossStreak}` : `loss=${advice.lossStreak}(assumed)`;
       const rec = advice.recommended ? `推荐: ${advice.recommended.label} $${advice.recommended.totalCost}` : "推荐: 无（资金不足）";
-      const alts = advice.alternatives.slice(0, 2).map((x) => `${x.label} $${x.totalCost}`).join(" | ");
+      const alts = advice.alternatives.slice(0, 2).map((x) => `${x.label} | 需买: ${purchaseText(x.purchases, advice.recommended?.armor ?? 0, advice.recommended?.helmet ?? false)} | $${x.totalCost}`).join("  ");
       console.log(`[${new Date(receipt.receivedAtWallClock).toLocaleTimeString()}] ${advice.side} r${advice.roundNumber} money=$${advice.money} ${ls} goal=${advice.goal}`);
       console.log(`    ${rec}`);
-      if (advice.recommended) console.log(`    需买: ${purchaseText(advice.recommended.purchases)}`);
+      if (advice.recommended) console.log(`    需买: ${purchaseText(advice.recommended.purchases, advice.recommended.armor, advice.recommended.helmet)}`);
       if (alts) console.log(`    备选: ${alts}`);
       if (advice.breaksGoal) console.log(`    ⚠ ${advice.breaksGoal}`);
     }

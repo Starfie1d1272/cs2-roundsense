@@ -174,17 +174,24 @@ describe("inventory quantities (runtime-observed, Windows build 14174)", () => {
 
   it("kevlar: armor 0→100 via player.state, weapons unchanged (observed $650)", () => {
     const before = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 0, helmet: false }));
-    expect(before.hasArmor).toBe(false);
+    expect(before.armor).toBe(0);
     const after = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 100, helmet: false }));
-    expect(after.hasArmor).toBe(true);
+    expect(after.armor).toBe(100);
     expect(after.hasHelmet).toBe(false);
     // the $650 cost itself is exercised through the armor incremental logic
     // in economy-advisor (kevlar price), not duplicated here
   });
 
+  it("preserves numeric armor values (0/50/99/100) without folding to boolean", () => {
+    for (const armor of [0, 50, 99, 100]) {
+      const inv = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor, helmet: false }));
+      expect(inv.armor).toBe(armor);
+    }
+  });
+
   it("vesthelm upgrade: helmet false→true with armor already 100, weapons unchanged (observed -$350)", () => {
     const after = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 100, helmet: true }));
-    expect(after.hasArmor).toBe(true);
+    expect(after.armor).toBe(100);
     expect(after.hasHelmet).toBe(true);
   });
 

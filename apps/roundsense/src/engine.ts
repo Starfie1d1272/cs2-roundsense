@@ -13,7 +13,7 @@
  * - OT start money is a server profile — never inferred here; the live
  *   money read comes straight from player.state.money.
  */
-import { recommend, type AdvisorInput, type AdvisorOutput, type InventoryState } from "@roundsense/economy-advisor";
+import { recommend, weaponIdToItem, type AdvisorInput, type AdvisorOutput, type InventoryState } from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
 import type { ItemId, NextRoundGoal } from "@roundsense/shared-types";
 
@@ -37,37 +37,31 @@ export interface AdviceTick {
     totalCost: number;
     /** full target value (empty inventory) */
     targetCost: number;
+    /** current armor/helmet — display context for armor wording */
+    armor: number;
+    helmet: boolean;
   } | null;
-  alternatives: { character: string; label: string; totalCost: number }[];
+  alternatives: { character: string; label: string; purchases: { item: ItemId; quantity: number }[]; totalCost: number; targetCost: number }[];
   breaksGoal: string | null;
 }
 
-const GSI_TO_ITEM: Record<string, ItemId> = {
-  weapon_ak47: "ak47",
-  weapon_m4a1: "m4a4",
-  weapon_m4a1_silencer: "m4a1s",
-  weapon_galilar: "galil",
-  weapon_famas: "famas",
-  weapon_awp: "awp",
-  weapon_mac10: "mac10",
-  weapon_mp9: "mp9",
-  weapon_deagle: "deagle",
-  weapon_glock: "glock",
-  weapon_usp_silencer: "usp",
-  weapon_hkp2000: "p2000",
-  weapon_fiveseven: "fiveseven",
-  weapon_tec9: "tec9",
-  weapon_p250: "p250",
-  weapon_elite: "dual",
-  weapon_cz75a: "cz75",
-  weapon_kevlar: "kevlar",
-  weapon_kevlar_helmet: "kevlar_helmet",
-  weapon_defuser: "defuse_kit",
+/** Non-weapon GSI names (runtime-observed representation): grenades live in
+ * player.weapons; armor/kit live in player.state (never in weapons). The
+ * weapon-table reverse mapping (weaponIdToItem) is the single source of
+ * truth for all firearms. */
+const GSI_NON_WEAPON: Record<string, ItemId> = {
   weapon_smokegrenade: "smoke",
   weapon_flashbang: "flash",
   weapon_hegrenade: "he",
   weapon_molotov: "molotov",
   weapon_incgrenade: "incendiary",
+  weapon_decoy: "decoy",
+};
+
+/** GSI class-name aliases that differ from the canonical weapon-table ids
+ * (m4a4's game class is weapon_m4a4; the weapon table key is weapon_m4a1). */
+const GSI_NAME_ALIASES: Record<string, ItemId> = {
+  weapon_m4a4: "m4a4",
 };
 
 /** GSI weapon `type` values observed live (Windows build 14174): SMGs send
@@ -81,9 +75,11 @@ export function inventoryFrom(payload: GsiPayload): InventoryState {
   let secondary: ItemId | undefined;
   const grenades: ItemId[] = [];
   for (const w of Object.values(weapons)) {
-    const item = w?.name ? GSI_TO_ITEM[w.name] : undefined;
+    const name = w?.name;
+    if (!name) continue;
+    const item = GSI_NON_WEAPON[name] ?? GSI_NAME_ALIASES[name] ?? weaponIdToItem(name);
     if (!item) continue;
-    if (item === "smoke" || item === "flash" || item === "he" || item === "molotov" || item === "incendiary") {
+    if (item === "smoke" || item === "flash" || item === "he" || item === "molotov" || item === "incendiary" || item === "decoy") {
       // Grenade quantity is ammo_reserve on the single weapon entry
       // (observed build 14174: flash ×2 = one weapon_flashbang, reserve=2).
       // Missing reserve still proves ≥1 carried.
@@ -103,7 +99,9 @@ export function inventoryFrom(payload: GsiPayload): InventoryState {
   return {
     primary,
     secondary,
-    hasArmor: (state?.armor ?? 0) > 0,
+    // numeric armor — keep the exact GSI value (0..100), do not fold any
+    // positive value into a boolean
+    armor: state?.armor ?? 0,
     hasHelmet: state?.helmet === true,
     // observed build 14174: player.state.defusekit=true — the kit never
     // appears in player.weapons
@@ -158,9 +156,17 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
           purchases: out.recommended.purchases,
           totalCost: out.recommended.totalCost,
           targetCost: out.recommended.targetCost,
+          armor: input.inventory.armor,
+          helmet: input.inventory.hasHelmet,
         }
       : null,
-    alternatives: out.alternatives.map((s) => ({ character: s.character, label: s.label, totalCost: s.totalCost })),
+    alternatives: out.alternatives.map((s) => ({
+      character: s.character,
+      label: s.label,
+      purchases: s.purchases,
+      totalCost: s.totalCost,
+      targetCost: s.targetCost,
+    })),
     breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,
   };
 }
