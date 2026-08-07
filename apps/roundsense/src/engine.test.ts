@@ -49,6 +49,13 @@ describe("advice phase gating (C1)", () => {
     const out = tick(p, { nextRoundGoal: "rifle_armor" });
     expect(out).toBeNull();
   });
+
+  it("returns null when map.round is missing (no silent round-1 guess)", () => {
+    const p = basePayload();
+    p.map = { ...p.map!, round: undefined };
+    const out = tick(p, { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
 });
 
 describe("team gating (C2)", () => {

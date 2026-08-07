@@ -112,13 +112,15 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   // C2: only explicit CT/T teams (observed as "CT"/"T" strings).
   if (!player?.team || (player.team !== "CT" && player.team !== "T")) return null;
   if (state?.money === undefined) return null;
+  // map.round must be present — no silent round-1 guess.
+  if (map?.round === undefined) return null;
   const side = player.team;
   const teamInfo = side === "T" ? map?.team_t : map?.team_ct;
   const lossStreakGsi = teamInfo?.consecutive_round_losses;
   const lossStreak = lossStreakGsi ?? 1;
   const input: AdvisorInput = {
     side,
-    roundNumber: map?.round ?? 1,
+    roundNumber: map.round,
     money: state.money,
     lossStreak,
     inventory: inventoryFrom(payload),
