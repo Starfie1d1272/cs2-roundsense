@@ -13,26 +13,26 @@ states replayed: 2105
 
 ## By side
 
-- T: below p25 0% · within 100% · above p75 0% (n=274)
-- CT: below p25 0% · within 100% · above p75 0% (n=371)
+- T: below p25 7% · within 27% · above p75 66% (n=1012)
+- CT: below p25 8% · within 34% · above p75 59% (n=1093)
 
 ## By lossReward
 
-- lr1400: below p25 0% · within 100% · above p75 0% (n=157)
-- lr1900: below p25 0% · within 100% · above p75 0% (n=241)
-- lr2400: below p25 0% · within 100% · above p75 0% (n=117)
-- lr2900: below p25 0% · within 100% · above p75 0% (n=61)
-- lr3400: below p25 0% · within 100% · above p75 0% (n=69)
+- lr1400: below p25 6% · within 21% · above p75 73% (n=754)
+- lr1900: below p25 20% · within 52% · above p75 28% (n=464)
+- lr2400: below p25 1% · within 26% · above p75 73% (n=445)
+- lr2900: below p25 2% · within 39% · above p75 59% (n=156)
+- lr3400: below p25 1% · within 24% · above p75 75% (n=286)
 
 ## By retained state
 
-- none: below p25 0% · within 100% · above p75 0% (n=349)
-- AK-47: below p25 0% · within 100% · above p75 0% (n=66)
-- AWP: below p25 0% · within 100% · above p75 0% (n=18)
-- M4A1-S: below p25 0% · within 100% · above p75 0% (n=79)
-- M4A4: below p25 0% · within 100% · above p75 0% (n=76)
-- MAC-10: below p25 0% · within 100% · above p75 0% (n=29)
-- MP9: below p25 0% · within 100% · above p75 0% (n=28)
+- none: below p25 16% · within 43% · above p75 41% (n=812)
+- AK-47: below p25 0% · within 21% · above p75 78% (n=308)
+- AWP: below p25 1% · within 13% · above p75 85% (n=137)
+- M4A1-S: below p25 1% · within 25% · above p75 74% (n=317)
+- M4A4: below p25 2% · within 24% · above p75 74% (n=319)
+- MAC-10: below p25 2% · within 28% · above p75 70% (n=104)
+- MP9: below p25 2% · within 26% · above p75 72% (n=108)
 
 ## Chosen primary professional support
 

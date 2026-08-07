@@ -116,15 +116,15 @@ function pct(n: number, t: number): string {
 }
 const total = out.length;
 const bands = { below_p25: 0, within: 0, above_p75: 0 };
-const bySide: Record<string, { below: number; within: number; above: number }> = { T: { below: 0, within: 0, above: 0 }, CT: { below: 0, within: 0, above: 0 } };
-const byLr: Record<string, { below: number; within: number; above: number }> = {};
-const byRetained: Record<string, { below: number; within: number; above: number }> = {};
+const bySide: Record<string, { below_p25: number; within: number; above_p75: number }> = { T: { below_p25: 0, within: 0, above_p75: 0 }, CT: { below_p25: 0, within: 0, above_p75: 0 } };
+const byLr: Record<string, { below_p25: number; within: number; above_p75: number }> = {};
+const byRetained: Record<string, { below_p25: number; within: number; above_p75: number }> = {};
 for (const o of out) {
   bands[o.spendBand]++;
   bySide[o.side][o.spendBand]++;
-  byLr[o.lr] = byLr[o.lr] ?? { below: 0, within: 0, above: 0 };
+  byLr[o.lr] = byLr[o.lr] ?? { below_p25: 0, within: 0, above_p75: 0 };
   byLr[o.lr][o.spendBand]++;
-  byRetained[o.retained] = byRetained[o.retained] ?? { below: 0, within: 0, above: 0 };
+  byRetained[o.retained] = byRetained[o.retained] ?? { below_p25: 0, within: 0, above_p75: 0 };
   byRetained[o.retained][o.spendBand]++;
 }
 
@@ -149,8 +149,8 @@ md.push("## By side");
 md.push("");
 for (const side of ["T", "CT"]) {
   const b = bySide[side];
-  const t = b.below + b.within + b.above;
-  md.push(`- ${side}: below p25 ${pct(b.below, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above, t)} (n=${t})`);
+  const t = b.below_p25 + b.within + b.above_p75;
+  md.push(`- ${side}: below p25 ${pct(b.below_p25, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above_p75, t)} (n=${t})`);
 }
 md.push("");
 md.push("## By lossReward");
@@ -158,15 +158,15 @@ md.push("");
 for (const lr of [1400, 1900, 2400, 2900, 3400]) {
   const b = byLr[lr];
   if (!b) continue;
-  const t = b.below + b.within + b.above;
-  md.push(`- lr${lr}: below p25 ${pct(b.below, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above, t)} (n=${t})`);
+  const t = b.below_p25 + b.within + b.above_p75;
+  md.push(`- lr${lr}: below p25 ${pct(b.below_p25, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above_p75, t)} (n=${t})`);
 }
 md.push("");
 md.push("## By retained state");
 md.push("");
 for (const [rv, b] of Object.entries(byRetained)) {
-  const t = b.below + b.within + b.above;
-  md.push(`- ${rv}: below p25 ${pct(b.below, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above, t)} (n=${t})`);
+  const t = b.below_p25 + b.within + b.above_p75;
+  md.push(`- ${rv}: below p25 ${pct(b.below_p25, t)} · within ${pct(b.within, t)} · above p75 ${pct(b.above_p75, t)} (n=${t})`);
 }
 md.push("");
 md.push("## Chosen primary professional support");
