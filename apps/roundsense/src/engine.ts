@@ -1,26 +1,21 @@
 /**
- * RoundSense engine: GSI payload → C4 status + economy advice.
+ * RoundSense engine: GSI payload → economy advice.
  *
- * Pure-ish core (testable without network): every GSI frame is reduced
- * through a BombTracker and, when player/map/round fields are present,
- * turned into an advice tick via economy-advisor.
+ * Pure-ish core (testable without network): when player/map/round fields are
+ * present, turns a payload into an advice tick via economy-advisor.
+ *
+ * C4 lives in packages/c4-estimator (C4StateMachine) + apps/roundsense
+ * presenter.ts — NOT here.
  *
  * Product rules:
- * - C4 remaining time uses C4_FUSE_RULES.fuseMs (41000, corpus-observed
- *   demo semantics; real-game 40 s pending runtime-check).
  * - lossStreak comes from map.team_*.consecutive_round_losses when GSI
  *   provides it (runtime-check #1); when absent, assumed 1 and flagged.
  * - OT start money is a server profile — never inferred here; the live
  *   money read comes straight from player.state.money.
  */
-import { C4_FUSE_RULES } from "@roundsense/c4-estimator";
 import { recommend, type AdvisorInput, type AdvisorOutput, type InventoryState } from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
 import type { ItemId, NextRoundGoal } from "@roundsense/shared-types";
-
-export interface BombTracker {
-  plantedAtMs: number | null;
-}
 
 export interface EngineOptions {
   nextRoundGoal: NextRoundGoal;
@@ -36,11 +31,6 @@ export interface AdviceTick {
   recommended: { character: string; label: string; totalCost: number } | null;
   alternatives: { character: string; label: string; totalCost: number }[];
   breaksGoal: string | null;
-}
-
-export interface EngineTick {
-  bomb: { planted: boolean; remainingMs: number | null };
-  advice: AdviceTick | null;
 }
 
 const GSI_TO_ITEM: Record<string, ItemId> = {
@@ -107,24 +97,10 @@ function inventoryFrom(payload: GsiPayload): InventoryState {
   };
 }
 
-export function tick(payload: GsiPayload, tracker: BombTracker, opts: EngineOptions, receivedAtMs: number): EngineTick {
-  // ── C4 ─────────────────────────────────────────────────────────────────────
-  const bomb = payload.round?.bomb ?? null;
-  if (bomb === "planted" && tracker.plantedAtMs === null) {
-    tracker.plantedAtMs = receivedAtMs;
-  } else if (bomb !== "planted" && tracker.plantedAtMs !== null) {
-    tracker.plantedAtMs = null;
-  }
-  let remainingMs: number | null = null;
-  if (tracker.plantedAtMs !== null) {
-    remainingMs = Math.max(0, C4_FUSE_RULES.fuseMs - (receivedAtMs - tracker.plantedAtMs));
-  }
-
-  // ── economy advice ─────────────────────────────────────────────────────────
+export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | null {
   const player = payload.player;
   const map = payload.map;
   const state = player?.state;
-  let advice: AdviceTick | null = null;
   if (player?.team && state?.money !== undefined) {
     const side = player.team === "T" ? "T" : "CT";
     const teamInfo = side === "T" ? map?.team_t : map?.team_ct;
@@ -137,11 +113,11 @@ export function tick(payload: GsiPayload, tracker: BombTracker, opts: EngineOpti
       lossStreak,
       inventory: inventoryFrom(payload),
       killsThisRound: [{ weaponClass: "unknown", count: state.round_kills ?? 0 }],
-      bombPlantedThisRound: side === "T" && bomb === "planted",
+      bombPlantedThisRound: side === "T" && payload.round?.bomb === "planted",
       nextRoundGoal: opts.nextRoundGoal,
     };
     const out: AdvisorOutput = recommend(input);
-    advice = {
+    return {
       side,
       roundNumber: input.roundNumber,
       money: state.money,
@@ -155,6 +131,5 @@ export function tick(payload: GsiPayload, tracker: BombTracker, opts: EngineOpti
       breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,
     };
   }
-
-  return { bomb: { planted: tracker.plantedAtMs !== null, remainingMs }, advice };
+  return null;
 }
