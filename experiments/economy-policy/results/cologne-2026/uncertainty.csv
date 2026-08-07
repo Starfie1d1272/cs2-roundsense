@@ -1,0 +1,11 @@
+side,lossReward,retained_value,quantity,ci_low,median,ci_high
+t,1400,none,full50_crossing,3800,3800,3900
+t,1900,none,full50_crossing,3900,4000,4000
+t,2400,none,full50_crossing,3950,4000,4000
+t,2900,none,full50_crossing,3950,3950,4000
+t,3400,none,full50_crossing,4000,4000,4050
+ct,1400,none,full50_crossing,3600,3650,3650
+ct,1900,none,full50_crossing,3850,4050,4050
+ct,2400,none,full50_crossing,4150,4200,4350
+ct,2900,none,full50_crossing,4150,4150,4200
+ct,3400,none,full50_crossing,4050,4350,4400

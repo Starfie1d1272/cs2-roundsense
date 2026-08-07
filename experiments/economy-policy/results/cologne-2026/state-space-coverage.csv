@@ -1,0 +1,83 @@
+retained_weapon,side,lossReward,exact_money_nodes,pool_n,money_lo,money_hi,grid_covered,grid_total,estimate_level
+none,t,1400,191,2498,3250,16000,256,321,none
+AK-47,t,1400,136,723,3250,14600,228,321,exact
+AWP,t,1400,80,136,3250,14450,225,321,exact
+FAMAS,t,1400,144,1032,3250,14600,228,321,family
+Galil AR,t,1400,71,284,3250,9850,133,321,exact
+M4A1-S,t,1400,144,1032,3250,14600,228,321,family
+M4A4,t,1400,144,1032,3250,14600,228,321,family
+MAC-10,t,1400,47,75,3350,12050,175,321,exact
+MP5-SD,t,1400,54,91,3300,12050,176,321,family
+MP7,t,1400,54,91,3300,12050,176,321,family
+SSG 08,t,1400,82,145,3250,14450,225,321,family
+none,t,1900,216,3387,800,16000,305,321,none
+AK-47,t,1900,39,58,0,6450,130,321,exact
+AWP,t,1900,0,0,,,0,0,unsupported
+Galil AR,t,1900,45,78,0,6450,130,321,family
+M4A1-S,t,1900,45,78,0,6450,130,321,family
+MAC-10,t,1900,0,0,,,0,0,unsupported
+MP9,t,1900,0,0,,,0,0,unsupported
+none,t,2400,117,2230,100,13700,273,321,none
+AK-47,t,2400,28,47,0,3600,73,321,family
+AWP,t,2400,0,0,,,0,0,unsupported
+Galil AR,t,2400,28,47,0,3600,73,321,family
+M4A1-S,t,2400,28,47,0,3600,73,321,family
+MAC-10,t,2400,0,0,,,0,0,unsupported
+SSG 08,t,2400,0,0,,,0,0,unsupported
+none,t,2900,86,1824,1900,7750,118,321,none
+AK-47,t,2900,0,0,,,0,0,unsupported
+AWP,t,2900,0,0,,,0,0,unsupported
+Galil AR,t,2900,0,0,,,0,0,unsupported
+MAC-10,t,2900,0,0,,,0,0,unsupported
+SSG 08,t,2900,0,0,,,0,0,unsupported
+none,t,3400,93,2400,1750,7900,124,321,none
+AK-47,t,3400,25,74,0,4650,94,321,exact
+AWP,t,3400,0,0,,,0,0,unsupported
+Galil AR,t,3400,27,81,0,4650,94,321,family
+none,ct,1400,227,2671,3400,16000,253,321,none
+AK-47,ct,1400,139,252,3500,15600,243,321,exact
+AUG,ct,1400,181,1445,3350,15600,246,321,family
+AWP,ct,1400,146,360,3450,16000,252,321,exact
+FAMAS,ct,1400,45,123,3450,9750,127,321,exact
+Galil AR,ct,1400,45,54,3550,12450,179,321,exact
+M4A1-S,ct,1400,110,488,3450,14800,228,321,exact
+M4A4,ct,1400,127,526,3350,14000,214,321,exact
+MAC-10,ct,1400,74,183,3400,12050,174,321,family
+MP7,ct,1400,74,183,3400,12050,174,321,family
+MP9,ct,1400,71,161,3400,12050,174,321,exact
+SSG 08,ct,1400,146,369,3450,16000,252,321,family
+none,ct,1900,232,3075,800,16000,305,321,none
+AK-47,ct,1900,58,89,1400,15500,283,321,family
+AWP,ct,1900,0,0,,,0,0,unsupported
+FAMAS,ct,1900,58,89,1400,15500,283,321,family
+M4A1-S,ct,1900,58,89,1400,15500,283,321,family
+M4A4,ct,1900,58,89,1400,15500,283,321,family
+MP9,ct,1900,0,0,,,0,0,unsupported
+SSG 08,ct,1900,0,0,,,0,0,unsupported
+none,ct,2400,119,1615,1900,13100,225,321,none
+AK-47,ct,2400,33,81,1900,6050,84,321,family
+AWP,ct,2400,27,46,1900,7350,110,321,exact
+FAMAS,ct,2400,33,81,1900,6050,84,321,family
+M4A1-S,ct,2400,33,81,1900,6050,84,321,family
+M4A4,ct,2400,33,81,1900,6050,84,321,family
+MP7,ct,2400,0,0,,,0,0,unsupported
+MP9,ct,2400,0,0,,,0,0,unsupported
+SSG 08,ct,2400,27,49,1900,7350,110,321,family
+none,ct,2900,81,1105,2400,8700,127,321,none
+AK-47,ct,2900,0,0,,,0,0,unsupported
+AWP,ct,2900,0,0,,,0,0,unsupported
+FAMAS,ct,2900,0,0,,,0,0,unsupported
+M4A1-S,ct,2900,0,0,,,0,0,unsupported
+M4A4,ct,2900,0,0,,,0,0,unsupported
+MP7,ct,2900,0,0,,,0,0,unsupported
+MP9,ct,2900,0,0,,,0,0,unsupported
+SSG 08,ct,2900,0,0,,,0,0,unsupported
+none,ct,3400,86,1106,2900,7850,100,321,none
+AK-47,ct,3400,24,44,2950,6350,69,321,family
+AWP,ct,3400,0,0,,,0,0,unsupported
+FAMAS,ct,3400,24,44,2950,6350,69,321,family
+Galil AR,ct,3400,24,44,2950,6350,69,321,family
+M4A1-S,ct,3400,24,44,2950,6350,69,321,family
+M4A4,ct,3400,24,44,2950,6350,69,321,family
+MP9,ct,3400,0,0,,,0,0,unsupported
+SSG 08,ct,3400,0,0,,,0,0,unsupported

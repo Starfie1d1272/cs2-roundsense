@@ -1,0 +1,5 @@
+representation,leaves,grouped_log_loss,grouped_accuracy
+surface_exact_lookup,-1,0.5398,0.8441
+rule_tree_30leaves,30,0.4465,0.8321
+rule_tree_60leaves,60,0.4599,0.8357
+rule_tree_100leaves,100,0.4986,0.8365

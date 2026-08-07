@@ -1,0 +1,111 @@
+side,lossReward,retained_weapon,family,exact_n,pool_n,estimate_level
+t,1400,AK-47,rifle,723,723,exact
+t,1400,AWP,sniper,136,136,exact
+t,1400,FAMAS,rifle,7,1032,family
+t,1400,Galil AR,rifle,284,284,exact
+t,1400,M4A1-S,rifle,9,1032,family
+t,1400,M4A4,rifle,9,1032,family
+t,1400,MAC-10,smg,75,75,exact
+t,1400,MP5-SD,smg,2,91,family
+t,1400,MP7,smg,14,91,family
+t,1400,MP9,smg,0,91,family
+t,1400,SSG 08,sniper,9,145,family
+t,1900,AK-47,rifle,58,58,exact
+t,1900,AWP,sniper,0,0,unsupported
+t,1900,FAMAS,rifle,0,78,family
+t,1900,Galil AR,rifle,18,78,family
+t,1900,M4A1-S,rifle,2,78,family
+t,1900,M4A4,rifle,0,78,family
+t,1900,MAC-10,smg,0,0,unsupported
+t,1900,MP5-SD,smg,0,0,unsupported
+t,1900,MP7,smg,0,0,unsupported
+t,1900,MP9,smg,0,0,unsupported
+t,1900,SSG 08,sniper,0,0,unsupported
+t,2400,AK-47,rifle,35,47,family
+t,2400,AWP,sniper,0,0,unsupported
+t,2400,FAMAS,rifle,0,47,family
+t,2400,Galil AR,rifle,11,47,family
+t,2400,M4A1-S,rifle,1,47,family
+t,2400,M4A4,rifle,0,47,family
+t,2400,MAC-10,smg,0,0,unsupported
+t,2400,MP5-SD,smg,0,0,unsupported
+t,2400,MP7,smg,0,0,unsupported
+t,2400,MP9,smg,0,0,unsupported
+t,2400,SSG 08,sniper,0,0,unsupported
+t,2900,AK-47,rifle,0,0,unsupported
+t,2900,AWP,sniper,0,0,unsupported
+t,2900,FAMAS,rifle,0,0,unsupported
+t,2900,Galil AR,rifle,0,0,unsupported
+t,2900,M4A1-S,rifle,0,0,unsupported
+t,2900,M4A4,rifle,0,0,unsupported
+t,2900,MAC-10,smg,0,0,unsupported
+t,2900,MP5-SD,smg,0,0,unsupported
+t,2900,MP7,smg,0,0,unsupported
+t,2900,MP9,smg,0,0,unsupported
+t,2900,SSG 08,sniper,0,0,unsupported
+t,3400,AK-47,rifle,74,74,exact
+t,3400,AWP,sniper,0,0,unsupported
+t,3400,FAMAS,rifle,0,81,family
+t,3400,Galil AR,rifle,7,81,family
+t,3400,M4A1-S,rifle,0,81,family
+t,3400,M4A4,rifle,0,81,family
+t,3400,MAC-10,smg,0,0,unsupported
+t,3400,MP5-SD,smg,0,0,unsupported
+t,3400,MP7,smg,0,0,unsupported
+t,3400,MP9,smg,0,0,unsupported
+t,3400,SSG 08,sniper,0,0,unsupported
+ct,1400,AK-47,rifle,252,252,exact
+ct,1400,AUG,rifle,2,1445,family
+ct,1400,AWP,sniper,360,360,exact
+ct,1400,FAMAS,rifle,123,123,exact
+ct,1400,Galil AR,rifle,54,54,exact
+ct,1400,M4A1-S,rifle,488,488,exact
+ct,1400,M4A4,rifle,526,526,exact
+ct,1400,MAC-10,smg,3,183,family
+ct,1400,MP7,smg,19,183,family
+ct,1400,MP9,smg,161,161,exact
+ct,1400,SSG 08,sniper,9,369,family
+ct,1900,AK-47,rifle,21,89,family
+ct,1900,AUG,rifle,0,89,family
+ct,1900,AWP,sniper,0,0,unsupported
+ct,1900,FAMAS,rifle,5,89,family
+ct,1900,Galil AR,rifle,0,89,family
+ct,1900,M4A1-S,rifle,28,89,family
+ct,1900,M4A4,rifle,35,89,family
+ct,1900,MAC-10,smg,0,0,unsupported
+ct,1900,MP7,smg,0,0,unsupported
+ct,1900,MP9,smg,0,0,unsupported
+ct,1900,SSG 08,sniper,0,0,unsupported
+ct,2400,AK-47,rifle,12,81,family
+ct,2400,AUG,rifle,0,81,family
+ct,2400,AWP,sniper,46,46,exact
+ct,2400,FAMAS,rifle,7,81,family
+ct,2400,Galil AR,rifle,0,81,family
+ct,2400,M4A1-S,rifle,27,81,family
+ct,2400,M4A4,rifle,35,81,family
+ct,2400,MAC-10,smg,0,0,unsupported
+ct,2400,MP7,smg,0,0,unsupported
+ct,2400,MP9,smg,0,0,unsupported
+ct,2400,SSG 08,sniper,3,49,family
+ct,2900,AK-47,rifle,0,0,unsupported
+ct,2900,AUG,rifle,0,0,unsupported
+ct,2900,AWP,sniper,0,0,unsupported
+ct,2900,FAMAS,rifle,0,0,unsupported
+ct,2900,Galil AR,rifle,0,0,unsupported
+ct,2900,M4A1-S,rifle,0,0,unsupported
+ct,2900,M4A4,rifle,0,0,unsupported
+ct,2900,MAC-10,smg,0,0,unsupported
+ct,2900,MP7,smg,0,0,unsupported
+ct,2900,MP9,smg,0,0,unsupported
+ct,2900,SSG 08,sniper,0,0,unsupported
+ct,3400,AK-47,rifle,1,44,family
+ct,3400,AUG,rifle,0,44,family
+ct,3400,AWP,sniper,0,0,unsupported
+ct,3400,FAMAS,rifle,1,44,family
+ct,3400,Galil AR,rifle,1,44,family
+ct,3400,M4A1-S,rifle,18,44,family
+ct,3400,M4A4,rifle,23,44,family
+ct,3400,MAC-10,smg,0,0,unsupported
+ct,3400,MP7,smg,0,0,unsupported
+ct,3400,MP9,smg,0,0,unsupported
+ct,3400,SSG 08,sniper,0,0,unsupported

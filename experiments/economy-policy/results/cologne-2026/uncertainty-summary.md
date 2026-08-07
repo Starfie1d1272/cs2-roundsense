@@ -1,0 +1,12 @@
+# Uncertainty Summary (match-series cluster bootstrap, B=100, seed 42)
+
+- T lr1400 full50 crossing: 90% CI $3800–$3900 (median $3800)
+- T lr1900 full50 crossing: 90% CI $3900–$4000 (median $4000)
+- T lr2400 full50 crossing: 90% CI $3950–$4000 (median $4000)
+- T lr2900 full50 crossing: 90% CI $3950–$4000 (median $3950)
+- T lr3400 full50 crossing: 90% CI $4000–$4050 (median $4000)
+- CT lr1400 full50 crossing: 90% CI $3600–$3650 (median $3650)
+- CT lr1900 full50 crossing: 90% CI $3850–$4050 (median $4050)
+- CT lr2400 full50 crossing: 90% CI $4150–$4350 (median $4200)
+- CT lr2900 full50 crossing: 90% CI $4150–$4200 (median $4150)
+- CT lr3400 full50 crossing: 90% CI $4050–$4400 (median $4350)

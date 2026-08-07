@@ -1,0 +1,4 @@
+FINAL ECONOMY CLOSEOUT AUDIT
+
+All invariants PASS
+Row counts: {"economy": 21507, "purchase": 7989, "primary": 45070, "secondary": 46128, "loadouts": 65938, "retained": 110}

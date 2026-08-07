@@ -1,0 +1,31 @@
+{
+ "exclusions": {
+  "raw": 43620,
+  "strict": 25986,
+  "drop_gave": 9842,
+  "drop_received": 5103,
+  "loss_index_ambiguous": 1009,
+  "overtime": 1680
+ },
+ "raw_ambiguous_flag_count": 1010,
+ "exclusive_ambiguity_only": 1009,
+ "grenade_dist_strict": {
+  "0": 5289,
+  "3": 3754,
+  "1": 3172,
+  "2": 3478,
+  "4": 10293
+ },
+ "weapon_families": {
+  "AK-47": "rifle",
+  "M4A4": "rifle",
+  "M4A1-S": "rifle",
+  "AWP": "sniper",
+  "SSG 08": "sniper",
+  "MP9": "smg",
+  "MAC-10": "smg",
+  "MP7": "smg",
+  "MP5-SD": "smg",
+  "Desert Eagle": "pistol"
+ }
+}
