@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # version comes from package.json "packageManager" (pnpm@11.20.0) —
+      # do NOT pin a version here or the action errors on a mismatch
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -20,3 +20,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      # validator smoke: repo-only tiny fixture (no large corpus in git);
+      # path is relative to the experiment package cwd under pnpm --filter
+      - run: pnpm --filter @roundsense/experiment-economy-ledger validate -- ../../fixtures/demo-format/tiny-v3.zip
