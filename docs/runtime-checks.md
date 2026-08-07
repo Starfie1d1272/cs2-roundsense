@@ -6,8 +6,11 @@ upgrade beyond their evidence scope.
 
 ## 1. GSI consecutive_round_losses — OBSERVED (availability + 2 clean discriminator samples)
 
-`map.team_ct/t.consecutive_round_losses` is sent on every in-game payload
-(40/41), all phases. Semantics observed:
+Availability was first established in a PRIOR normal-player observation
+(41 payloads, warmup + 5 formal rounds): 40/41 payloads carried
+`consecutive_round_losses` (absent only on the main-menu payload), all
+phases. The controlled 84-payload economy session (this file) then
+provided the clean payout discriminator samples. Semantics observed:
 
 - loss → +1 per consecutive loss (1→2→3 across r3/r4/r5)
 - win → `max(0, lCT−2)` style decrement observed twice (3→1, 1→0)
