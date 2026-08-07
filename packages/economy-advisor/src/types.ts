@@ -14,9 +14,8 @@ export interface InventoryState {
   hasArmor: boolean;
   hasHelmet: boolean;
   hasDefuseKit: boolean;
-  /** grenades carried; they survive if the player survived the round */
+  /** grenades carried as a multiset (flash ×2 → two entries) */
   grenades: ItemId[];
-  survivedLastRound: boolean;
 }
 
 export interface AdvisorInput {

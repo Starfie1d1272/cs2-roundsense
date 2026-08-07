@@ -33,6 +33,9 @@ export const playerStateSchema = z
     round_kills: z.number().optional(),
     round_killhs: z.number().optional(),
     equip_value: z.number().optional(),
+    // observed on Windows build 14174: player.state.defusekit=true after
+    // buying a defuse kit (weapons block carries NO entry for the kit)
+    defusekit: z.boolean().optional(),
   })
   .passthrough();
 

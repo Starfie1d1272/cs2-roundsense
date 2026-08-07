@@ -11,7 +11,7 @@ function input(partial: Partial<AdvisorInput>): AdvisorInput {
     roundNumber: 2,
     money: 3400,
     lossStreak: 0,
-    inventory: { hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [], survivedLastRound: false },
+    inventory: { hasArmor: false, hasHelmet: false, hasDefuseKit: false, grenades: [] },
     killsThisRound: [],
     bombPlantedThisRound: false,
     nextRoundGoal: "rifle_armor",

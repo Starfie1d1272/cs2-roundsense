@@ -137,3 +137,61 @@ describe("weapon mapping (C4)", () => {
     expect(inv.primary).toBeNull(); // unmapped name — no guessing
   });
 });
+
+describe("inventory quantities (runtime-observed, Windows build 14174)", () => {
+  const withWeapons = (weapons: Record<string, Record<string, unknown>>, state: Record<string, unknown> = {}) =>
+    basePayload({ player: { ...basePayload().player!, weapons: weapons as never, state: { ...basePayload().player!.state!, ...state } as never } });
+
+  it("smoke ammo_reserve=1 → grenades ['smoke']", () => {
+    const inv = inventoryFrom(withWeapons({ a: { name: "weapon_smokegrenade", type: "Grenade", ammo_reserve: 1 } }));
+    expect(inv.grenades).toEqual(["smoke"]);
+  });
+
+  it("flash ammo_reserve=1 → grenades ['flash']", () => {
+    const inv = inventoryFrom(withWeapons({ a: { name: "weapon_flashbang", type: "Grenade", ammo_reserve: 1 } }));
+    expect(inv.grenades).toEqual(["flash"]);
+  });
+
+  it("flash ammo_reserve=2 → grenades ['flash','flash'] (single entry, multiset)", () => {
+    const inv = inventoryFrom(withWeapons({ a: { name: "weapon_flashbang", type: "Grenade", ammo_reserve: 2 } }));
+    expect(inv.grenades).toEqual(["flash", "flash"]);
+  });
+
+  it("smoke + flash×2 → ['smoke','flash','flash']", () => {
+    const inv = inventoryFrom(
+      withWeapons({
+        a: { name: "weapon_smokegrenade", type: "Grenade", ammo_reserve: 1 },
+        b: { name: "weapon_flashbang", type: "Grenade", ammo_reserve: 2 },
+      }),
+    );
+    expect(inv.grenades).toEqual(["smoke", "flash", "flash"]);
+  });
+
+  it("grenade entry without ammo_reserve still counts as ≥1", () => {
+    const inv = inventoryFrom(withWeapons({ a: { name: "weapon_hegrenade", type: "Grenade" } }));
+    expect(inv.grenades).toEqual(["he"]);
+  });
+
+  it("kevlar: armor 0→100 via player.state, weapons unchanged (observed $650)", () => {
+    const before = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 0, helmet: false }));
+    expect(before.hasArmor).toBe(false);
+    const after = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 100, helmet: false }));
+    expect(after.hasArmor).toBe(true);
+    expect(after.hasHelmet).toBe(false);
+    // the $650 cost itself is exercised through the armor incremental logic
+    // in economy-advisor (kevlar price), not duplicated here
+  });
+
+  it("vesthelm upgrade: helmet false→true with armor already 100, weapons unchanged (observed -$350)", () => {
+    const after = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { armor: 100, helmet: true }));
+    expect(after.hasArmor).toBe(true);
+    expect(after.hasHelmet).toBe(true);
+  });
+
+  it("defuse kit: player.state.defusekit=true → hasDefuseKit (kit never in weapons)", () => {
+    const withKit = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }, { defusekit: true }));
+    expect(withKit.hasDefuseKit).toBe(true);
+    const withoutKit = inventoryFrom(withWeapons({ a: { name: "weapon_hkp2000", type: "Pistol" } }));
+    expect(withoutKit.hasDefuseKit).toBe(false);
+  });
+});

@@ -132,10 +132,8 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
     const assumptions = [
       "投影按 0 额外击杀；每步枪击杀 +$300、每 AWP 击杀 +$100（规则文件）",
       "未计下包/拆包个人 +$300 奖励、未计短员/惩罚",
-      input.inventory.survivedLastRound
-        ? "本回合存活：保留装备下回合无需重购（未折价）"
-        : "若本回合阵亡，装备不保留",
-      "数值规则（回合奖励/连败奖金/价格）已通过语料整数账本验证（rules.status=verified, statusScope=numeric-rules）；lossStreak 实时来源（GSI consecutive_round_losses）仍 runtime-unverified；若调用方提供 lossStreak，投影按该输入计算；win transition 未决不影响本投影",
+      "当前已持有装备按 inventory 快照参与本次购买差额计算",
+      "数值规则（回合奖励/连败奖金/价格）已通过语料整数账本验证（rules.status=verified, statusScope=numeric-rules）；lossStreak 实时来源（GSI consecutive_round_losses）Windows build 14174 runtime-observed（index 1→$1900、index 2→$2400，win transitions 3→1/1→0 已观测）；index 0/3/4 未在受控 runtime 直接验证 payout；win transition 未决不影响本投影",
     ];
 
     return {

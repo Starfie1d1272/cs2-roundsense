@@ -70,14 +70,17 @@ export function inventoryFrom(payload: GsiPayload): InventoryState {
   const weapons = payload.player?.weapons ?? {};
   let primary: ItemId | null = null;
   let secondary: ItemId | undefined;
-  let hasDefuseKit = false;
   const grenades: ItemId[] = [];
   for (const w of Object.values(weapons)) {
     const item = w?.name ? GSI_TO_ITEM[w.name] : undefined;
     if (!item) continue;
-    if (item === "defuse_kit") { hasDefuseKit = true; continue; }
     if (item === "smoke" || item === "flash" || item === "he" || item === "molotov" || item === "incendiary") {
-      grenades.push(item);
+      // Grenade quantity is ammo_reserve on the single weapon entry
+      // (observed build 14174: flash ×2 = one weapon_flashbang, reserve=2).
+      // Missing reserve still proves ≥1 carried.
+      const reserve = w?.ammo_reserve;
+      const count = reserve !== undefined && reserve >= 0 ? reserve : 1;
+      for (let i = 0; i < count; i++) grenades.push(item);
       continue;
     }
     if (item === "kevlar" || item === "kevlar_helmet") continue;
@@ -93,11 +96,10 @@ export function inventoryFrom(payload: GsiPayload): InventoryState {
     secondary,
     hasArmor: (state?.armor ?? 0) > 0,
     hasHelmet: state?.helmet === true,
-    hasDefuseKit,
+    // observed build 14174: player.state.defusekit=true — the kit never
+    // appears in player.weapons
+    hasDefuseKit: state?.defusekit === true,
     grenades,
-    // GSI cannot report whether the player survived the last round; current
-    // grenades are held now, so keep them in projections (optimistic)
-    survivedLastRound: true,
   };
 }
 
