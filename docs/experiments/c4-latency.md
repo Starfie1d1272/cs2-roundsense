@@ -79,13 +79,15 @@
 - `dup_rate` = 同一真值安放产生的重复 planted 事件数（状态机去重后应为 0，用于验证去重）。
 - `final_countdown_error_ms` = 估算剩余时间 vs 实际爆炸时刻的误差：
   `error = (plantedAt + fuseMs_规则) − exploded真值时刻`，其中 fuseMs_规则 取
-  `c4-estimator/src/rules.ts` 的 40000（B1，待语料核验）。
+  `c4-estimator/src/rules.ts` 的 41000（corpus-observed，demo 事件语义；
+  真实游戏是否 40s 仍 runtime-unverified，本实验可提供证据）。
 - 每条记录必须可追溯：`seq`、`receivedAtMonotonicNs`、`provider.timestamp`、`gsi.bufferMs/throttleMs`。
 
 ## 7. 输出格式（Windows → Mac 分析）
 
 NDJSON 保持 recorder 原生格式（`recordings/*.ndjson`）。
-新增一个 `experiments/c4-latency/output/<配置>.summary.json`（脚本生成）：
+输出统一放到 gitignored 的 `recordings/c4-latency/`（不再创建 experiment 输出目录）。
+新增一个 `recordings/c4-latency/<配置>.summary.json`（脚本生成）：
 
 ```json
 {
@@ -98,7 +100,7 @@ NDJSON 保持 recorder 原生格式（`recordings/*.ndjson`）。
   "missed_rate": 0.0,
   "dup_rate": 0.0,
   "final_countdown_error_ms": { "p50": 0, "p95": 0, "p99": 0 },
-  "fuse_source": "rules/cs2-c4-fuse-2026-08 (code-tentative, 40000ms)"
+  "fuse_source": "rules/cs2-c4-fuse-2026-08 (corpus-verified 41000ms demo-event; real-game 40s pending Windows)"
 }
 ```
 
@@ -116,6 +118,6 @@ NDJSON 保持 recorder 原生格式（`recordings/*.ndjson`）。
 ## 9. 完成后交付
 
 - `recordings/*.ndjson`（原样保留，上传到 Mac 分析）。
-- `experiments/c4-latency/output/*.summary.json`。
+- `recordings/c4-latency/*.summary.json`。
 - 每配置 1~2 行观察笔记（漏报场景、异常状态值、`round.bomb` 实际取值集合）。
-- 更新 `docs/assumptions.md` 中 A4/A5/A7/A9/A10 与 B4 的状态标签。
+- 更新 `docs/assumptions.md` 中 A4/A5/A7/A9/A10 与 B1/B4 的状态标签（41000 vs 40s 的判定证据）。

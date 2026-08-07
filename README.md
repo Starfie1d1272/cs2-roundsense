@@ -2,7 +2,8 @@
 
 面向 CS2 普通玩家的**只读实时决策辅助研究项目**（非 HUD / 非直播 / 非 OBS / 非 Overlay）。
 当前状态：v0.1 研究基线已收敛——C4 安放时间估算（P0-A）、个人经济购买建议（P0-B）、
-demo 真值适配（P1），经济规则已通过整数账本对 316 场语料验证并固化。
+demo 真值适配（P1）。**经济数值规则已通过语料整数账本验证；loss-counter win transition
+与 GSI runtime availability 仍待 Windows 实测。**
 
 ## 快速开始
 
@@ -17,7 +18,7 @@ pnpm test
 ```text
 apps/
   gsi-recorder/     # 最小 GSI 接收器（127.0.0.1 + token + 204 + NDJSON）
-  debug-viewer/     # 最小 CLI：回放 NDJSON 输出 C4/经济时间线
+  debug-viewer/     # 最小 CLI：回放 NDJSON 输出 C4 时间线
 packages/
   gsi-protocol/     # GSI payload schema、cfg 生成、token、时钟、脱敏、NDJSON 信封
   c4-estimator/     # C4 状态机 + 剩余时间估算器（纯函数）
