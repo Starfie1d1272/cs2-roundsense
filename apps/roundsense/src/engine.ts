@@ -61,7 +61,11 @@ const GSI_TO_ITEM: Record<string, ItemId> = {
   weapon_incgrenade: "incendiary",
 };
 
-function inventoryFrom(payload: GsiPayload): InventoryState {
+/** GSI weapon `type` values observed live (Windows build 14174): SMGs send
+ * "Submachine Gun", NOT "SMG" — match the real strings. */
+const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machinegun", "SniperRifle"];
+
+export function inventoryFrom(payload: GsiPayload): InventoryState {
   const state = payload.player?.state;
   const weapons = payload.player?.weapons ?? {};
   let primary: ItemId | null = null;
@@ -78,7 +82,7 @@ function inventoryFrom(payload: GsiPayload): InventoryState {
     }
     if (item === "kevlar" || item === "kevlar_helmet") continue;
     const type = w?.type ?? "";
-    if (type.includes("Rifle") || type.includes("SMG") || type.includes("Shotgun") || type.includes("Machinegun") || type.includes("SniperRifle")) {
+    if (PRIMARY_TYPE_HINTS.some((h) => type.includes(h))) {
       primary = item;
     } else if (type.includes("Pistol")) {
       secondary = item;
@@ -101,35 +105,43 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   const player = payload.player;
   const map = payload.map;
   const state = player?.state;
-  if (player?.team && state?.money !== undefined) {
-    const side = player.team === "T" ? "T" : "CT";
-    const teamInfo = side === "T" ? map?.team_t : map?.team_ct;
-    const lossStreakGsi = teamInfo?.consecutive_round_losses;
-    const lossStreak = lossStreakGsi ?? 1;
-    const input: AdvisorInput = {
-      side,
-      roundNumber: map?.round ?? 1,
-      money: state.money,
-      lossStreak,
-      inventory: inventoryFrom(payload),
-      killsThisRound: [{ weaponClass: "unknown", count: state.round_kills ?? 0 }],
-      bombPlantedThisRound: side === "T" && payload.round?.bomb === "planted",
-      nextRoundGoal: opts.nextRoundGoal,
-    };
-    const out: AdvisorOutput = recommend(input);
-    return {
-      side,
-      roundNumber: input.roundNumber,
-      money: state.money,
-      lossStreak,
-      lossStreakSource: lossStreakGsi !== undefined ? "gsi" : "assumed-1",
-      goal: out.goal,
-      recommended: out.recommended
-        ? { character: out.recommended.character, label: out.recommended.label, totalCost: out.recommended.totalCost }
-        : null,
-      alternatives: out.alternatives.map((s) => ({ character: s.character, label: s.label, totalCost: s.totalCost })),
-      breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,
-    };
-  }
-  return null;
+  // C1: advice only during freezetime — the only verified buy window in
+  // normal-player GSI (no buytime countdown contract observed yet). live /
+  // planted / over / undefined phases get no purchase advice.
+  if (payload.round?.phase !== "freezetime") return null;
+  // C2: only explicit CT/T teams (observed as "CT"/"T" strings).
+  if (!player?.team || (player.team !== "CT" && player.team !== "T")) return null;
+  if (state?.money === undefined) return null;
+  const side = player.team;
+  const teamInfo = side === "T" ? map?.team_t : map?.team_ct;
+  const lossStreakGsi = teamInfo?.consecutive_round_losses;
+  const lossStreak = lossStreakGsi ?? 1;
+  const input: AdvisorInput = {
+    side,
+    roundNumber: map?.round ?? 1,
+    money: state.money,
+    lossStreak,
+    inventory: inventoryFrom(payload),
+    // C3: current GSI money already includes rewards earned before this
+    // payload (observed: money 1650 → 2250 exactly when round_kills 0 → 1,
+    // Windows build 14174). Past round_kills are NOT future income — never
+    // re-add them to the projection.
+    killsThisRound: [],
+    bombPlantedThisRound: side === "T" && payload.round?.bomb === "planted",
+    nextRoundGoal: opts.nextRoundGoal,
+  };
+  const out: AdvisorOutput = recommend(input);
+  return {
+    side,
+    roundNumber: input.roundNumber,
+    money: state.money,
+    lossStreak,
+    lossStreakSource: lossStreakGsi !== undefined ? "gsi" : "assumed-1",
+    goal: out.goal,
+    recommended: out.recommended
+      ? { character: out.recommended.character, label: out.recommended.label, totalCost: out.recommended.totalCost }
+      : null,
+    alternatives: out.alternatives.map((s) => ({ character: s.character, label: s.label, totalCost: s.totalCost })),
+    breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,
+  };
 }

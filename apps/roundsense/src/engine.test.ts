@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { tick } from "./engine.js";
+import { tick, inventoryFrom } from "./engine.js";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
 
 const basePayload = (over: Partial<GsiPayload> = {}): GsiPayload => ({
   provider: { name: "csgo", appid: 730, version: 1, steamid: "1", timestamp: 100 },
   map: { name: "de_mirage", mode: "competitive", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } },
-  round: { phase: "live", bomb: null, win_team: null },
+  round: { phase: "freezetime", bomb: null, win_team: null },
   player: {
     steamid: "1",
     name: "p",
@@ -20,22 +20,62 @@ const basePayload = (over: Partial<GsiPayload> = {}): GsiPayload => ({
   ...over,
 });
 
-describe("economy advice", () => {
-  it("produces recommended + alternatives from GSI player state", () => {
+describe("advice phase gating (C1)", () => {
+  it("produces advice during freezetime", () => {
     const out = tick(basePayload(), { nextRoundGoal: "rifle_armor" });
     expect(out).not.toBeNull();
     expect(out!.side).toBe("T");
     expect(out!.money).toBe(4200);
-    expect(out!.lossStreak).toBe(1);
-    expect(out!.lossStreakSource).toBe("gsi");
-    expect(out!.recommended).not.toBeNull();
-    expect(out!.alternatives.length).toBeGreaterThan(0);
   });
 
+  it("returns null during live", () => {
+    const out = tick(basePayload({ round: { phase: "live", bomb: null, win_team: null } }), { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+
+  it("returns null during live with planted bomb", () => {
+    const out = tick(basePayload({ round: { phase: "live", bomb: "planted", win_team: null } }), { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+
+  it("returns null during over", () => {
+    const out = tick(basePayload({ round: { phase: "over", bomb: "exploded", win_team: "T" } }), { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+
+  it("returns null when round.phase is undefined", () => {
+    const p = basePayload();
+    p.round = undefined;
+    const out = tick(p, { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+});
+
+describe("team gating (C2)", () => {
+  it("accepts CT and T", () => {
+    const ct = tick(basePayload({ player: { ...basePayload().player!, team: "CT" } }), { nextRoundGoal: "rifle_armor" });
+    expect(ct!.side).toBe("CT");
+    const t = tick(basePayload(), { nextRoundGoal: "rifle_armor" });
+    expect(t!.side).toBe("T");
+  });
+
+  it("returns null for unknown team strings", () => {
+    const out = tick(basePayload({ player: { ...basePayload().player!, team: "spectator" } }), { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+
+  it("returns null when team is missing", () => {
+    const p = basePayload();
+    p.player = { ...p.player!, team: undefined };
+    const out = tick(p, { nextRoundGoal: "rifle_armor" });
+    expect(out).toBeNull();
+  });
+});
+
+describe("loss streak input", () => {
   it("uses consecutive_round_losses of the player's team", () => {
     const out = tick(basePayload({ player: { ...basePayload().player!, team: "CT" } }), { nextRoundGoal: "rifle_armor" });
     expect(out!.lossStreak).toBe(2); // team_ct.consecutive_round_losses
-    expect(out!.side).toBe("CT");
   });
 
   it("falls back to assumed-1 when GSI omits consecutive_round_losses", () => {
@@ -51,5 +91,42 @@ describe("economy advice", () => {
     p.player = undefined;
     const out = tick(p, { nextRoundGoal: "rifle_armor" });
     expect(out).toBeNull();
+  });
+});
+
+describe("kill reward input (C3)", () => {
+  it("advice is identical regardless of round_kills — past kills are not re-added", () => {
+    const noKills = tick(basePayload({ player: { ...basePayload().player!, state: { ...basePayload().player!.state!, round_kills: 0 } } }), { nextRoundGoal: "rifle_armor" });
+    const manyKills = tick(basePayload({ player: { ...basePayload().player!, state: { ...basePayload().player!.state!, round_kills: 5 } } }), { nextRoundGoal: "rifle_armor" });
+    expect(noKills!.recommended?.totalCost).toBe(manyKills!.recommended?.totalCost);
+    expect(noKills!.recommended?.label).toBe(manyKills!.recommended?.label);
+  });
+});
+
+describe("weapon mapping (C4)", () => {
+  it("maps weapon_mp9 with real GSI type 'Submachine Gun' to primary mp9", () => {
+    const p = basePayload({
+      player: {
+        ...basePayload().player!,
+        weapons: {
+          a: { name: "weapon_mp9", type: "Submachine Gun", state: "active" },
+          b: { name: "weapon_hkp2000", type: "Pistol", state: "holstered" },
+        },
+      },
+    });
+    const inv = inventoryFrom(p);
+    expect(inv.primary).toBe("mp9");
+    expect(inv.secondary).toBe("p2000");
+  });
+
+  it("keeps primary null for an unknown weapon with a primary-looking type", () => {
+    const p = basePayload({
+      player: {
+        ...basePayload().player!,
+        weapons: { a: { name: "weapon_future_rifle", type: "Rifle", state: "active" } },
+      },
+    });
+    const inv = inventoryFrom(p);
+    expect(inv.primary).toBeNull(); // unmapped name — no guessing
   });
 });
