@@ -1,0 +1,170 @@
+side,role,money_band,branch,purchase_state,pistol,n,share_of_paid_pistol_rows,share_of_condition
+ct,,,,,CZ75-Auto,37,0.0065,0.0065
+ct,,,,,Desert Eagle,709,0.1247,0.1247
+ct,,,,,Dual Berettas,585,0.1029,0.1029
+ct,,,,,Five-SeveN,1102,0.1938,0.1938
+ct,,,,,P250,190,0.0334,0.0334
+ct,,,,,Tec-9,196,0.0345,0.0345
+t,,,,,CZ75-Auto,2,0.0004,0.0004
+t,,,,,Desert Eagle,911,0.1602,0.1602
+t,,,,,Dual Berettas,81,0.0142,0.0142
+t,,,,,Five-SeveN,63,0.0111,0.0111
+t,,,,,P250,364,0.064,0.064
+t,,,,,R8 Revolver,1,0.0002,0.0002
+t,,,,,Tec-9,1445,0.2541,0.2541
+ct,,2000-3000,,purchased,CZ75-Auto,14,0.0025,0.0194
+ct,,2000-3000,,purchased,Desert Eagle,256,0.045,0.3546
+ct,,2000-3000,,purchased,Dual Berettas,4,0.0007,0.0055
+ct,,2000-3000,,purchased,Five-SeveN,393,0.0691,0.5443
+ct,,2000-3000,,purchased,P250,55,0.0097,0.0762
+ct,,<2000,,purchased,CZ75-Auto,5,0.0009,0.0101
+ct,,<2000,,purchased,Desert Eagle,31,0.0055,0.0629
+ct,,<2000,,purchased,Dual Berettas,333,0.0586,0.6755
+ct,,<2000,,purchased,Five-SeveN,110,0.0193,0.2231
+ct,,<2000,,purchased,P250,13,0.0023,0.0264
+ct,,<2000,,purchased,Tec-9,1,0.0002,0.002
+ct,,>=3000,,purchased,CZ75-Auto,13,0.0023,0.0149
+ct,,>=3000,,purchased,Desert Eagle,261,0.0459,0.2993
+ct,,>=3000,,purchased,Dual Berettas,43,0.0076,0.0493
+ct,,>=3000,,purchased,Five-SeveN,364,0.064,0.4174
+ct,,>=3000,,purchased,P250,77,0.0135,0.0883
+ct,,>=3000,,purchased,Tec-9,114,0.02,0.1307
+t,,2000-3000,,purchased,Desert Eagle,429,0.0754,0.4218
+t,,2000-3000,,purchased,P250,86,0.0151,0.0846
+t,,2000-3000,,purchased,Tec-9,502,0.0883,0.4936
+t,,<2000,,purchased,Desert Eagle,72,0.0127,0.2143
+t,,<2000,,purchased,Five-SeveN,1,0.0002,0.003
+t,,<2000,,purchased,P250,141,0.0248,0.4196
+t,,<2000,,purchased,Tec-9,122,0.0215,0.3631
+t,,>=3000,,purchased,CZ75-Auto,2,0.0004,0.0016
+t,,>=3000,,purchased,Desert Eagle,355,0.0624,0.2771
+t,,>=3000,,purchased,Dual Berettas,61,0.0107,0.0476
+t,,>=3000,,purchased,Five-SeveN,45,0.0079,0.0351
+t,,>=3000,,purchased,P250,76,0.0134,0.0593
+t,,>=3000,,purchased,R8 Revolver,1,0.0002,0.0008
+t,,>=3000,,purchased,Tec-9,741,0.1303,0.5785
+ct,,,ECO,purchased,Desert Eagle,9,0.0016,0.45
+ct,,,ECO,purchased,Five-SeveN,7,0.0012,0.35
+ct,,,ECO,purchased,P250,4,0.0007,0.2
+ct,,,FORCE,purchased,CZ75-Auto,8,0.0014,0.0235
+ct,,,FORCE,purchased,Desert Eagle,108,0.019,0.3176
+ct,,,FORCE,purchased,Dual Berettas,4,0.0007,0.0118
+ct,,,FORCE,purchased,Five-SeveN,216,0.038,0.6353
+ct,,,FORCE,purchased,P250,4,0.0007,0.0118
+ct,,,LIGHT,purchased,Desert Eagle,6,0.0011,0.4286
+ct,,,LIGHT,purchased,Five-SeveN,8,0.0014,0.5714
+t,,,ECO,purchased,Desert Eagle,47,0.0083,0.8246
+t,,,ECO,purchased,P250,9,0.0016,0.1579
+t,,,ECO,purchased,Tec-9,1,0.0002,0.0175
+t,,,FORCE,purchased,Desert Eagle,47,0.0083,0.2733
+t,,,FORCE,purchased,P250,1,0.0002,0.0058
+t,,,FORCE,purchased,Tec-9,124,0.0218,0.7209
+t,,,LIGHT,purchased,Desert Eagle,11,0.0019,0.2037
+t,,,LIGHT,purchased,P250,2,0.0004,0.037
+t,,,LIGHT,purchased,Tec-9,41,0.0072,0.7593
+both,AWPer,2000-3000,,purchased,Desert Eagle,143,0.0251,0.5766
+both,AWPer,2000-3000,,purchased,Dual Berettas,3,0.0005,0.0121
+both,AWPer,2000-3000,,purchased,Five-SeveN,35,0.0062,0.1411
+both,AWPer,2000-3000,,purchased,P250,19,0.0033,0.0766
+both,AWPer,2000-3000,,purchased,Tec-9,48,0.0084,0.1935
+both,AWPer,<2000,,purchased,Desert Eagle,35,0.0062,0.1823
+both,AWPer,<2000,,purchased,Dual Berettas,55,0.0097,0.2865
+both,AWPer,<2000,,purchased,Five-SeveN,11,0.0019,0.0573
+both,AWPer,<2000,,purchased,P250,73,0.0128,0.3802
+both,AWPer,<2000,,purchased,Tec-9,18,0.0032,0.0938
+both,AWPer,>=3000,,purchased,CZ75-Auto,2,0.0004,0.004
+both,AWPer,>=3000,,purchased,Desert Eagle,167,0.0294,0.3333
+both,AWPer,>=3000,,purchased,Dual Berettas,28,0.0049,0.0559
+both,AWPer,>=3000,,purchased,Five-SeveN,95,0.0167,0.1896
+both,AWPer,>=3000,,purchased,P250,57,0.01,0.1138
+both,AWPer,>=3000,,purchased,Tec-9,152,0.0267,0.3034
+both,Anchor/Support,2000-3000,,purchased,Desert Eagle,121,0.0213,0.3457
+both,Anchor/Support,2000-3000,,purchased,Five-SeveN,99,0.0174,0.2829
+both,Anchor/Support,2000-3000,,purchased,P250,26,0.0046,0.0743
+both,Anchor/Support,2000-3000,,purchased,Tec-9,104,0.0183,0.2971
+both,Anchor/Support,<2000,,purchased,Desert Eagle,17,0.003,0.0939
+both,Anchor/Support,<2000,,purchased,Dual Berettas,84,0.0148,0.4641
+both,Anchor/Support,<2000,,purchased,Five-SeveN,36,0.0063,0.1989
+both,Anchor/Support,<2000,,purchased,P250,23,0.004,0.1271
+both,Anchor/Support,<2000,,purchased,Tec-9,21,0.0037,0.116
+both,Anchor/Support,>=3000,,purchased,Desert Eagle,106,0.0186,0.2611
+both,Anchor/Support,>=3000,,purchased,Dual Berettas,11,0.0019,0.0271
+both,Anchor/Support,>=3000,,purchased,Five-SeveN,90,0.0158,0.2217
+both,Anchor/Support,>=3000,,purchased,P250,28,0.0049,0.069
+both,Anchor/Support,>=3000,,purchased,R8 Revolver,1,0.0002,0.0025
+both,Anchor/Support,>=3000,,purchased,Tec-9,170,0.0299,0.4187
+both,Closer,2000-3000,,purchased,CZ75-Auto,1,0.0002,0.003
+both,Closer,2000-3000,,purchased,Desert Eagle,128,0.0225,0.3855
+both,Closer,2000-3000,,purchased,Five-SeveN,75,0.0132,0.2259
+both,Closer,2000-3000,,purchased,P250,30,0.0053,0.0904
+both,Closer,2000-3000,,purchased,Tec-9,98,0.0172,0.2952
+both,Closer,<2000,,purchased,Desert Eagle,17,0.003,0.109
+both,Closer,<2000,,purchased,Dual Berettas,72,0.0127,0.4615
+both,Closer,<2000,,purchased,Five-SeveN,19,0.0033,0.1218
+both,Closer,<2000,,purchased,P250,23,0.004,0.1474
+both,Closer,<2000,,purchased,Tec-9,25,0.0044,0.1603
+both,Closer,>=3000,,purchased,CZ75-Auto,2,0.0004,0.0051
+both,Closer,>=3000,,purchased,Desert Eagle,112,0.0197,0.2879
+both,Closer,>=3000,,purchased,Dual Berettas,17,0.003,0.0437
+both,Closer,>=3000,,purchased,Five-SeveN,80,0.0141,0.2057
+both,Closer,>=3000,,purchased,P250,13,0.0023,0.0334
+both,Closer,>=3000,,purchased,Tec-9,165,0.029,0.4242
+both,IGL,2000-3000,,purchased,CZ75-Auto,9,0.0016,0.0243
+both,IGL,2000-3000,,purchased,Desert Eagle,118,0.0208,0.3189
+both,IGL,2000-3000,,purchased,Dual Berettas,1,0.0002,0.0027
+both,IGL,2000-3000,,purchased,Five-SeveN,82,0.0144,0.2216
+both,IGL,2000-3000,,purchased,P250,35,0.0062,0.0946
+both,IGL,2000-3000,,purchased,Tec-9,125,0.022,0.3378
+both,IGL,<2000,,purchased,CZ75-Auto,5,0.0009,0.0362
+both,IGL,<2000,,purchased,Desert Eagle,19,0.0033,0.1377
+both,IGL,<2000,,purchased,Dual Berettas,40,0.007,0.2899
+both,IGL,<2000,,purchased,Five-SeveN,20,0.0035,0.1449
+both,IGL,<2000,,purchased,P250,18,0.0032,0.1304
+both,IGL,<2000,,purchased,Tec-9,36,0.0063,0.2609
+both,IGL,>=3000,,purchased,CZ75-Auto,11,0.0019,0.0272
+both,IGL,>=3000,,purchased,Desert Eagle,82,0.0144,0.203
+both,IGL,>=3000,,purchased,Dual Berettas,25,0.0044,0.0619
+both,IGL,>=3000,,purchased,Five-SeveN,70,0.0123,0.1733
+both,IGL,>=3000,,purchased,P250,34,0.006,0.0842
+both,IGL,>=3000,,purchased,Tec-9,182,0.032,0.4505
+both,Opener,2000-3000,,purchased,CZ75-Auto,4,0.0007,0.0099
+both,Opener,2000-3000,,purchased,Desert Eagle,160,0.0281,0.3941
+both,Opener,2000-3000,,purchased,Five-SeveN,92,0.0162,0.2266
+both,Opener,2000-3000,,purchased,P250,28,0.0049,0.069
+both,Opener,2000-3000,,purchased,Tec-9,122,0.0215,0.3005
+both,Opener,<2000,,purchased,Desert Eagle,14,0.0025,0.0921
+both,Opener,<2000,,purchased,Dual Berettas,76,0.0134,0.5
+both,Opener,<2000,,purchased,Five-SeveN,23,0.004,0.1513
+both,Opener,<2000,,purchased,P250,17,0.003,0.1118
+both,Opener,<2000,,purchased,Tec-9,22,0.0039,0.1447
+both,Opener,>=3000,,purchased,Desert Eagle,137,0.0241,0.3278
+both,Opener,>=3000,,purchased,Dual Berettas,21,0.0037,0.0502
+both,Opener,>=3000,,purchased,Five-SeveN,69,0.0121,0.1651
+both,Opener,>=3000,,purchased,P250,20,0.0035,0.0478
+both,Opener,>=3000,,purchased,Tec-9,171,0.0301,0.4091
+both,no-role,2000-3000,,purchased,Desert Eagle,15,0.0026,0.4545
+both,no-role,2000-3000,,purchased,Five-SeveN,10,0.0018,0.303
+both,no-role,2000-3000,,purchased,P250,3,0.0005,0.0909
+both,no-role,2000-3000,,purchased,Tec-9,5,0.0009,0.1515
+both,no-role,<2000,,purchased,Desert Eagle,1,0.0002,0.1
+both,no-role,<2000,,purchased,Dual Berettas,6,0.0011,0.6
+both,no-role,<2000,,purchased,Five-SeveN,2,0.0004,0.2
+both,no-role,<2000,,purchased,Tec-9,1,0.0002,0.1
+both,no-role,>=3000,,purchased,Desert Eagle,12,0.0021,0.3429
+both,no-role,>=3000,,purchased,Dual Berettas,2,0.0004,0.0571
+both,no-role,>=3000,,purchased,Five-SeveN,5,0.0009,0.1429
+both,no-role,>=3000,,purchased,P250,1,0.0002,0.0286
+both,no-role,>=3000,,purchased,Tec-9,15,0.0026,0.4286
+both,,,,carried,CZ75-Auto,5,0.0009,0.0052
+both,,,,carried,Desert Eagle,216,0.038,0.2238
+both,,,,carried,Dual Berettas,225,0.0396,0.2332
+both,,,,carried,Five-SeveN,252,0.0443,0.2611
+both,,,,carried,P250,106,0.0186,0.1098
+both,,,,carried,Tec-9,161,0.0283,0.1668
+both,,,,purchased,CZ75-Auto,34,0.006,0.0072
+both,,,,purchased,Desert Eagle,1404,0.2469,0.2974
+both,,,,purchased,Dual Berettas,441,0.0776,0.0934
+both,,,,purchased,Five-SeveN,913,0.1606,0.1934
+both,,,,purchased,P250,448,0.0788,0.0949
+both,,,,purchased,R8 Revolver,1,0.0002,0.0002
+both,,,,purchased,Tec-9,1480,0.2603,0.3135
