@@ -1,0 +1,384 @@
+{
+  "schema_version": 1,
+  "purpose": "normal-player GSI-only opponent established-rifle deployability gate",
+  "input": {
+    "corpus_sha256": "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6",
+    "weapons_sha256": "c08ff5380cab5267cb4c3175be9abcd19c5453616ef5ebd2db4e74305506b2cb",
+    "raw_player_rounds": 43620,
+    "runtime": {
+      "python": "3.13.13",
+      "numpy": "2.5.1",
+      "scipy": "1.18.0",
+      "scikit_learn": "1.9.0"
+    }
+  },
+  "evaluation": {
+    "unit": "opponent team-round perspective",
+    "label_demo_oracle_only": "current resulting rifle/sniper count >= 3",
+    "folds": 5,
+    "held_out_group": "match series",
+    "fold_assignment": "deterministic greedy balance by series row count",
+    "series": 106,
+    "eligible_team_rounds": 7580,
+    "exclusions": {
+      "overtime": 336,
+      "pistol_round": 808
+    },
+    "classifier": {
+      "type": "LogisticRegression",
+      "solver": "lbfgs",
+      "C": 1.0,
+      "max_iter": 2000,
+      "random_state": 42
+    },
+    "probability_contract": {
+      "p_le_0_20": "LIKELY_NOT_ESTABLISHED_RIFLE",
+      "p_ge_0_80": "LIKELY_ESTABLISHED_RIFLE",
+      "otherwise": "UNKNOWN"
+    }
+  },
+  "feature_contract": {
+    "direct_normal_gsi": [
+      "opponent side inferred from player.team",
+      "map.round / round-in-half",
+      "map.team_ct.score and map.team_t.score",
+      "opponent map.team_*.consecutive_round_losses"
+    ],
+    "tracked_prior_gsi": [
+      "previous-round winner",
+      "previous-round witnessed plant",
+      "current-half consecutive prior wins"
+    ],
+    "forbidden_oracle_inputs": [
+      "opponent exact/team/player money",
+      "opponent retained weapons or AWP",
+      "opponent survivors or kills",
+      "opponent current spend or resulting loadout",
+      "team/player identity",
+      "current-round result"
+    ]
+  },
+  "models": {
+    "prevalence_only": {
+      "overall": {
+        "n": 7580,
+        "base_rate": 0.7872,
+        "log_loss": 0.5177,
+        "brier": 0.1675,
+        "auc": 0.4911,
+        "accuracy_at_0_5": 0.7872,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.0,
+          "unknown_rate": 1.0,
+          "accuracy": null,
+          "likely_established_n": 0,
+          "likely_established_precision": null,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "post_pistol": {
+        "n": 808,
+        "base_rate": 0.4666,
+        "log_loss": 0.9371,
+        "brier": 0.3517,
+        "auc": 0.495,
+        "accuracy_at_0_5": 0.4666,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.0,
+          "unknown_rate": 1.0,
+          "accuracy": null,
+          "likely_established_n": 0,
+          "likely_established_precision": null,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "later_rounds": {
+        "n": 6772,
+        "base_rate": 0.8255,
+        "log_loss": 0.4676,
+        "brier": 0.1456,
+        "auc": 0.4895,
+        "accuracy_at_0_5": 0.8255,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.0,
+          "unknown_rate": 1.0,
+          "accuracy": null,
+          "likely_established_n": 0,
+          "likely_established_precision": null,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "opponent_ct": {
+        "n": 3790,
+        "base_rate": 0.8193,
+        "log_loss": 0.4758,
+        "brier": 0.1491,
+        "auc": 0.4791,
+        "accuracy_at_0_5": 0.8193,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.0,
+          "unknown_rate": 1.0,
+          "accuracy": null,
+          "likely_established_n": 0,
+          "likely_established_precision": null,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "opponent_t": {
+        "n": 3790,
+        "base_rate": 0.7551,
+        "log_loss": 0.5596,
+        "brier": 0.1859,
+        "auc": 0.5006,
+        "accuracy_at_0_5": 0.7551,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.0,
+          "unknown_rate": 1.0,
+          "accuracy": null,
+          "likely_established_n": 0,
+          "likely_established_precision": null,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      }
+    },
+    "direct_gsi": {
+      "overall": {
+        "n": 7580,
+        "base_rate": 0.7872,
+        "log_loss": 0.2993,
+        "brier": 0.0967,
+        "auc": 0.9042,
+        "accuracy_at_0_5": 0.864,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.659,
+          "unknown_rate": 0.341,
+          "accuracy": 0.9566,
+          "likely_established_n": 4591,
+          "likely_established_precision": 0.9577,
+          "likely_not_established_n": 404,
+          "likely_not_established_precision": 0.9431
+        }
+      },
+      "post_pistol": {
+        "n": 808,
+        "base_rate": 0.4666,
+        "log_loss": 0.3061,
+        "brier": 0.0822,
+        "auc": 0.893,
+        "accuracy_at_0_5": 0.9097,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 1.0,
+          "unknown_rate": 0.0,
+          "accuracy": 0.9097,
+          "likely_established_n": 404,
+          "likely_established_precision": 0.8762,
+          "likely_not_established_n": 404,
+          "likely_not_established_precision": 0.9431
+        }
+      },
+      "later_rounds": {
+        "n": 6772,
+        "base_rate": 0.8255,
+        "log_loss": 0.2985,
+        "brier": 0.0985,
+        "auc": 0.8851,
+        "accuracy_at_0_5": 0.8585,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.6183,
+          "unknown_rate": 0.3817,
+          "accuracy": 0.9656,
+          "likely_established_n": 4187,
+          "likely_established_precision": 0.9656,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "opponent_ct": {
+        "n": 3790,
+        "base_rate": 0.8193,
+        "log_loss": 0.2437,
+        "brier": 0.0768,
+        "auc": 0.9255,
+        "accuracy_at_0_5": 0.9016,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.7198,
+          "unknown_rate": 0.2802,
+          "accuracy": 0.9652,
+          "likely_established_n": 2529,
+          "likely_established_precision": 0.9628,
+          "likely_not_established_n": 199,
+          "likely_not_established_precision": 0.995
+        }
+      },
+      "opponent_t": {
+        "n": 3790,
+        "base_rate": 0.7551,
+        "log_loss": 0.3549,
+        "brier": 0.1167,
+        "auc": 0.8803,
+        "accuracy_at_0_5": 0.8264,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.5982,
+          "unknown_rate": 0.4018,
+          "accuracy": 0.9462,
+          "likely_established_n": 2062,
+          "likely_established_precision": 0.9515,
+          "likely_not_established_n": 205,
+          "likely_not_established_precision": 0.8927
+        }
+      }
+    },
+    "direct_plus_tracked_gsi": {
+      "overall": {
+        "n": 7580,
+        "base_rate": 0.7872,
+        "log_loss": 0.2954,
+        "brier": 0.0962,
+        "auc": 0.9065,
+        "accuracy_at_0_5": 0.8609,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.6761,
+          "unknown_rate": 0.3239,
+          "accuracy": 0.9573,
+          "likely_established_n": 4721,
+          "likely_established_precision": 0.9585,
+          "likely_not_established_n": 404,
+          "likely_not_established_precision": 0.9431
+        }
+      },
+      "post_pistol": {
+        "n": 808,
+        "base_rate": 0.4666,
+        "log_loss": 0.2894,
+        "brier": 0.0805,
+        "auc": 0.93,
+        "accuracy_at_0_5": 0.9097,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 1.0,
+          "unknown_rate": 0.0,
+          "accuracy": 0.9097,
+          "likely_established_n": 404,
+          "likely_established_precision": 0.8762,
+          "likely_not_established_n": 404,
+          "likely_not_established_precision": 0.9431
+        }
+      },
+      "later_rounds": {
+        "n": 6772,
+        "base_rate": 0.8255,
+        "log_loss": 0.2962,
+        "brier": 0.0981,
+        "auc": 0.8877,
+        "accuracy_at_0_5": 0.8551,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.6375,
+          "unknown_rate": 0.3625,
+          "accuracy": 0.9662,
+          "likely_established_n": 4317,
+          "likely_established_precision": 0.9662,
+          "likely_not_established_n": 0,
+          "likely_not_established_precision": null
+        }
+      },
+      "opponent_ct": {
+        "n": 3790,
+        "base_rate": 0.8193,
+        "log_loss": 0.2406,
+        "brier": 0.0762,
+        "auc": 0.9274,
+        "accuracy_at_0_5": 0.8966,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.7493,
+          "unknown_rate": 0.2507,
+          "accuracy": 0.9648,
+          "likely_established_n": 2641,
+          "likely_established_precision": 0.9625,
+          "likely_not_established_n": 199,
+          "likely_not_established_precision": 0.995
+        }
+      },
+      "opponent_t": {
+        "n": 3790,
+        "base_rate": 0.7551,
+        "log_loss": 0.3503,
+        "brier": 0.1162,
+        "auc": 0.8824,
+        "accuracy_at_0_5": 0.8253,
+        "selective": {
+          "thresholds": {
+            "likely_not_established_max": 0.2,
+            "likely_established_min": 0.8
+          },
+          "coverage": 0.6029,
+          "unknown_rate": 0.3971,
+          "accuracy": 0.9479,
+          "likely_established_n": 2080,
+          "likely_established_precision": 0.9534,
+          "likely_not_established_n": 205,
+          "likely_not_established_precision": 0.8927
+        }
+      }
+    }
+  }
+}
