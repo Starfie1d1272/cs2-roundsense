@@ -1,0 +1,81 @@
+RESULT: PASS (80 checks)
+[PASS] role metadata: 恰好 32 队 — got 32
+[PASS] role metadata: 恰好 160 玩家行 — got 160
+[PASS] role metadata: 每队 5 人
+[PASS] role metadata: 无重复 (team, player) — dups=0
+[PASS] role aliases: 条目数 == 5 — got 5
+[PASS] role join: unresolved == 0 — {'exact': 25167, 'alias-team-only': 387, 'alias-player': 432}
+[PASS] role join: exact == 25167 — 25167
+[PASS] role join: alias-player == 432 — 432
+[PASS] role join: alias-team-only == 387 — 387
+[PASS] pp team-rounds: 恰好 404 行 — got 404
+[PASS] pp team-rounds: (map, half) 无重复（不按 5 人乘）
+[PASS] pp team-rounds: half ∈ {h1,h2}
+[PASS] pp team-rounds: h1 全部是 R2 — 0 wrong
+[PASS] pp team-rounds: h1 无 overtime
+[PASS] pp team-rounds: h1 覆盖 202 张图 — got 202
+[PASS] pp team-rounds: h2 全部是 R14 — 0 wrong
+[PASS] pp team-rounds: h2 无 overtime
+[PASS] pp team-rounds: h2 覆盖 202 张图 — got 202
+[PASS] pp team-rounds: T=205 CT=199 — {'ct': 199, 't': 205}
+[PASS] pp team-rounds: 全部为手枪败者
+[PASS] pp team-rounds: kills = 5 - 对手存活 — 0 rows
+[PASS] pp team-rounds: spend/start/remaining 自洽 — []
+[PASS] pp team-rounds: 手枪败者 lossReward 真 2400 — 0 rows
+[PASS] pp team-rounds: 对手（手枪胜者）lossReward == 1400
+[PASS] pp team-rounds: 对手（手枪胜者）start 高于败者（>90%） — 404/404
+[PASS] branch thresholds: t/ct 都存在
+[PASS] branch thresholds: 确定性且有序
+[PASS] post-pistol-branches: 404 行 — got 404
+[PASS] post-pistol-branches: (map, half) 无重复
+[PASS] post-pistol-branches: 每行恰好一个合法 branch — []
+[PASS] post-pistol-branches: 后验概率和 == 1 — []
+[PASS] post-pistol-branches: branch == 后验 argmax — 0 rows
+[PASS] post-pistol-branches: 与 team-rounds (map, half) 完全对齐
+[PASS] branch distribution: rate == n/总 且 CI 有效 — []
+[PASS] branch sensitivity: ±0.05 n 对账
+[PASS] mixture: weights 求和 == 1 且 BIC 3<2<1
+[PASS] two-branch coverage: 覆盖对账 + 残差对账
+[PASS] ct-survivor: 组计数对账 CT 199
+[PASS] t-plant: 组计数对账 T 205
+[PASS] ct/t 组表: rate*n 与整数计数一致（舍入内）
+[PASS] CT OOF 复现: n == 191 (199 - 8 LIGHT) — got 191
+[PASS] CT OOF 复现: money-only AUC — rebuilt 0.5147 vs 0.5147
+[PASS] CT OOF 复现: money+survivors AUC — rebuilt 0.5267 vs 0.5267
+[PASS] T OOF 复现: n == 183 (205 - 22 LIGHT) — got 183
+[PASS] T OOF 复现: money-only AUC — 0.8209 vs 0.8209
+[PASS] T OOF 复现: money+plant AUC — 0.8029 vs 0.8029
+[PASS] T OOF 复现: money+plant+survivors AUC — 0.7962 vs 0.7962
+[PASS] matched overall: T POST_PISTOL n==205
+[PASS] matched overall: CT POST_PISTOL n==199
+[PASS] matched overall: T LATER_NORMAL n==157
+[PASS] matched overall: CT LATER_NORMAL n==45
+[PASS] matched: POST_PISTOL opp_retained_primary == 0
+[PASS] matched overall: FORCE rate 与分支分布一致
+[PASS] matched band: t LATER_NORMAL n 与 overall 一致
+[PASS] matched band: ct LATER_NORMAL n 与 overall 一致
+[PASS] matched later 重建: T == 157 — rebuilt 157
+[PASS] matched later 重建: CT == 45 — rebuilt 45
+[PASS] matched caliper: 样本单调
+[PASS] team style: 32 队 — got 32
+[PASS] team style: n 总和 == 404 — 404
+[PASS] team style: n_t 总和 == 205 / n_ct == 199 — 205/199
+[PASS] team style: n == n_t + n_ct
+[PASS] team style: raw 率对账 + shrinkage/CI 字段有效
+[PASS] awp: 32 队 — got 32
+[PASS] awp: 角色来源 + rate 有界 + 分母报告
+[PASS] player-style: 25,986 行 — got 25986
+[PASS] player-style: 无 overtime 行 — 0
+[PASS] player-style: role_join_method 合法 — 0
+[PASS] role OOF 复现: deagle base series AUC — rebuilt 0.5793
+[PASS] role OOF 复现: deagle base player(LPO) AUC（无同 player 泄漏） — rebuilt 0.5744
+[PASS] pistol-preference: 无条件表 n 总和 == 5686 — 5686
+[PASS] pistol-preference: 无条件表与 strict 重算一致
+[PASS] opponent economy: predictor 仅预决策字段 — []
+[PASS] opponent economy: 结局只用 y_force_full — ['y_force_full']
+[PASS] opponent economy: 前轮结果用 rn-1
+[PASS] opponent economy 重建: n == 7580 — 7580
+[PASS] opponent economy 重建: 类分布 eco/light/force — {'force/full': 2779, 'eco': 918, 'light': 3883}
+[PASS] production: 0875db9 以来 packages/ apps/ 无改动
+[PASS] frozen core: 6 个 artifact 内容与 0875db9 基线 6/6 一致
+[PASS] frozen core: 旧 _core-sha256.json 未被修改
