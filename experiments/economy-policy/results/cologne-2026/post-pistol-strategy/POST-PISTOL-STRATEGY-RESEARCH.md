@@ -47,25 +47,36 @@
 - 解释：**"T survivors 决定 CT FORCE"不成立**——CT post-pistol FORCE 的
   主要决定因素是经济状态；存活人数信号在控钱后接近零。
 
-## Q4. T：下包与 FORCE（DESCRIPTIVE / 中介说明）
+## Q4. T：下包与 FORCE（DESCRIPTIVE / money 一致性说明）
 
 - 原始关联：未下包 18.7% FORCE（n=139）vs 下包 81.8% FORCE（n=66），
   +63pp。
 - money 控制后 grouped-OOF：money-only AUC 0.8209 → +plant 0.8029 →
   +survivors 0.7962（无增益，audit 复现一致）。
-- 解释：**plant 的预测信号完全由 money 中介**（下包 → +600/人 → 有足够
-  钱 force）。不能写"下包导致 FORCE +63pp"作为独立因果。
+- 解释：plant 与 FORCE 有很强的原始关联，但在当前 grouped-OOF 模型中，
+  加入 plant 并未提供超出 money 的增量预测价值。这一结果与 plant 主要
+  通过 +$600/player 改变可支配经济的 money-mediated explanation **一致**，
+  但不构成正式的因果中介证明（本分析不是 formal causal mediation
+  analysis）。不能写"下包导致 FORCE +63pp"作为独立因果。
 
 ## Q5. Matched lr2400：post-pistol vs later normal cycle（VALIDATED / DESCRIPTIVE）
 
 - overall（未匹配）：T PP 39.0%（n=205）vs later 41.4%（n=157）；
   CT PP 80.9%（n=199）vs later 57.8%（n=45）。later 样本 = lossIndex==2、
   零 retained primary、非 R1/R2/R13/R14（audit 独立重建 157/45 精确命中）。
-- 对手经济匹配后（caliper 300，对手 start ~20k）：T PP 46.0% vs 配对 later
-  5.8%；CT PP 71.4% vs 9.5%。
+- 我方起始经济匹配后（caliper 300，nearest-neighbor matching on
+  side + per_player_start_mean）：T PP 46.0% vs 配对 later 5.8%；CT PP
+  71.4% vs 9.5%。
+  注意：匹配只控制了**我方**起始经济，**对手 pre-decision economy 未被
+  控制**——T：PP 对手 start ~20.15k vs later ~25.18k（retained primary
+  3.21）；CT：~18.91k vs ~24.05k（2.48）。
 - 解释：同一 lossReward/零保留条件下，post-pistol 轮（手枪败者，人均
   ~2–2.7k）是系统性 FORCE 窗口；later 同档经济队伍更倾向 ECO。CT 的
   PP-vs-later 差异（80.9 vs 57.8）比 T 大，但 T 的匹配后差异更极端。
+- 进一步说明：该结果支持 **money + lossReward 不是充分战略状态**——
+  post-pistol context 与对手经济状态仍携带重要信息。但这是 observational
+  result，**不能**证明"在控制 opponent economy 后 post-pistol 本身导致
+  更高 FORCE"（对手经济未被 matching 控制）。
 
 ## Q6. 对手预决策经济差异（VALIDATED / DESCRIPTIVE）
 
@@ -75,10 +86,11 @@
   （n=7,580，全部常规轮）。
 - 对"对手步枪经济"（resulting rifle/sniper ≥3）判别：full AUC 0.977 vs
   money-only 0.961——预决策特征可以相当好地区分 established rifle economy。
-- **存活人数单调性的 money 中介**：survived_prev 0→5 时 force/full 率
+- **存活人数单调性在控 money 后大幅减弱**：survived_prev 0→5 时 force/full 率
   53%→6.7%（原始），按对手 startMoney 分段后单调性大幅减弱/反转
   （如 hi(≥12k) 段内 surv0 0.53 / surv5 0.067 仍高，但 band 内对比表见
-  opponent-economy-context.md）——原始信号主要由 money 水平中介。
+  opponent-economy-context.md）——原始信号与 money 为主要驱动一致
+  （非正式中介证明，无因果断言）。
 - 结论：可用回合历史/预决策上下文**有意义地区分** low buy / force /
   established rifle economy 状态，具备支撑 context-sensitive 规则（如 CT
   helmet 优先级）的潜力；但这是关联证据，live-GSI 可用性与阈值校准是
@@ -94,8 +106,10 @@
 
 ## Q8. AWP 依赖与经济保全（VALIDATED / DESCRIPTIVE）
 
-- designated AWPer（31 人）在 $5400+ 轮 resulting AWP rate 均值 0.813
-  （各队 0.81–0.96）；non-AWPer ≤ 0.109；dual-AWP 队伍-回合率 1.04%。
+- designated AWPer（31 人）在 startMoney ≥ $5400 的可负担轮中 resulting
+  AWP rate 跨队均值约 0.813，有数据队伍（31 队）范围约 0.560–0.961
+  （NRG 0.560 / TYLOO 0.611 / GamerLegion 0.639 … B8 0.961）；
+  non-AWPer ≤ 0.109；dual-AWP 队伍-回合率 1.04%。
 - AWPer 在购买 AWP 前一轮均花 $847（n=443）vs non-AWPer 买步枪前 $1997
   （n=6,669）——AWP 前经济保全行为存在。
 - 队伍层 AWP 保留率 vs post-pistol FORCE rate：rho=-0.37，p=0.06
@@ -122,6 +136,9 @@ target × 特征集（grouped 5-fold OOF AUC；LPO = GroupKFold by player）：
   支撑"IGL 偏好道具"作为泛化规则；LPO 无改善的目标按任务口径表述为
   ROLE METADATA DOES NOT GENERALIZE FOR THIS TARGET。
 - **AWP 是例外**：role metadata 对 AWP 购买有强、可跨玩家泛化的判别力。
+  精确表述：这证明 **designated AWPer role 对 AWP 使用有极强、可跨玩家
+  泛化的预测力**，而不是证明某个抽象的"AWP economy personality latent
+  trait"。
 
 ## Q10. 偏好轴证据（汇总，详见 preference-axis-evidence.md）
 
@@ -144,8 +161,9 @@ leave-player-out。
   mode 10.7%）——不适合单一"推荐"；两个推荐（保经济 / 冲）覆盖 ~90%。
 - **CT post-pistol：近单模态 FORCE**（80.9%，两分支覆盖 90–95%）。
 - 对手经济（全轮）：花费类三分类中 light 占 51.2%，但"light"区间混合了
-  高余额全步枪队伍（money 中介）——这是 outcome 定义语义，不是真实
-  第三购买模式；对手 rifle economy 状态近乎可判（AUC 0.977）。
+  高余额全步枪队伍（其花费比例被自身 money 水平压低）——这是 outcome
+  定义语义，不是真实第三购买模式；对手 rifle economy 状态近乎可判
+  （AUC 0.977）。
 
 ## 产品含义（PRODUCT IMPLICATION — NOT YET POLICY）
 
@@ -160,7 +178,7 @@ leave-player-out。
 
 ## 明确不支持的陈述（NOT SUPPORTED）
 
-- "下包导致 FORCE +63pp"（money 中介，无独立信号）。
+- "下包导致 FORCE +63pp"（无超出 money 的增量 OOF 预测价值）。
 - "T 存活人数决定 CT FORCE"（控钱后 OOF 增益 ≈ 0）。
 - "IGL 偏好道具 / 角色风格可泛化"（utility ΔAUC +0.004，LPO 无实质增益；
   手枪偏好无增益）。
