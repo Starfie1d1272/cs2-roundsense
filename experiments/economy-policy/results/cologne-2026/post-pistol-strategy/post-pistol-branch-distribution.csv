@@ -1,0 +1,18 @@
+side,branch,n,rate,ci95_low,ci95_high
+all,FORCE,250,0.6188,0.5619,0.6736
+all,LIGHT,21,0.052,0.0321,0.0744
+all,ECO,133,0.3292,0.2786,0.3844
+t,FORCE,80,0.3902,0.3165,0.46
+t,LIGHT,22,0.1073,0.0676,0.152
+t,ECO,103,0.5024,0.4321,0.578
+ct,FORCE,161,0.809,0.7541,0.8621
+ct,LIGHT,8,0.0402,0.0155,0.0686
+ct,ECO,30,0.1508,0.0963,0.2062
+t,FORCE (threshold-0.05),87,0.4244,,
+t,ECO (threshold-0.05),118,0.5756,,
+t,FORCE (threshold+0.05),62,0.3024,,
+t,ECO (threshold+0.05),143,0.6976,,
+ct,FORCE (threshold-0.05),165,0.8291,,
+ct,ECO (threshold-0.05),34,0.1709,,
+ct,FORCE (threshold+0.05),146,0.7337,,
+ct,ECO (threshold+0.05),53,0.2663,,

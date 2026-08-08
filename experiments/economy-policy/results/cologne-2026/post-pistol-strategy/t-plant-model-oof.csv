@@ -1,0 +1,5 @@
+coef_ct_survivors_raw,coef_money_raw,coef_plant_raw,coef_plant_x_survivors_raw,model,n,oof_auc,oof_brier,oof_log_loss
+,,,,t_money_only,183,0.8209,0.1316,0.4279
+,,,,t_money_plus_plant,183,0.8029,0.1315,0.4262
+,,,,t_money_plus_plant_plus_CT_survivors,183,0.7962,0.1333,0.4351
+0.2708,0.001415,0.1266,-0.2776,t_full_interaction,183,0.7941,0.1338,0.4397

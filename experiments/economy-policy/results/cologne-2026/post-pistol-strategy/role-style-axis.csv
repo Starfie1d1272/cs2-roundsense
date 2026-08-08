@@ -1,0 +1,11 @@
+comparison,n_shared_conditions,weapon_share_diff_A_minus_B,utility_share_diff_A_minus_B
+IGL vs Opener,26,-0.0066,0.0327
+Anchor/Support vs Opener,25,-0.0061,0.0076
+Closer vs Opener,25,-0.0149,-0.0114
+AWPer vs Opener,28,0.0772,-0.0614
+T Pack vs Lurker,28,0.0238,0.0291
+T Pack vs Flex,24,0.0083,-0.0023
+T Lurker vs Flex,24,-0.0106,-0.0312
+CT Anchor vs Rotator,27,-0.0198,0.0055
+CT Anchor vs Mixed,25,-0.0053,-0.0002
+CT Rotator vs Mixed,25,0.0132,-0.0058

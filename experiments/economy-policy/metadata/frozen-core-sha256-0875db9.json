@@ -1,0 +1,26 @@
+{
+  "economy-reference-surface.csv": {
+    "repo_blob_sha256_0875db9": "e1304108913bf70bd2d6613679ef922de26c5f14373765b088884b635bfaefab",
+    "working_tree_sha256": "e1304108913bf70bd2d6613679ef922de26c5f14373765b088884b635bfaefab"
+  },
+  "purchase-surface.csv": {
+    "repo_blob_sha256_0875db9": "bf45f76f0f13f6597f199679ac7ef03b06a3d8d5db82978316a490a3d4eb3ae7",
+    "working_tree_sha256": "bf45f76f0f13f6597f199679ac7ef03b06a3d8d5db82978316a490a3d4eb3ae7"
+  },
+  "primary-distribution.csv": {
+    "repo_blob_sha256_0875db9": "eee92c3ad51f35989571474f0b44218f613f708ea8d710b95951e73f3f200348",
+    "working_tree_sha256": "eee92c3ad51f35989571474f0b44218f613f708ea8d710b95951e73f3f200348"
+  },
+  "secondary-distribution.csv": {
+    "repo_blob_sha256_0875db9": "c12364abc22b7251c5e50afdeabc1929de51a92b1f16872fd91d9c26ab174af0",
+    "working_tree_sha256": "c12364abc22b7251c5e50afdeabc1929de51a92b1f16872fd91d9c26ab174af0"
+  },
+  "conditional-loadouts.csv": {
+    "repo_blob_sha256_0875db9": "87a226b59b9d1ec8e4e99c7dad04d63a3aab1d6b524bc1c1ef20097585f18c93",
+    "working_tree_sha256": "87a226b59b9d1ec8e4e99c7dad04d63a3aab1d6b524bc1c1ef20097585f18c93"
+  },
+  "retained-coverage.csv": {
+    "repo_blob_sha256_0875db9": "6e86c277c5937497bb7510712e8c7a264714d109e7fb5cf707ed7fcc80095dde",
+    "working_tree_sha256": "6e86c277c5937497bb7510712e8c7a264714d109e7fb5cf707ed7fcc80095dde"
+  }
+}

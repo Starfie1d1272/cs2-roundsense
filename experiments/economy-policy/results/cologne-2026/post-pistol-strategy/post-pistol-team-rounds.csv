@@ -1,0 +1,405 @@
+match_series,map,half,post_pistol_round,team,teamKey,side,opponent,opponent_teamKey,pistol_outcome,pistol_win_method,pistol_bomb_planted,pistol_bomb_exploded,pistol_defused,own_survivors_pistol_end,opponent_survivors_pistol_end,own_kills,opponent_kills,team_start_money,team_money_spent,team_money_remaining,team_spend_ratio,per_player_start_mean,per_player_start_median,per_player_remaining_mean,team_loss_reward_if_current_round_lost,retained_primary_count_at_decision,retained_awp_count_at_decision,opponent_team_start_money,opponent_retained_primary_count,opponent_retained_awp_count,opponent_per_player_start_mean,opponent_loss_index,opponent_loss_reward,opponent_survivedPrev_count,pistol_winner_side
+p-r1-qf1,p-r1-qf1-m1-de_dust2,h1,2,FURIA,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,4,1,4,10650,10250,400,0.9624413145539906,2130.0,2100.0,80.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+p-r1-qf1,p-r1-qf1-m1-de_dust2,h2,14,9z,teamA,ct,FURIA,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10850,350,0.96875,2240.0,2150.0,70.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+p-r1-qf1,p-r1-qf1-m2-de_mirage,h1,2,9z,teamB,ct,FURIA,teamA,loss,t_win,False,False,False,1,1,4,4,12300,11800,500,0.959349593495935,2460.0,2400.0,100.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+p-r1-qf1,p-r1-qf1-m2-de_mirage,h2,14,FURIA,teamA,ct,9z,teamB,loss,t_win,False,False,False,1,3,2,4,11200,9750,1450,0.8705357142857143,2240.0,2150.0,290.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+p-r1-qf1,p-r1-qf1-m3-de_overpass,h1,2,FURIA,teamB,ct,9z,teamA,loss,target_bombed,True,True,False,1,0,5,4,12700,800,11900,0.06299212598425197,2540.0,2300.0,2380.0,2400,0,0,19650,0,0,3930.0,0,1400,0,t
+p-r1-qf1,p-r1-qf1-m3-de_overpass,h2,14,FURIA,teamB,t,9z,teamA,loss,ct_win,False,False,False,1,4,1,4,10250,400,9850,0.03902439024390244,2050.0,2050.0,1970.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+p-r1-qf2,p-r1-qf2-m1-de_nuke,h1,2,Aurora,teamB,ct,BetBoom,teamA,loss,t_win,False,False,False,1,2,3,4,11750,11500,250,0.9787234042553191,2350.0,2200.0,50.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+p-r1-qf2,p-r1-qf2-m1-de_nuke,h2,14,BetBoom,teamA,ct,Aurora,teamB,loss,t_win,False,False,False,1,4,1,4,10750,8950,1800,0.8325581395348837,2150.0,2100.0,360.0,2400,0,0,18500,0,0,3700.0,0,1400,4,t
+p-r1-qf2,p-r1-qf2-m2-de_anubis,h1,2,BetBoom,teamA,t,Aurora,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14550,4700,9850,0.3230240549828179,2910.0,2650.0,1970.0,2400,0,0,21150,0,0,4230.0,0,1400,1,ct
+p-r1-qf2,p-r1-qf2-m2-de_anubis,h2,14,BetBoom,teamA,ct,Aurora,teamB,loss,t_win,False,False,False,1,2,3,4,11700,700,11000,0.05982905982905983,2340.0,2200.0,2200.0,2400,0,0,18500,0,0,3700.0,0,1400,2,t
+p-r1-qf3,p-r1-qf3-m1-de_overpass,h1,2,G2,teamA,t,Spirit,teamB,loss,ct_win,False,False,False,1,1,4,4,11250,10600,650,0.9422222222222222,2250.0,2200.0,130.0,2400,0,0,19450,0,0,3890.0,0,1400,1,ct
+p-r1-qf3,p-r1-qf3-m1-de_overpass,h2,14,Spirit,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,7300,3450,0.6790697674418604,2150.0,2050.0,690.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+p-r1-qf3,p-r1-qf3-m2-de_dust2,h1,2,Spirit,teamA,t,G2,teamB,loss,ct_win,False,False,False,1,5,0,4,10050,50,10000,0.004975124378109453,2010.0,2050.0,2000.0,2400,0,0,19550,0,0,3910.0,0,1400,5,ct
+p-r1-qf3,p-r1-qf3-m2-de_dust2,h2,14,Spirit,teamA,ct,G2,teamB,loss,t_win,False,False,False,1,4,1,4,10600,9850,750,0.9292452830188679,2120.0,2100.0,150.0,2400,0,0,18400,0,0,3680.0,0,1400,4,t
+p-r1-qf3,p-r1-qf3-m3-de_mirage,h1,2,Spirit,teamB,ct,G2,teamA,loss,t_win,False,False,False,1,2,3,4,11700,10700,1000,0.9145299145299145,2340.0,2350.0,200.0,2400,0,0,18450,0,0,3690.0,0,1400,2,t
+p-r1-qf3,p-r1-qf3-m3-de_mirage,h2,14,G2,teamA,ct,Spirit,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10900,850,0.9276595744680851,2350.0,2500.0,170.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+p-r1-qf4,p-r1-qf4-m1-de_anubis,h1,2,Vitality,teamA,t,Falcons,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14250,11200,3050,0.7859649122807018,2850.0,2900.0,610.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+p-r1-qf4,p-r1-qf4-m1-de_anubis,h2,14,Falcons,teamB,t,Vitality,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,700,10000,0.06542056074766354,2140.0,2050.0,2000.0,2400,0,0,19750,0,0,3950.0,0,1400,3,ct
+p-r1-qf4,p-r1-qf4-m2-de_inferno,h1,2,Vitality,teamA,t,Falcons,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,13200,1150,0.9198606271777003,2870.0,2900.0,230.0,2400,0,0,21250,0,0,4250.0,0,1400,2,ct
+p-r1-qf4,p-r1-qf4-m2-de_inferno,h2,14,Vitality,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,3,2,4,11150,10850,300,0.9730941704035875,2230.0,2150.0,60.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+p-r1-qf4,p-r1-qf4-m3-de_dust2,h1,2,Vitality,teamB,ct,Falcons,teamA,loss,t_win,False,False,False,1,2,3,4,11700,11450,250,0.9786324786324786,2340.0,2200.0,50.0,2400,0,0,18300,0,0,3660.0,0,1400,2,t
+p-r1-qf4,p-r1-qf4-m3-de_dust2,h2,14,Falcons,teamA,ct,Vitality,teamB,loss,t_win,False,False,False,1,2,3,4,11600,10900,700,0.9396551724137931,2320.0,2350.0,140.0,2400,0,0,18750,0,0,3750.0,0,1400,2,t
+p-r2-sf1,p-r2-sf1-m1-de_dust2,h1,2,FURIA,teamA,t,Aurora,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,2000,8750,0.18604651162790697,2150.0,2050.0,1750.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+p-r2-sf1,p-r2-sf1-m1-de_dust2,h2,14,Aurora,teamB,t,FURIA,teamA,loss,bomb_defused,True,False,True,0,3,2,5,14050,13750,300,0.9786476868327402,2810.0,2650.0,60.0,2400,0,0,21000,0,0,4200.0,0,1400,3,ct
+p-r2-sf1,p-r2-sf1-m2-de_nuke,h1,2,FURIA,teamA,t,Aurora,teamB,loss,ct_win,False,False,False,1,4,1,4,10350,9100,1250,0.8792270531400966,2070.0,2050.0,250.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+p-r2-sf1,p-r2-sf1-m2-de_nuke,h2,14,Aurora,teamB,t,FURIA,teamA,loss,ct_win,False,False,False,1,4,1,4,10250,200,10050,0.01951219512195122,2050.0,2050.0,2010.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+p-r2-sf2,p-r2-sf2-m1-de_anubis,h1,2,Spirit,teamA,t,Falcons,teamB,loss,ct_win,False,False,False,1,5,0,4,10000,0,10000,0.0,2000.0,2000.0,2000.0,2400,0,0,19550,0,0,3910.0,0,1400,5,ct
+p-r2-sf2,p-r2-sf2-m1-de_anubis,h2,14,Spirit,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,2,3,4,11750,1200,10550,0.10212765957446808,2350.0,2500.0,2110.0,2400,0,0,18550,0,0,3710.0,0,1400,2,t
+p-r2-sf2,p-r2-sf2-m2-de_mirage,h1,2,Spirit,teamA,t,Falcons,teamB,loss,ct_win,False,False,False,1,4,1,4,10350,0,10350,0.0,2070.0,2050.0,2070.0,2400,0,0,19550,0,0,3910.0,0,1400,4,ct
+p-r2-sf2,p-r2-sf2-m2-de_mirage,h2,14,Spirit,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,1,4,4,12300,11150,1150,0.9065040650406504,2460.0,2250.0,230.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+p-r2-sf2,p-r2-sf2-m3-de_dust2,h1,2,Falcons,teamA,t,Spirit,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,2950,7800,0.2744186046511628,2150.0,2050.0,1560.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+p-r2-sf2,p-r2-sf2-m3-de_dust2,h2,14,Spirit,teamB,t,Falcons,teamA,loss,ct_win,False,False,False,1,4,1,4,10350,0,10350,0.0,2070.0,2050.0,2070.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+p-r3-gf1,p-r3-gf1-m1-de_mirage,h1,2,FURIA,teamA,t,Falcons,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,0,10750,0.0,2150.0,2050.0,2150.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+p-r3-gf1,p-r3-gf1-m1-de_mirage,h2,14,FURIA,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,3,2,4,11150,9550,1600,0.8565022421524664,2230.0,2150.0,320.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+p-r3-gf1,p-r3-gf1-m2-de_anubis,h1,2,FURIA,teamA,t,Falcons,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14300,13750,550,0.9615384615384616,2860.0,2650.0,110.0,2400,0,0,21100,0,0,4220.0,0,1400,2,ct
+p-r3-gf1,p-r3-gf1-m2-de_anubis,h2,14,FURIA,teamA,ct,Falcons,teamB,loss,target_bombed,True,True,False,1,4,1,4,10650,9050,1600,0.8497652582159625,2130.0,2100.0,320.0,2400,0,0,19550,0,0,3910.0,0,1400,4,t
+p-r3-gf1,p-r3-gf1-m3-de_inferno,h1,2,Falcons,teamB,ct,FURIA,teamA,loss,t_win,False,False,False,1,4,1,4,10500,9350,1150,0.8904761904761904,2100.0,2100.0,230.0,2400,0,0,18500,0,0,3700.0,0,1400,4,t
+p-r3-gf1,p-r3-gf1-m3-de_inferno,h2,14,FURIA,teamA,ct,Falcons,teamB,loss,target_bombed,True,True,False,2,0,5,3,12700,12450,250,0.9803149606299213,2540.0,2600.0,50.0,2400,0,0,19250,0,0,3850.0,0,1400,0,t
+s1-r1-m1,s1-r1-m1-m1-de_inferno,h1,2,M80,teamB,ct,Lynn Vision,teamA,loss,target_bombed,True,True,False,1,0,5,4,12700,11700,1000,0.9212598425196851,2540.0,2600.0,200.0,2400,0,0,19650,0,0,3930.0,0,1400,0,t
+s1-r1-m1,s1-r1-m1-m1-de_inferno,h2,14,Lynn Vision,teamA,ct,M80,teamB,loss,t_win,False,False,False,1,1,4,4,12150,10850,1300,0.8930041152263375,2430.0,2400.0,260.0,2400,0,0,18700,0,0,3740.0,0,1400,1,t
+s1-r1-m2,s1-r1-m2-m1-de_ancient,h1,2,SINNERS,teamB,ct,FlyQuest,teamA,loss,target_bombed,True,True,False,1,2,3,4,11750,11200,550,0.9531914893617022,2350.0,2200.0,110.0,2400,0,0,19650,0,0,3930.0,0,1400,2,t
+s1-r1-m2,s1-r1-m2-m1-de_ancient,h2,14,FlyQuest,teamA,ct,SINNERS,teamB,loss,t_win,False,False,False,1,3,2,4,11150,10000,1150,0.8968609865470852,2230.0,2150.0,230.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s1-r1-m3,s1-r1-m3-m1-de_inferno,h1,2,MIBR,teamB,ct,THUNDER dOWNUNDER,teamA,loss,t_win,False,False,False,1,2,3,4,11850,11300,550,0.9535864978902954,2370.0,2400.0,110.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s1-r1-m3,s1-r1-m3-m1-de_inferno,h2,14,THUNDER dOWNUNDER,teamA,ct,MIBR,teamB,loss,target_bombed,True,True,False,1,5,0,4,9950,9050,900,0.9095477386934674,1990.0,2050.0,180.0,2400,0,0,19900,0,0,3980.0,0,1400,5,t
+s1-r1-m4,s1-r1-m4-m1-de_mirage,h1,2,TYLOO,teamA,t,B8,teamB,loss,bomb_defused,True,False,True,1,1,4,4,14950,13450,1500,0.8996655518394648,2990.0,2950.0,300.0,2400,0,0,20700,0,0,4140.0,0,1400,1,ct
+s1-r1-m4,s1-r1-m4-m1-de_mirage,h2,14,TYLOO,teamA,ct,B8,teamB,loss,target_bombed,True,True,False,1,3,2,4,11050,0,11050,0.0,2210.0,2150.0,2210.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s1-r1-m5,s1-r1-m5-m1-de_nuke,h1,2,Sharks,teamA,t,HEROIC,teamB,loss,ct_win,False,False,False,1,4,1,4,10250,9900,350,0.9658536585365853,2050.0,2050.0,70.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s1-r1-m5,s1-r1-m5-m1-de_nuke,h2,14,HEROIC,teamB,t,Sharks,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14550,12550,2000,0.8625429553264605,2910.0,2900.0,400.0,2400,0,0,21150,0,0,4230.0,0,1400,1,ct
+s1-r1-m6,s1-r1-m6-m1-de_inferno,h1,2,GamerLegion,teamB,ct,NRG,teamA,loss,t_win,False,False,False,1,3,2,4,11200,10150,1050,0.90625,2240.0,2150.0,210.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s1-r1-m6,s1-r1-m6-m1-de_inferno,h2,14,GamerLegion,teamB,t,NRG,teamA,loss,ct_win,False,False,False,1,2,3,4,11000,10550,450,0.9590909090909091,2200.0,2050.0,90.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s1-r1-m7,s1-r1-m7-m1-de_dust2,h1,2,BetBoom,teamB,ct,Gaimin Gladiators,teamA,loss,t_win,False,False,False,1,3,2,4,11350,10300,1050,0.9074889867841409,2270.0,2150.0,210.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s1-r1-m7,s1-r1-m7-m1-de_dust2,h2,14,BetBoom,teamB,t,Gaimin Gladiators,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,700,10350,0.06334841628959276,2210.0,2050.0,2070.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s1-r1-m8,s1-r1-m8-m1-de_nuke,h1,2,BIG,teamB,ct,Liquid,teamA,loss,target_bombed,True,True,False,3,0,5,2,12850,12500,350,0.9727626459143969,2570.0,2600.0,70.0,2400,0,0,19000,0,0,3800.0,0,1400,0,t
+s1-r1-m8,s1-r1-m8-m1-de_nuke,h2,14,Liquid,teamA,ct,BIG,teamB,loss,target_bombed,True,True,False,1,1,4,4,12300,11400,900,0.926829268292683,2460.0,2250.0,180.0,2400,0,0,19700,0,0,3940.0,0,1400,1,t
+s1-r2-l1,s1-r2-l1-m1-de_dust2,h1,2,Lynn Vision,teamA,t,HEROIC,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,10400,250,0.9765258215962441,2130.0,2050.0,50.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r2-l1,s1-r2-l1-m1-de_dust2,h2,14,HEROIC,teamB,t,Lynn Vision,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,0,10700,0.0,2140.0,2050.0,2140.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s1-r2-l2,s1-r2-l2-m1-de_nuke,h1,2,TYLOO,teamA,t,MIBR,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,0,10700,0.0,2140.0,2050.0,2140.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r2-l2,s1-r2-l2-m1-de_nuke,h2,14,MIBR,teamB,t,TYLOO,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,10500,200,0.9813084112149533,2140.0,2050.0,40.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r2-l3,s1-r2-l3-m1-de_nuke,h1,2,NRG,teamA,t,SINNERS,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14450,14100,350,0.9757785467128027,2890.0,2800.0,70.0,2400,0,0,21150,0,0,4230.0,0,1400,1,ct
+s1-r2-l3,s1-r2-l3-m1-de_nuke,h2,14,SINNERS,teamB,t,NRG,teamA,loss,ct_win,False,False,False,1,5,0,4,9900,0,9900,0.0,1980.0,2000.0,1980.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s1-r2-l4,s1-r2-l4-m1-de_nuke,h1,2,Gaimin Gladiators,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,5,0,4,10000,0,10000,0.0,2000.0,2050.0,2000.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s1-r2-l4,s1-r2-l4-m1-de_nuke,h2,14,Gaimin Gladiators,teamA,ct,BIG,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10650,550,0.9508928571428571,2240.0,2150.0,110.0,2400,0,0,18750,0,0,3750.0,0,1400,3,t
+s1-r2-w1,s1-r2-w1-m1-de_dust2,h1,2,THUNDER dOWNUNDER,teamA,t,B8,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14550,1100,13450,0.07560137457044673,2910.0,2900.0,2690.0,2400,0,0,21150,0,0,4230.0,0,1400,1,ct
+s1-r2-w1,s1-r2-w1-m1-de_dust2,h2,14,B8,teamB,t,THUNDER dOWNUNDER,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14250,13600,650,0.9543859649122807,2850.0,2900.0,130.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s1-r2-w2,s1-r2-w2-m1-de_mirage,h1,2,Sharks,teamA,t,M80,teamB,loss,ct_win,False,False,False,1,5,0,4,10150,9900,250,0.9753694581280788,2030.0,2050.0,50.0,2400,0,0,19700,0,0,3940.0,0,1400,5,ct
+s1-r2-w2,s1-r2-w2-m1-de_mirage,h2,14,M80,teamB,t,Sharks,teamA,loss,ct_win,False,False,False,1,4,1,4,10500,50,10450,0.004761904761904762,2100.0,2050.0,2090.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s1-r2-w3,s1-r2-w3-m1-de_inferno,h1,2,GamerLegion,teamB,ct,FlyQuest,teamA,loss,target_bombed,True,True,False,2,5,0,3,10200,8400,1800,0.8235294117647058,2040.0,2050.0,360.0,2400,0,0,19250,0,0,3850.0,0,1400,5,t
+s1-r2-w3,s1-r2-w3-m1-de_inferno,h2,14,FlyQuest,teamA,ct,GamerLegion,teamB,loss,target_bombed,True,True,False,1,0,5,4,12700,11450,1250,0.9015748031496063,2540.0,2600.0,250.0,2400,0,0,19600,0,0,3920.0,0,1400,0,t
+s1-r2-w4,s1-r2-w4-m1-de_dust2,h1,2,Liquid,teamA,t,BetBoom,teamB,loss,ct_win,False,False,False,1,4,1,4,10350,2400,7950,0.2318840579710145,2070.0,2050.0,1590.0,2400,0,0,19300,0,0,3860.0,0,1400,4,ct
+s1-r2-w4,s1-r2-w4-m1-de_dust2,h2,14,BetBoom,teamB,t,Liquid,teamA,loss,ct_win,False,False,False,1,5,0,4,10150,0,10150,0.0,2030.0,2050.0,2030.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s1-r3-a1,s1-r3-a1-m1-de_nuke,h1,2,GamerLegion,teamB,ct,BetBoom,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10200,1550,0.8680851063829788,2350.0,2200.0,310.0,2400,0,0,18500,0,0,3700.0,0,1400,2,t
+s1-r3-a1,s1-r3-a1-m1-de_nuke,h2,14,BetBoom,teamA,ct,GamerLegion,teamB,loss,t_win,False,False,False,1,5,0,4,10100,9700,400,0.9603960396039604,2020.0,2050.0,80.0,2400,0,0,18600,0,0,3720.0,0,1400,5,t
+s1-r3-a1,s1-r3-a1-m2-de_ancient,h1,2,BetBoom,teamB,ct,GamerLegion,teamA,loss,target_bombed,True,True,False,1,0,5,4,12850,12300,550,0.9571984435797666,2570.0,2600.0,110.0,2400,0,0,19550,0,0,3910.0,0,1400,0,t
+s1-r3-a1,s1-r3-a1-m2-de_ancient,h2,14,GamerLegion,teamA,ct,BetBoom,teamB,loss,t_win,False,False,False,1,3,2,4,11200,9550,1650,0.8526785714285714,2240.0,2150.0,330.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s1-r3-a2,s1-r3-a2-m1-de_ancient,h1,2,M80,teamB,ct,B8,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10050,1700,0.8553191489361702,2350.0,2200.0,340.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s1-r3-a2,s1-r3-a2-m1-de_ancient,h2,14,M80,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,0,10750,0.0,2150.0,2050.0,2150.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r3-a2,s1-r3-a2-m2-de_inferno,h1,2,B8,teamA,t,M80,teamB,loss,ct_win,False,False,False,1,5,0,4,10100,0,10100,0.0,2020.0,2050.0,2020.0,2400,0,0,19450,0,0,3890.0,0,1400,5,ct
+s1-r3-a2,s1-r3-a2-m2-de_inferno,h2,14,M80,teamB,t,B8,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14250,13800,450,0.968421052631579,2850.0,2950.0,90.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s1-r3-e1,s1-r3-e1-m1-de_ancient,h1,2,TYLOO,teamB,ct,SINNERS,teamA,loss,t_win,False,False,False,1,3,2,4,11200,700,10500,0.0625,2240.0,2150.0,2100.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s1-r3-e1,s1-r3-e1-m1-de_ancient,h2,14,SINNERS,teamA,ct,TYLOO,teamB,loss,t_win,False,False,False,1,4,1,4,10650,0,10650,0.0,2130.0,2100.0,2130.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s1-r3-e1,s1-r3-e1-m2-de_inferno,h1,2,SINNERS,teamB,ct,TYLOO,teamA,loss,t_win,False,False,False,1,4,1,4,10650,10150,500,0.9530516431924883,2130.0,2100.0,100.0,2400,0,0,18700,0,0,3740.0,0,1400,4,t
+s1-r3-e1,s1-r3-e1-m2-de_inferno,h2,14,TYLOO,teamA,ct,SINNERS,teamB,loss,t_win,False,False,False,1,4,1,4,10650,0,10650,0.0,2130.0,2100.0,2130.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s1-r3-e2,s1-r3-e2-m1-de_dust2,h1,2,HEROIC,teamA,t,Gaimin Gladiators,teamB,loss,ct_win,False,False,False,1,3,2,4,10800,0,10800,0.0,2160.0,2050.0,2160.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r3-e2,s1-r3-e2-m1-de_dust2,h2,14,Gaimin Gladiators,teamB,t,HEROIC,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14500,13200,1300,0.9103448275862069,2900.0,2850.0,260.0,2400,0,0,21250,0,0,4250.0,0,1400,1,ct
+s1-r3-e2,s1-r3-e2-m2-de_inferno,h1,2,HEROIC,teamB,ct,Gaimin Gladiators,teamA,loss,target_bombed,True,True,False,2,4,1,3,10600,8500,2100,0.8018867924528302,2120.0,2100.0,420.0,2400,0,0,19400,0,0,3880.0,0,1400,4,t
+s1-r3-e2,s1-r3-e2-m2-de_inferno,h2,14,HEROIC,teamB,t,Gaimin Gladiators,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14150,13600,550,0.9611307420494699,2830.0,2800.0,110.0,2400,0,0,21000,0,0,4200.0,0,1400,2,ct
+s1-r3-m1,s1-r3-m1-m1-de_mirage,h1,2,FlyQuest,teamA,t,NRG,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,13800,550,0.9616724738675958,2870.0,2650.0,110.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s1-r3-m1,s1-r3-m1-m1-de_mirage,h2,14,FlyQuest,teamA,ct,NRG,teamB,loss,t_win,False,False,False,1,4,1,4,10600,9900,700,0.9339622641509434,2120.0,2100.0,140.0,2400,0,0,18700,0,0,3740.0,0,1400,4,t
+s1-r3-m2,s1-r3-m2-m1-de_overpass,h1,2,Sharks,teamB,ct,Lynn Vision,teamA,loss,t_win,False,False,False,1,3,2,4,11200,10150,1050,0.90625,2240.0,2150.0,210.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s1-r3-m2,s1-r3-m2-m1-de_overpass,h2,14,Lynn Vision,teamA,ct,Sharks,teamB,loss,t_win,False,False,False,1,2,3,4,11750,9600,2150,0.8170212765957446,2350.0,2200.0,430.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s1-r3-m3,s1-r3-m3-m1-de_inferno,h1,2,BIG,teamA,t,THUNDER dOWNUNDER,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13750,13400,350,0.9745454545454545,2750.0,2650.0,70.0,2400,0,0,21000,0,0,4200.0,0,1400,4,ct
+s1-r3-m3,s1-r3-m3-m1-de_inferno,h2,14,BIG,teamA,ct,THUNDER dOWNUNDER,teamB,loss,target_bombed,True,True,False,1,1,4,4,12400,11100,1300,0.8951612903225806,2480.0,2450.0,260.0,2400,0,0,20650,0,0,4130.0,0,1400,1,t
+s1-r3-m4,s1-r3-m4-m1-de_mirage,h1,2,MIBR,teamA,t,Liquid,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,0,10750,0.0,2150.0,2050.0,2150.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s1-r3-m4,s1-r3-m4-m1-de_mirage,h2,14,MIBR,teamA,ct,Liquid,teamB,loss,t_win,False,False,False,1,1,4,4,12300,11900,400,0.967479674796748,2460.0,2400.0,80.0,2400,0,0,18650,0,0,3730.0,0,1400,1,t
+s1-r4-a1,s1-r4-a1-m1-de_overpass,h1,2,BIG,teamA,t,GamerLegion,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,1400,9000,0.1346153846153846,2080.0,2050.0,1800.0,2400,0,0,19700,0,0,3940.0,0,1400,4,ct
+s1-r4-a1,s1-r4-a1-m1-de_overpass,h2,14,BIG,teamA,ct,GamerLegion,teamB,loss,target_bombed,True,True,False,1,3,2,4,11150,700,10450,0.06278026905829596,2230.0,2150.0,2090.0,2400,0,0,19700,0,0,3940.0,0,1400,3,t
+s1-r4-a1,s1-r4-a1-m2-de_ancient,h1,2,BIG,teamB,ct,GamerLegion,teamA,loss,t_win,False,False,False,1,2,3,4,11750,500,11250,0.0425531914893617,2350.0,2500.0,2250.0,2400,0,0,18750,0,0,3750.0,0,1400,2,t
+s1-r4-a1,s1-r4-a1-m2-de_ancient,h2,14,BIG,teamB,t,GamerLegion,teamA,loss,ct_win,False,False,False,1,4,1,4,10450,700,9750,0.06698564593301436,2090.0,2050.0,1950.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s1-r4-a2,s1-r4-a2-m1-de_anubis,h1,2,MIBR,teamB,ct,Lynn Vision,teamA,loss,t_win,False,False,False,1,3,2,4,10850,10250,600,0.9447004608294931,2170.0,2150.0,120.0,2400,0,0,18300,0,0,3660.0,0,1400,3,t
+s1-r4-a2,s1-r4-a2-m1-de_anubis,h2,14,Lynn Vision,teamA,ct,MIBR,teamB,loss,t_win,False,False,False,1,5,0,4,10100,900,9200,0.0891089108910891,2020.0,2050.0,1840.0,2400,0,0,18650,0,0,3730.0,0,1400,5,t
+s1-r4-a2,s1-r4-a2-m2-de_inferno,h1,2,Lynn Vision,teamA,t,MIBR,teamB,loss,bomb_defused,True,False,True,0,3,2,5,13950,11350,2600,0.8136200716845878,2790.0,2800.0,520.0,2400,0,0,21000,0,0,4200.0,0,1400,3,ct
+s1-r4-a2,s1-r4-a2-m2-de_inferno,h2,14,Lynn Vision,teamA,ct,MIBR,teamB,loss,t_win,False,False,False,1,2,3,4,12400,11700,700,0.9435483870967742,2480.0,2500.0,140.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s1-r4-a3,s1-r4-a3-m1-de_ancient,h1,2,NRG,teamA,t,M80,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13650,12800,850,0.9377289377289377,2730.0,2650.0,170.0,2400,0,0,21100,0,0,4220.0,0,1400,4,ct
+s1-r4-a3,s1-r4-a3-m1-de_ancient,h2,14,NRG,teamA,ct,M80,teamB,loss,t_win,False,False,False,1,5,0,4,10100,0,10100,0.0,2020.0,2050.0,2020.0,2400,0,0,18700,0,0,3740.0,0,1400,5,t
+s1-r4-a3,s1-r4-a3-m2-de_inferno,h1,2,M80,teamA,t,NRG,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14250,13350,900,0.9368421052631579,2850.0,2650.0,180.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s1-r4-a3,s1-r4-a3-m2-de_inferno,h2,14,M80,teamA,ct,NRG,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10950,800,0.9319148936170213,2350.0,2500.0,160.0,2400,0,0,18400,0,0,3680.0,0,1400,2,t
+s1-r4-e1,s1-r4-e1-m1-de_anubis,h1,2,FlyQuest,teamB,ct,THUNDER dOWNUNDER,teamA,loss,target_bombed,True,True,False,1,0,5,4,12850,12100,750,0.9416342412451362,2570.0,2600.0,150.0,2400,0,0,19550,0,0,3910.0,0,1400,0,t
+s1-r4-e1,s1-r4-e1-m1-de_anubis,h2,14,FlyQuest,teamB,t,THUNDER dOWNUNDER,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,10600,450,0.9592760180995475,2210.0,2050.0,90.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s1-r4-e1,s1-r4-e1-m2-de_inferno,h1,2,THUNDER dOWNUNDER,teamA,t,FlyQuest,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14300,13400,900,0.9370629370629371,2860.0,2900.0,180.0,2400,0,0,21200,0,0,4240.0,0,1400,2,ct
+s1-r4-e1,s1-r4-e1-m2-de_inferno,h2,14,FlyQuest,teamB,t,THUNDER dOWNUNDER,teamA,loss,ct_win,False,False,False,1,3,2,4,10550,9900,650,0.9383886255924171,2110.0,2050.0,130.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s1-r4-e2,s1-r4-e2-m1-de_nuke,h1,2,TYLOO,teamB,ct,Sharks,teamA,loss,target_bombed,True,True,False,3,5,0,2,10100,8900,1200,0.8811881188118812,2020.0,2050.0,240.0,2400,0,0,18850,0,0,3770.0,0,1400,5,t
+s1-r4-e2,s1-r4-e2-m1-de_nuke,h2,14,TYLOO,teamB,t,Sharks,teamA,loss,ct_win,False,False,False,1,5,0,4,10100,0,10100,0.0,2020.0,2050.0,2020.0,2400,0,0,19700,0,0,3940.0,0,1400,5,ct
+s1-r4-e2,s1-r4-e2-m2-de_inferno,h1,2,TYLOO,teamA,t,Sharks,teamB,loss,ct_win,False,False,False,1,4,1,4,10450,0,10450,0.0,2090.0,2050.0,2090.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s1-r4-e2,s1-r4-e2-m2-de_inferno,h2,14,TYLOO,teamA,ct,Sharks,teamB,loss,t_win,False,False,False,1,2,3,4,11750,11650,100,0.9914893617021276,2350.0,2350.0,20.0,2400,0,0,18550,0,0,3710.0,0,1400,2,t
+s1-r4-e2,s1-r4-e2-m3-de_anubis,h1,2,Sharks,teamB,ct,TYLOO,teamA,loss,t_win,False,False,False,1,2,3,4,11600,10650,950,0.9181034482758621,2320.0,2200.0,190.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s1-r4-e2,s1-r4-e2-m3-de_anubis,h2,14,TYLOO,teamA,ct,Sharks,teamB,loss,t_win,False,False,False,1,3,2,4,11200,0,11200,0.0,2240.0,2150.0,2240.0,2400,0,0,18450,0,0,3690.0,0,1400,3,t
+s1-r4-e3,s1-r4-e3-m1-de_nuke,h1,2,Liquid,teamB,ct,HEROIC,teamA,loss,target_bombed,True,True,False,1,3,2,4,11600,11050,550,0.9525862068965517,2320.0,2200.0,110.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s1-r4-e3,s1-r4-e3-m1-de_nuke,h2,14,HEROIC,teamA,ct,Liquid,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10400,1350,0.8851063829787233,2350.0,2200.0,270.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s1-r4-e3,s1-r4-e3-m2-de_inferno,h1,2,HEROIC,teamB,ct,Liquid,teamA,loss,t_win,False,False,False,1,2,3,4,11750,11050,700,0.9404255319148936,2350.0,2200.0,140.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s1-r4-e3,s1-r4-e3-m2-de_inferno,h2,14,Liquid,teamA,ct,HEROIC,teamB,loss,t_win,False,False,False,1,3,2,4,11200,9600,1600,0.8571428571428571,2240.0,2150.0,320.0,2400,0,0,18500,0,0,3700.0,0,1400,3,t
+s1-r5-d1,s1-r5-d1-m1-de_ancient,h1,2,TYLOO,teamB,ct,Lynn Vision,teamA,loss,t_win,False,False,False,1,4,1,4,10650,0,10650,0.0,2130.0,2100.0,2130.0,2400,0,0,18700,0,0,3740.0,0,1400,4,t
+s1-r5-d1,s1-r5-d1-m1-de_ancient,h2,14,Lynn Vision,teamA,ct,TYLOO,teamB,loss,target_bombed,True,True,False,2,4,1,3,10600,8000,2600,0.7547169811320755,2120.0,2100.0,520.0,2400,0,0,19400,0,0,3880.0,0,1400,4,t
+s1-r5-d1,s1-r5-d1-m2-de_inferno,h1,2,TYLOO,teamA,t,Lynn Vision,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,10050,650,0.9392523364485982,2140.0,2050.0,130.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s1-r5-d1,s1-r5-d1-m2-de_inferno,h2,14,Lynn Vision,teamB,t,TYLOO,teamA,loss,ct_win,False,False,False,1,5,0,4,10050,9600,450,0.9552238805970149,2010.0,2050.0,90.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s1-r5-d2,s1-r5-d2-m1-de_anubis,h1,2,Liquid,teamA,t,FlyQuest,teamB,loss,ct_win,False,False,False,1,5,0,4,10100,600,9500,0.0594059405940594,2020.0,2050.0,1900.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s1-r5-d2,s1-r5-d2-m1-de_anubis,h2,14,Liquid,teamA,ct,FlyQuest,teamB,loss,t_win,False,False,False,1,2,3,4,11750,11300,450,0.9617021276595744,2350.0,2200.0,90.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s1-r5-d2,s1-r5-d2-m2-de_inferno,h1,2,Liquid,teamA,t,FlyQuest,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,700,10000,0.06542056074766354,2140.0,2050.0,2000.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s1-r5-d2,s1-r5-d2-m2-de_inferno,h2,14,Liquid,teamA,ct,FlyQuest,teamB,loss,t_win,False,False,False,1,2,3,4,11750,11050,700,0.9404255319148936,2350.0,2500.0,140.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s1-r5-d3,s1-r5-d3-m1-de_dust2,h1,2,BIG,teamA,t,NRG,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13750,2400,11350,0.17454545454545456,2750.0,2650.0,2270.0,2400,0,0,21150,0,0,4230.0,0,1400,4,ct
+s1-r5-d3,s1-r5-d3-m1-de_dust2,h2,14,NRG,teamB,t,BIG,teamA,loss,ct_win,False,False,False,1,4,1,4,10400,0,10400,0.0,2080.0,2050.0,2080.0,2400,0,0,19550,0,0,3910.0,0,1400,4,ct
+s1-r5-d3,s1-r5-d3-m2-de_nuke,h1,2,BIG,teamB,ct,NRG,teamA,loss,target_bombed,True,True,False,2,4,1,3,10650,9650,1000,0.9061032863849765,2130.0,2100.0,200.0,2400,0,0,19250,0,0,3850.0,0,1400,4,t
+s1-r5-d3,s1-r5-d3-m2-de_nuke,h2,14,NRG,teamA,ct,BIG,teamB,loss,t_win,False,False,False,1,3,2,4,11200,200,11000,0.017857142857142856,2240.0,2150.0,2200.0,2400,0,0,18750,0,0,3750.0,0,1400,3,t
+s1-r5-d3,s1-r5-d3-m3-de_mirage,h1,2,BIG,teamA,t,NRG,teamB,loss,ct_win,False,False,False,1,2,3,4,10950,10400,550,0.9497716894977168,2190.0,2050.0,110.0,2400,0,0,19700,0,0,3940.0,0,1400,2,ct
+s1-r5-d3,s1-r5-d3-m3-de_mirage,h2,14,NRG,teamB,t,BIG,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,500,10550,0.04524886877828054,2210.0,2050.0,2110.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r1-m1,s2-r1-m1-m1-de_ancient,h1,2,GamerLegion,teamA,t,Astralis,teamB,loss,ct_win,False,False,False,1,2,3,4,11100,900,10200,0.08108108108108109,2220.0,2050.0,2040.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s2-r1-m1,s2-r1-m1-m1-de_ancient,h2,14,Astralis,teamB,t,GamerLegion,teamA,loss,ct_win,False,False,False,1,4,1,4,10350,200,10150,0.01932367149758454,2070.0,2050.0,2030.0,2400,0,0,19550,0,0,3910.0,0,1400,4,ct
+s2-r1-m2,s2-r1-m2-m1-de_dust2,h1,2,FlyQuest,teamA,t,9z,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,13850,500,0.9651567944250871,2870.0,2650.0,100.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s2-r1-m2,s2-r1-m2-m1-de_dust2,h2,14,9z,teamB,t,FlyQuest,teamA,loss,ct_win,False,False,False,1,3,2,4,10600,200,10400,0.018867924528301886,2120.0,2050.0,2080.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s2-r1-m3,s2-r1-m3-m1-de_ancient,h1,2,FUT,teamB,ct,B8,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10650,1100,0.9063829787234042,2350.0,2200.0,220.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s2-r1-m3,s2-r1-m3-m1-de_ancient,h2,14,B8,teamA,ct,FUT,teamB,loss,target_bombed,True,True,False,1,1,4,4,12300,12000,300,0.975609756097561,2460.0,2250.0,60.0,2400,0,0,19600,0,0,3920.0,0,1400,1,t
+s2-r1-m4,s2-r1-m4-m1-de_mirage,h1,2,paiN,teamB,ct,TYLOO,teamA,loss,t_win,False,False,False,1,1,4,4,12450,11750,700,0.9437751004016064,2490.0,2250.0,140.0,2400,0,0,18450,0,0,3690.0,0,1400,1,t
+s2-r1-m4,s2-r1-m4-m1-de_mirage,h2,14,paiN,teamB,t,TYLOO,teamA,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r1-m5,s2-r1-m5-m1-de_mirage,h1,2,M80,teamA,t,G2,teamB,loss,ct_win,False,False,False,1,5,0,4,10150,9650,500,0.9507389162561576,2030.0,2050.0,100.0,2400,0,0,19450,0,0,3890.0,0,1400,5,ct
+s2-r1-m5,s2-r1-m5-m1-de_mirage,h2,14,M80,teamA,ct,G2,teamB,loss,t_win,False,False,False,1,4,1,4,10500,9950,550,0.9476190476190476,2100.0,2100.0,110.0,2400,0,0,18550,0,0,3710.0,0,1400,4,t
+s2-r1-m6,s2-r1-m6-m1-de_mirage,h1,2,Monte,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,5,0,4,9950,0,9950,0.0,1990.0,2050.0,1990.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r1-m6,s2-r1-m6-m1-de_mirage,h2,14,Monte,teamA,ct,BIG,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10550,1200,0.8978723404255319,2350.0,2500.0,240.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s2-r1-m7,s2-r1-m7-m1-de_mirage,h1,2,BetBoom,teamA,t,Spirit,teamB,loss,ct_win,False,False,False,1,1,4,4,11250,700,10550,0.06222222222222222,2250.0,2350.0,2110.0,2400,0,0,19550,0,0,3910.0,0,1400,1,ct
+s2-r1-m7,s2-r1-m7-m1-de_mirage,h2,14,BetBoom,teamA,ct,Spirit,teamB,loss,t_win,False,False,False,1,3,2,4,11350,200,11150,0.01762114537444934,2270.0,2150.0,2230.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s2-r1-m8,s2-r1-m8-m1-de_nuke,h1,2,Legacy,teamB,ct,MIBR,teamA,loss,t_win,False,False,False,1,4,1,4,10650,9950,700,0.9342723004694836,2130.0,2100.0,140.0,2400,0,0,18200,0,0,3640.0,0,1400,4,t
+s2-r1-m8,s2-r1-m8-m1-de_nuke,h2,14,Legacy,teamB,t,MIBR,teamA,loss,bomb_defused,True,False,True,0,3,2,5,14000,13550,450,0.9678571428571429,2800.0,2650.0,90.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r2-l1,s2-r2-l1-m1-de_overpass,h1,2,paiN,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,2,3,4,10850,700,10150,0.06451612903225806,2170.0,2050.0,2030.0,2400,0,0,19550,0,0,3910.0,0,1400,2,ct
+s2-r2-l1,s2-r2-l1-m1-de_overpass,h2,14,BIG,teamB,t,paiN,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,700,10050,0.06511627906976744,2150.0,2050.0,2010.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r2-l2,s2-r2-l2-m1-de_dust2,h1,2,FlyQuest,teamA,t,Legacy,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,12750,1600,0.8885017421602788,2870.0,2650.0,320.0,2400,0,0,21000,0,0,4200.0,0,1400,2,ct
+s2-r2-l2,s2-r2-l2-m1-de_dust2,h2,14,FlyQuest,teamA,ct,Legacy,teamB,loss,target_bombed,True,True,False,1,3,2,4,11450,9550,1900,0.834061135371179,2290.0,2200.0,380.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s2-r2-l3,s2-r2-l3-m1-de_nuke,h1,2,GamerLegion,teamA,t,BetBoom,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,0,10400,0.0,2080.0,2050.0,2080.0,2400,0,0,19700,0,0,3940.0,0,1400,4,ct
+s2-r2-l3,s2-r2-l3-m1-de_nuke,h2,14,BetBoom,teamB,t,GamerLegion,teamA,loss,bomb_defused,True,False,True,0,3,2,5,13950,12500,1450,0.8960573476702509,2790.0,2650.0,290.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r2-l4,s2-r2-l4-m1-de_mirage,h1,2,B8,teamB,ct,M80,teamA,loss,target_bombed,True,True,False,2,4,1,3,10650,10500,150,0.9859154929577465,2130.0,2100.0,30.0,2400,0,0,19350,0,0,3870.0,0,1400,4,t
+s2-r2-l4,s2-r2-l4-m1-de_mirage,h2,14,B8,teamB,t,M80,teamA,loss,ct_win,False,False,False,1,3,2,4,11300,700,10600,0.061946902654867256,2260.0,2050.0,2120.0,2400,0,0,19550,0,0,3910.0,0,1400,3,ct
+s2-r2-w1,s2-r2-w1-m1-de_overpass,h1,2,TYLOO,teamA,t,FUT,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13800,13100,700,0.9492753623188406,2760.0,2650.0,140.0,2400,0,0,21000,0,0,4200.0,0,1400,4,ct
+s2-r2-w1,s2-r2-w1-m1-de_overpass,h2,14,TYLOO,teamA,ct,FUT,teamB,loss,t_win,False,False,False,1,4,1,4,10650,10350,300,0.971830985915493,2130.0,2100.0,60.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s2-r2-w2,s2-r2-w2-m1-de_nuke,h1,2,Astralis,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,3,2,4,11300,9650,1650,0.8539823008849557,2260.0,2150.0,330.0,2400,0,0,18500,0,0,3700.0,0,1400,3,t
+s2-r2-w2,s2-r2-w2-m1-de_nuke,h2,14,Astralis,teamB,t,9z,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14550,14100,450,0.9690721649484536,2910.0,2650.0,90.0,2400,0,0,21300,0,0,4260.0,0,1400,1,ct
+s2-r2-w3,s2-r2-w3-m1-de_mirage,h1,2,Monte,teamA,t,G2,teamB,loss,ct_win,False,False,False,1,5,0,4,10050,50,10000,0.004975124378109453,2010.0,2050.0,2000.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r2-w3,s2-r2-w3-m1-de_mirage,h2,14,G2,teamB,t,Monte,teamA,loss,ct_win,False,False,False,1,2,3,4,10950,10600,350,0.9680365296803652,2190.0,2300.0,70.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r2-w4,s2-r2-w4-m1-de_mirage,h1,2,MIBR,teamA,t,Spirit,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,10300,450,0.958139534883721,2150.0,2050.0,90.0,2400,0,0,19550,0,0,3910.0,0,1400,3,ct
+s2-r2-w4,s2-r2-w4-m1-de_mirage,h2,14,MIBR,teamA,ct,Spirit,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10550,650,0.9419642857142857,2240.0,2150.0,130.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s2-r3-a1,s2-r3-a1-m1-de_mirage,h1,2,Spirit,teamA,t,9z,teamB,loss,ct_win,False,False,False,1,1,4,4,11150,1400,9750,0.12556053811659193,2230.0,2200.0,1950.0,2400,0,0,19750,0,0,3950.0,0,1400,1,ct
+s2-r3-a1,s2-r3-a1-m1-de_mirage,h2,14,9z,teamB,t,Spirit,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,0,10750,0.0,2150.0,2050.0,2150.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r3-a1,s2-r3-a1-m2-de_nuke,h1,2,9z,teamA,t,Spirit,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14550,13200,1350,0.9072164948453608,2910.0,2800.0,270.0,2400,0,0,21000,0,0,4200.0,0,1400,1,ct
+s2-r3-a1,s2-r3-a1-m2-de_nuke,h2,14,9z,teamA,ct,Spirit,teamB,loss,t_win,False,False,False,1,2,3,4,11900,11100,800,0.9327731092436975,2380.0,2200.0,160.0,2400,0,0,18450,0,0,3690.0,0,1400,2,t
+s2-r3-a2,s2-r3-a2-m1-de_anubis,h1,2,G2,teamA,t,FUT,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,700,10050,0.06511627906976744,2150.0,2050.0,2010.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s2-r3-a2,s2-r3-a2-m1-de_anubis,h2,14,G2,teamA,ct,FUT,teamB,loss,t_win,False,False,False,1,1,4,4,12250,11400,850,0.9306122448979591,2450.0,2400.0,170.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+s2-r3-a2,s2-r3-a2-m2-de_overpass,h1,2,G2,teamA,t,FUT,teamB,loss,ct_win,False,False,False,1,2,3,4,11100,11000,100,0.990990990990991,2220.0,2050.0,20.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s2-r3-a2,s2-r3-a2-m2-de_overpass,h2,14,FUT,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,700,10050,0.06511627906976744,2150.0,2050.0,2010.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s2-r3-a2,s2-r3-a2-m3-de_ancient,h1,2,FUT,teamB,ct,G2,teamA,loss,target_bombed,True,True,False,1,2,3,4,11750,9600,2150,0.8170212765957446,2350.0,2500.0,430.0,2400,0,0,19650,0,0,3930.0,0,1400,2,t
+s2-r3-a2,s2-r3-a2-m3-de_ancient,h2,14,FUT,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,4,1,4,10450,8550,1900,0.8181818181818182,2090.0,2050.0,380.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s2-r3-e1,s2-r3-e1-m1-de_nuke,h1,2,FlyQuest,teamB,ct,paiN,teamA,loss,t_win,False,False,False,1,5,0,4,10100,9850,250,0.9752475247524752,2020.0,2050.0,50.0,2400,0,0,18650,0,0,3730.0,0,1400,5,t
+s2-r3-e1,s2-r3-e1-m1-de_nuke,h2,14,FlyQuest,teamB,t,paiN,teamA,loss,bomb_defused,True,False,True,0,3,2,5,13950,12500,1450,0.8960573476702509,2790.0,2800.0,290.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r3-e1,s2-r3-e1-m2-de_anubis,h1,2,FlyQuest,teamB,ct,paiN,teamA,loss,target_bombed,True,True,False,1,0,5,4,12850,10950,1900,0.8521400778210116,2570.0,2600.0,380.0,2400,0,0,19650,0,0,3930.0,0,1400,0,t
+s2-r3-e1,s2-r3-e1-m2-de_anubis,h2,14,paiN,teamA,ct,FlyQuest,teamB,loss,t_win,False,False,False,1,2,3,4,11750,11350,400,0.9659574468085106,2350.0,2200.0,80.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s2-r3-e2,s2-r3-e2-m1-de_inferno,h1,2,GamerLegion,teamB,ct,B8,teamA,loss,t_win,False,False,False,1,4,1,4,10650,9700,950,0.9107981220657277,2130.0,2100.0,190.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s2-r3-e2,s2-r3-e2-m1-de_inferno,h2,14,B8,teamA,ct,GamerLegion,teamB,loss,t_win,False,False,False,1,2,3,4,11750,9650,2100,0.8212765957446808,2350.0,2200.0,420.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s2-r3-e2,s2-r3-e2-m2-de_mirage,h1,2,B8,teamA,t,GamerLegion,teamB,loss,ct_win,False,False,False,1,2,3,4,10950,1400,9550,0.1278538812785388,2190.0,2050.0,1910.0,2400,0,0,19700,0,0,3940.0,0,1400,2,ct
+s2-r3-e2,s2-r3-e2-m2-de_mirage,h2,14,GamerLegion,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,4,1,4,10450,700,9750,0.06698564593301436,2090.0,2050.0,1950.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s2-r3-e2,s2-r3-e2-m3-de_nuke,h1,2,B8,teamB,ct,GamerLegion,teamA,loss,t_win,False,False,False,1,3,2,4,11350,11100,250,0.9779735682819384,2270.0,2150.0,50.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s2-r3-e2,s2-r3-e2-m3-de_nuke,h2,14,GamerLegion,teamA,ct,B8,teamB,loss,t_win,False,False,False,1,1,4,4,12300,8000,4300,0.6504065040650406,2460.0,2250.0,860.0,2400,0,0,18350,0,0,3670.0,0,1400,1,t
+s2-r3-m1,s2-r3-m1-m1-de_ancient,h1,2,Legacy,teamA,t,Monte,teamB,loss,bomb_defused,True,False,True,0,3,2,5,14050,13800,250,0.9822064056939501,2810.0,2650.0,50.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r3-m1,s2-r3-m1-m1-de_ancient,h2,14,Monte,teamB,t,Legacy,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,200,10550,0.018604651162790697,2150.0,2050.0,2110.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r3-m2,s2-r3-m2-m1-de_nuke,h1,2,Astralis,teamB,ct,TYLOO,teamA,loss,t_win,False,False,False,1,5,0,4,10100,0,10100,0.0,2020.0,2050.0,2020.0,2400,0,0,18500,0,0,3700.0,0,1400,5,t
+s2-r3-m2,s2-r3-m2-m1-de_nuke,h2,14,TYLOO,teamA,ct,Astralis,teamB,loss,target_bombed,True,True,False,1,5,0,4,10100,8350,1750,0.8267326732673267,2020.0,2050.0,350.0,2400,0,0,19450,0,0,3890.0,0,1400,5,t
+s2-r3-m3,s2-r3-m3-m1-de_inferno,h1,2,MIBR,teamB,ct,BIG,teamA,loss,t_win,False,False,False,1,2,3,4,11600,11150,450,0.9612068965517241,2320.0,2200.0,90.0,2400,0,0,18400,0,0,3680.0,0,1400,2,t
+s2-r3-m3,s2-r3-m3-m1-de_inferno,h2,14,MIBR,teamB,t,BIG,teamA,loss,ct_win,False,False,False,1,5,0,4,10150,0,10150,0.0,2030.0,2050.0,2030.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r3-m4,s2-r3-m4-m1-de_dust2,h1,2,M80,teamA,t,BetBoom,teamB,loss,bomb_defused,True,False,True,0,3,2,5,13900,13700,200,0.9856115107913669,2780.0,2800.0,40.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r3-m4,s2-r3-m4-m1-de_dust2,h2,14,M80,teamA,ct,BetBoom,teamB,loss,t_win,False,False,False,1,2,3,4,11600,11250,350,0.9698275862068966,2320.0,2200.0,70.0,2400,0,0,18500,0,0,3700.0,0,1400,2,t
+s2-r4-a1,s2-r4-a1-m1-de_nuke,h1,2,Monte,teamB,ct,BetBoom,teamA,loss,target_bombed,True,True,False,1,0,5,4,12850,12300,550,0.9571984435797666,2570.0,2450.0,110.0,2400,0,0,19550,0,0,3910.0,0,1400,0,t
+s2-r4-a1,s2-r4-a1-m1-de_nuke,h2,14,Monte,teamB,t,BetBoom,teamA,loss,ct_win,False,False,False,1,5,0,4,10200,9600,600,0.9411764705882353,2040.0,2050.0,120.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r4-a1,s2-r4-a1-m2-de_mirage,h1,2,BetBoom,teamB,ct,Monte,teamA,loss,t_win,False,False,False,1,4,1,4,10900,10350,550,0.9495412844036697,2180.0,2150.0,110.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s2-r4-a1,s2-r4-a1-m2-de_mirage,h2,14,Monte,teamA,ct,BetBoom,teamB,loss,t_win,False,False,False,1,3,2,4,11200,9500,1700,0.8482142857142857,2240.0,2150.0,340.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s2-r4-a1,s2-r4-a1-m3-de_dust2,h1,2,Monte,teamB,ct,BetBoom,teamA,loss,target_bombed,True,True,False,1,2,3,4,11750,10950,800,0.9319148936170213,2350.0,2200.0,160.0,2400,0,0,19650,0,0,3930.0,0,1400,2,t
+s2-r4-a1,s2-r4-a1-m3-de_dust2,h2,14,BetBoom,teamA,ct,Monte,teamB,loss,t_win,False,False,False,1,3,2,4,11250,10850,400,0.9644444444444444,2250.0,2150.0,80.0,2400,0,0,18300,0,0,3660.0,0,1400,3,t
+s2-r4-a2,s2-r4-a2-m1-de_overpass,h1,2,TYLOO,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,1,4,4,12300,11850,450,0.9634146341463414,2460.0,2550.0,90.0,2400,0,0,18300,0,0,3660.0,0,1400,1,t
+s2-r4-a2,s2-r4-a2-m1-de_overpass,h2,14,TYLOO,teamB,t,9z,teamA,loss,ct_win,False,False,False,1,2,3,4,11000,0,11000,0.0,2200.0,2050.0,2200.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r4-a2,s2-r4-a2-m2-de_inferno,h1,2,9z,teamB,ct,TYLOO,teamA,loss,target_bombed,True,True,False,1,2,3,4,11750,10750,1000,0.9148936170212766,2350.0,2200.0,200.0,2400,0,0,19600,0,0,3920.0,0,1400,2,t
+s2-r4-a2,s2-r4-a2-m2-de_inferno,h2,14,TYLOO,teamA,ct,9z,teamB,loss,target_bombed,True,True,False,1,4,1,4,10650,6600,4050,0.6197183098591549,2130.0,2100.0,810.0,2400,0,0,19550,0,0,3910.0,0,1400,4,t
+s2-r4-a3,s2-r4-a3-m1-de_inferno,h1,2,BIG,teamA,t,G2,teamB,loss,ct_win,False,False,False,1,4,1,4,10450,700,9750,0.06698564593301436,2090.0,2050.0,1950.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s2-r4-a3,s2-r4-a3-m1-de_inferno,h2,14,BIG,teamA,ct,G2,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10300,900,0.9196428571428571,2240.0,2150.0,180.0,2400,0,0,18350,0,0,3670.0,0,1400,3,t
+s2-r4-a3,s2-r4-a3-m2-de_mirage,h1,2,G2,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,5,0,4,10150,0,10150,0.0,2030.0,2050.0,2030.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r4-a3,s2-r4-a3-m2-de_mirage,h2,14,BIG,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,3,2,4,10650,9300,1350,0.8732394366197183,2130.0,2050.0,270.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r4-e1,s2-r4-e1-m1-de_nuke,h1,2,Astralis,teamB,ct,paiN,teamA,loss,t_win,False,False,False,1,4,1,4,10800,9650,1150,0.8935185185185185,2160.0,2100.0,230.0,2400,0,0,18750,0,0,3750.0,0,1400,4,t
+s2-r4-e1,s2-r4-e1-m1-de_nuke,h2,14,Astralis,teamB,t,paiN,teamA,loss,ct_win,False,False,False,1,5,0,4,9950,9000,950,0.9045226130653267,1990.0,2050.0,190.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s2-r4-e1,s2-r4-e1-m2-de_overpass,h1,2,Astralis,teamA,t,paiN,teamB,loss,ct_win,False,False,False,1,2,3,4,11050,0,11050,0.0,2210.0,2050.0,2210.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r4-e1,s2-r4-e1-m2-de_overpass,h2,14,paiN,teamB,t,Astralis,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,700,10350,0.06334841628959276,2210.0,2050.0,2070.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r4-e2,s2-r4-e2-m1-de_mirage,h1,2,B8,teamA,t,MIBR,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,300,10100,0.028846153846153848,2080.0,2050.0,2020.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s2-r4-e2,s2-r4-e2-m1-de_mirage,h2,14,B8,teamA,ct,MIBR,teamB,loss,target_bombed,True,True,False,3,0,5,2,12850,12500,350,0.9727626459143969,2570.0,2600.0,70.0,2400,0,0,18950,0,0,3790.0,0,1400,0,t
+s2-r4-e2,s2-r4-e2-m2-de_nuke,h1,2,MIBR,teamA,t,B8,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,700,9950,0.06572769953051644,2130.0,2050.0,1990.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r4-e2,s2-r4-e2-m2-de_nuke,h2,14,B8,teamB,t,MIBR,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,0,10700,0.0,2140.0,2050.0,2140.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r4-e2,s2-r4-e2-m3-de_ancient,h1,2,B8,teamA,t,MIBR,teamB,loss,ct_win,False,False,False,1,2,3,4,11100,1300,9800,0.11711711711711711,2220.0,2050.0,1960.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r4-e2,s2-r4-e2-m3-de_ancient,h2,14,B8,teamA,ct,MIBR,teamB,loss,t_win,False,False,False,1,2,3,4,11600,1000,10600,0.08620689655172414,2320.0,2200.0,2120.0,2400,0,0,18350,0,0,3670.0,0,1400,2,t
+s2-r4-e3,s2-r4-e3-m1-de_dust2,h1,2,M80,teamB,ct,Legacy,teamA,loss,t_win,False,False,False,1,3,2,4,11050,10250,800,0.9276018099547512,2210.0,2150.0,160.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s2-r4-e3,s2-r4-e3-m1-de_dust2,h2,14,Legacy,teamA,ct,M80,teamB,loss,t_win,False,False,False,1,2,3,4,11700,10600,1100,0.905982905982906,2340.0,2200.0,220.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s2-r4-e3,s2-r4-e3-m2-de_inferno,h1,2,M80,teamA,t,Legacy,teamB,loss,bomb_defused,True,False,True,0,3,2,5,14000,13450,550,0.9607142857142857,2800.0,2900.0,110.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r4-e3,s2-r4-e3-m2-de_inferno,h2,14,M80,teamA,ct,Legacy,teamB,loss,t_win,False,False,False,1,3,2,4,11050,10300,750,0.9321266968325792,2210.0,2150.0,150.0,2400,0,0,18550,0,0,3710.0,0,1400,3,t
+s2-r5-d1,s2-r5-d1-m1-de_nuke,h1,2,Monte,teamB,ct,paiN,teamA,loss,target_bombed,True,True,False,2,4,1,3,10650,9100,1550,0.8544600938967136,2130.0,2100.0,310.0,2400,0,0,19250,0,0,3850.0,0,1400,4,t
+s2-r5-d1,s2-r5-d1-m1-de_nuke,h2,14,paiN,teamA,ct,Monte,teamB,loss,t_win,False,False,False,1,4,1,4,10600,10350,250,0.9764150943396226,2120.0,2100.0,50.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s2-r5-d1,s2-r5-d1-m2-de_dust2,h1,2,Monte,teamA,t,paiN,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r5-d1,s2-r5-d1-m2-de_dust2,h2,14,Monte,teamA,ct,paiN,teamB,loss,t_win,False,False,False,1,1,4,4,12300,11100,1200,0.9024390243902439,2460.0,2550.0,240.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+s2-r5-d2,s2-r5-d2-m1-de_mirage,h1,2,Legacy,teamA,t,TYLOO,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,14150,200,0.9860627177700348,2870.0,2900.0,40.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s2-r5-d2,s2-r5-d2-m1-de_mirage,h2,14,Legacy,teamA,ct,TYLOO,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10850,900,0.9234042553191489,2350.0,2200.0,180.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s2-r5-d2,s2-r5-d2-m2-de_inferno,h1,2,TYLOO,teamA,t,Legacy,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14650,14250,400,0.9726962457337884,2930.0,2950.0,80.0,2400,0,0,21150,0,0,4230.0,0,1400,1,ct
+s2-r5-d2,s2-r5-d2-m2-de_inferno,h2,14,Legacy,teamB,t,TYLOO,teamA,loss,ct_win,False,False,False,1,4,1,4,10350,0,10350,0.0,2070.0,2050.0,2070.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s2-r5-d3,s2-r5-d3-m1-de_ancient,h1,2,B8,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r5-d3,s2-r5-d3-m1-de_ancient,h2,14,BIG,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,700,10000,0.06542056074766354,2140.0,2050.0,2000.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r5-d3,s2-r5-d3-m2-de_overpass,h1,2,BIG,teamA,t,B8,teamB,loss,ct_win,False,False,False,1,3,2,4,10800,700,10100,0.06481481481481481,2160.0,2050.0,2020.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s2-r5-d3,s2-r5-d3-m2-de_overpass,h2,14,B8,teamB,t,BIG,teamA,loss,bomb_defused,True,False,True,0,3,2,5,14100,10100,4000,0.7163120567375887,2820.0,2950.0,800.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s2-r5-d3,s2-r5-d3-m3-de_dust2,h1,2,B8,teamA,t,BIG,teamB,loss,ct_win,False,False,False,1,2,3,4,10950,0,10950,0.0,2190.0,2350.0,2190.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s2-r5-d3,s2-r5-d3-m3-de_dust2,h2,14,BIG,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,5,0,4,10150,900,9250,0.08866995073891626,2030.0,2050.0,1850.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s3-r1-m1,s3-r1-m1-m1-de_overpass,h1,2,PARIVISION,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,2,3,4,12250,11750,500,0.9591836734693877,2450.0,2300.0,100.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s3-r1-m1,s3-r1-m1-m1-de_overpass,h2,14,PARIVISION,teamB,t,9z,teamA,loss,ct_win,False,False,False,1,4,1,4,10450,10200,250,0.9760765550239234,2090.0,2050.0,50.0,2400,0,0,19700,0,0,3940.0,0,1400,4,ct
+s3-r1-m1,s3-r1-m1-m2-de_dust2,h1,2,PARIVISION,teamA,t,9z,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,2000,8650,0.18779342723004694,2130.0,2050.0,1730.0,2400,0,0,19400,0,0,3880.0,0,1400,3,ct
+s3-r1-m1,s3-r1-m1-m2-de_dust2,h2,14,PARIVISION,teamA,ct,9z,teamB,loss,t_win,False,False,False,1,4,1,4,10600,500,10100,0.04716981132075472,2120.0,2100.0,2020.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s3-r1-m1,s3-r1-m1-m3-de_inferno,h1,2,9z,teamA,t,PARIVISION,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14350,13250,1100,0.9233449477351916,2870.0,2650.0,220.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r1-m1,s3-r1-m1-m3-de_inferno,h2,14,9z,teamA,ct,PARIVISION,teamB,loss,target_bombed,True,True,False,1,3,2,4,11450,10450,1000,0.9126637554585153,2290.0,2200.0,200.0,2400,0,0,19600,0,0,3920.0,0,1400,3,t
+s3-r1-m2,s3-r1-m2-m1-de_dust2,h1,2,BetBoom,teamA,t,The MongolZ,teamB,loss,ct_win,False,False,False,1,1,4,4,11250,2400,8850,0.21333333333333335,2250.0,2300.0,1770.0,2400,0,0,19600,0,0,3920.0,0,1400,1,ct
+s3-r1-m2,s3-r1-m2-m1-de_dust2,h2,14,BetBoom,teamA,ct,The MongolZ,teamB,loss,t_win,False,False,False,1,2,3,4,11600,1900,9700,0.16379310344827586,2320.0,2200.0,1940.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s3-r1-m2,s3-r1-m2-m2-de_mirage,h1,2,BetBoom,teamB,ct,The MongolZ,teamA,loss,t_win,False,False,False,1,3,2,4,11250,10350,900,0.92,2250.0,2150.0,180.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s3-r1-m2,s3-r1-m2-m2-de_mirage,h2,14,BetBoom,teamB,t,The MongolZ,teamA,loss,bomb_defused,True,False,True,0,4,1,5,13750,3750,10000,0.2727272727272727,2750.0,2650.0,2000.0,2400,0,0,21150,0,0,4230.0,0,1400,4,ct
+s3-r1-m2,s3-r1-m2-m3-de_ancient,h1,2,BetBoom,teamA,t,The MongolZ,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14300,13650,650,0.9545454545454546,2860.0,2650.0,130.0,2400,0,0,20800,0,0,4160.0,0,1400,1,ct
+s3-r1-m2,s3-r1-m2-m3-de_ancient,h2,14,The MongolZ,teamB,t,BetBoom,teamA,loss,bomb_defused,True,False,True,0,5,0,5,13400,12900,500,0.9626865671641791,2680.0,2650.0,100.0,2400,0,0,21150,0,0,4230.0,0,1400,5,ct
+s3-r1-m3,s3-r1-m3-m1-de_anubis,h1,2,FUT,teamB,ct,Vitality,teamA,loss,t_win,False,False,False,1,5,0,4,10100,9550,550,0.9455445544554455,2020.0,2050.0,110.0,2400,0,0,18750,0,0,3750.0,0,1400,5,t
+s3-r1-m3,s3-r1-m3-m1-de_anubis,h2,14,Vitality,teamA,ct,FUT,teamB,loss,t_win,False,False,False,1,2,3,4,11850,9750,2100,0.8227848101265823,2370.0,2450.0,420.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r1-m3,s3-r1-m3-m2-de_overpass,h1,2,FUT,teamB,ct,Vitality,teamA,loss,t_win,False,False,False,1,2,3,4,11600,9400,2200,0.8103448275862069,2320.0,2350.0,440.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r1-m3,s3-r1-m3-m2-de_overpass,h2,14,FUT,teamB,t,Vitality,teamA,loss,ct_win,False,False,False,1,1,4,4,11400,11250,150,0.9868421052631579,2280.0,2050.0,30.0,2400,0,0,19700,0,0,3940.0,0,1400,1,ct
+s3-r1-m3,s3-r1-m3-m3-de_nuke,h1,2,FUT,teamA,t,Vitality,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,9250,1450,0.8644859813084113,2140.0,2050.0,290.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r1-m3,s3-r1-m3-m3-de_nuke,h2,14,FUT,teamA,ct,Vitality,teamB,loss,t_win,False,False,False,1,4,1,4,10800,10250,550,0.9490740740740741,2160.0,2100.0,110.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r1-m4,s3-r1-m4-m1-de_dust2,h1,2,Legacy,teamA,t,MOUZ,teamB,loss,ct_win,False,False,False,1,2,3,4,10950,4400,6550,0.4018264840182648,2190.0,2050.0,1310.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r1-m4,s3-r1-m4-m1-de_dust2,h2,14,MOUZ,teamB,t,Legacy,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14300,13050,1250,0.9125874125874126,2860.0,2650.0,250.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r1-m4,s3-r1-m4-m2-de_nuke,h1,2,Legacy,teamB,ct,MOUZ,teamA,loss,t_win,False,False,False,1,3,2,4,11200,10450,750,0.9330357142857143,2240.0,2150.0,150.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s3-r1-m4,s3-r1-m4-m2-de_nuke,h2,14,Legacy,teamB,t,MOUZ,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,8650,2050,0.8084112149532711,2140.0,2050.0,410.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r1-m5,s3-r1-m5-m1-de_mirage,h1,2,FURIA,teamB,ct,B8,teamA,loss,target_bombed,True,True,False,1,4,1,4,10600,9750,850,0.9198113207547169,2120.0,2100.0,170.0,2400,0,0,19550,0,0,3910.0,0,1400,4,t
+s3-r1-m5,s3-r1-m5-m1-de_mirage,h2,14,FURIA,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,4,1,4,10300,400,9900,0.038834951456310676,2060.0,2000.0,1980.0,2400,0,0,19750,0,0,3950.0,0,1400,4,ct
+s3-r1-m5,s3-r1-m5-m2-de_inferno,h1,2,B8,teamA,t,FURIA,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14600,14350,250,0.9828767123287672,2920.0,2650.0,50.0,2400,0,0,21000,0,0,4200.0,0,1400,1,ct
+s3-r1-m5,s3-r1-m5-m2-de_inferno,h2,14,B8,teamA,ct,FURIA,teamB,loss,t_win,False,False,False,1,1,4,4,12300,11450,850,0.9308943089430894,2460.0,2250.0,170.0,2400,0,0,18300,0,0,3660.0,0,1400,1,t
+s3-r1-m6,s3-r1-m6-m1-de_inferno,h1,2,G2,teamA,t,Falcons,teamB,loss,ct_win,False,False,False,1,5,0,4,10050,9750,300,0.9701492537313433,2010.0,2050.0,60.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s3-r1-m6,s3-r1-m6-m1-de_inferno,h2,14,G2,teamA,ct,Falcons,teamB,loss,target_bombed,True,True,False,1,3,2,4,11200,10050,1150,0.8973214285714286,2240.0,2150.0,230.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s3-r1-m6,s3-r1-m6-m2-de_dust2,h1,2,G2,teamB,ct,Falcons,teamA,loss,t_win,False,False,False,1,3,2,4,11200,10850,350,0.96875,2240.0,2150.0,70.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s3-r1-m6,s3-r1-m6-m2-de_dust2,h2,14,Falcons,teamA,ct,G2,teamB,loss,target_bombed,True,True,False,3,4,1,2,10650,9350,1300,0.8779342723004695,2130.0,2100.0,260.0,2400,0,0,18950,0,0,3790.0,0,1400,4,t
+s3-r1-m6,s3-r1-m6-m3-de_ancient,h1,2,Falcons,teamB,ct,G2,teamA,loss,t_win,False,False,False,1,2,3,4,11600,400,11200,0.034482758620689655,2320.0,2350.0,2240.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s3-r1-m6,s3-r1-m6-m3-de_ancient,h2,14,Falcons,teamB,t,G2,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14600,13800,800,0.9452054794520548,2920.0,2650.0,160.0,2400,0,0,21000,0,0,4200.0,0,1400,1,ct
+s3-r1-m7,s3-r1-m7-m1-de_nuke,h1,2,Monte,teamA,t,Aurora,teamB,loss,ct_win,False,False,False,1,2,3,4,11000,0,11000,0.0,2200.0,2350.0,2200.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r1-m7,s3-r1-m7-m1-de_nuke,h2,14,Aurora,teamB,t,Monte,teamA,loss,ct_win,False,False,False,1,2,3,4,11000,700,10300,0.06363636363636363,2200.0,2050.0,2060.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r1-m7,s3-r1-m7-m2-de_anubis,h1,2,Monte,teamA,t,Aurora,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13750,13350,400,0.9709090909090909,2750.0,2650.0,80.0,2400,0,0,21150,0,0,4230.0,0,1400,4,ct
+s3-r1-m7,s3-r1-m7-m2-de_anubis,h2,14,Monte,teamA,ct,Aurora,teamB,loss,target_bombed,True,True,False,2,4,1,3,10650,8200,2450,0.7699530516431925,2130.0,2100.0,490.0,2400,0,0,19350,0,0,3870.0,0,1400,4,t
+s3-r1-m8,s3-r1-m8-m1-de_dust2,h1,2,Natus Vincere,teamB,ct,Spirit,teamA,loss,t_win,False,False,False,1,2,3,4,11600,9600,2000,0.8275862068965517,2320.0,2200.0,400.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s3-r1-m8,s3-r1-m8-m1-de_dust2,h2,14,Natus Vincere,teamB,t,Spirit,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,10700,350,0.9683257918552036,2210.0,2050.0,70.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s3-r1-m8,s3-r1-m8-m2-de_anubis,h1,2,Spirit,teamA,t,Natus Vincere,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14550,13600,950,0.9347079037800687,2910.0,2900.0,190.0,2400,0,0,21000,0,0,4200.0,0,1400,1,ct
+s3-r1-m8,s3-r1-m8-m2-de_anubis,h2,14,Spirit,teamA,ct,Natus Vincere,teamB,loss,target_bombed,True,True,False,1,4,1,4,10650,700,9950,0.06572769953051644,2130.0,2100.0,1990.0,2400,0,0,19650,0,0,3930.0,0,1400,4,t
+s3-r2-l1,s3-r2-l1-m1-de_mirage,h1,2,B8,teamA,t,The MongolZ,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r2-l1,s3-r2-l1-m1-de_mirage,h2,14,The MongolZ,teamB,t,B8,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,1600,9100,0.14953271028037382,2140.0,2050.0,1820.0,2400,0,0,19750,0,0,3950.0,0,1400,3,ct
+s3-r2-l1,s3-r2-l1-m2-de_overpass,h1,2,B8,teamB,ct,The MongolZ,teamA,loss,t_win,False,False,False,1,3,2,4,11200,200,11000,0.017857142857142856,2240.0,2150.0,2200.0,2400,0,0,18750,0,0,3750.0,0,1400,3,t
+s3-r2-l1,s3-r2-l1-m2-de_overpass,h2,14,B8,teamB,t,The MongolZ,teamA,loss,ct_win,False,False,False,1,2,3,4,11000,1400,9600,0.12727272727272726,2200.0,2350.0,1920.0,2400,0,0,19700,0,0,3940.0,0,1400,2,ct
+s3-r2-l2,s3-r2-l2-m1-de_mirage,h1,2,PARIVISION,teamB,ct,Monte,teamA,loss,target_bombed,True,True,False,2,5,0,3,10200,9450,750,0.9264705882352942,2040.0,2050.0,150.0,2400,0,0,19350,0,0,3870.0,0,1400,5,t
+s3-r2-l2,s3-r2-l2-m1-de_mirage,h2,14,PARIVISION,teamB,t,Monte,teamA,loss,ct_win,False,False,False,1,2,3,4,11050,300,10750,0.027149321266968326,2210.0,2050.0,2150.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r2-l2,s3-r2-l2-m2-de_ancient,h1,2,Monte,teamB,ct,PARIVISION,teamA,loss,target_bombed,True,True,False,1,4,1,4,10600,10100,500,0.9528301886792453,2120.0,2100.0,100.0,2400,0,0,19450,0,0,3890.0,0,1400,4,t
+s3-r2-l2,s3-r2-l2-m2-de_ancient,h2,14,PARIVISION,teamA,ct,Monte,teamB,loss,target_bombed,True,True,False,1,1,4,4,12550,12300,250,0.9800796812749004,2510.0,2600.0,50.0,2400,0,0,19650,0,0,3930.0,0,1400,1,t
+s3-r2-l2,s3-r2-l2-m3-de_inferno,h1,2,PARIVISION,teamB,ct,Monte,teamA,loss,t_win,False,False,False,1,2,3,4,11750,9750,2000,0.8297872340425532,2350.0,2350.0,400.0,2400,0,0,18550,0,0,3710.0,0,1400,2,t
+s3-r2-l2,s3-r2-l2-m3-de_inferno,h2,14,PARIVISION,teamB,t,Monte,teamA,loss,bomb_defused,True,False,True,0,3,2,5,14000,13700,300,0.9785714285714285,2800.0,2900.0,60.0,2400,0,0,21250,0,0,4250.0,0,1400,3,ct
+s3-r2-l3,s3-r2-l3-m1-de_overpass,h1,2,G2,teamA,t,FUT,teamB,loss,ct_win,False,False,False,1,1,4,4,11350,9850,1500,0.8678414096916299,2270.0,2050.0,300.0,2400,0,0,19450,0,0,3890.0,0,1400,1,ct
+s3-r2-l3,s3-r2-l3-m1-de_overpass,h2,14,G2,teamA,ct,FUT,teamB,loss,t_win,False,False,False,1,3,2,4,11300,10100,1200,0.8938053097345132,2260.0,2150.0,240.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s3-r2-l3,s3-r2-l3-m2-de_ancient,h1,2,FUT,teamA,t,G2,teamB,loss,bomb_defused,True,False,True,0,3,2,5,14050,13400,650,0.9537366548042705,2810.0,2650.0,130.0,2400,0,0,21300,0,0,4260.0,0,1400,3,ct
+s3-r2-l3,s3-r2-l3-m2-de_ancient,h2,14,FUT,teamA,ct,G2,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10550,1200,0.8978723404255319,2350.0,2200.0,240.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r2-l3,s3-r2-l3-m3-de_mirage,h1,2,FUT,teamB,ct,G2,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10950,800,0.9319148936170213,2350.0,2200.0,160.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s3-r2-l3,s3-r2-l3-m3-de_mirage,h2,14,FUT,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,9850,900,0.9162790697674419,2150.0,2050.0,180.0,2400,0,0,19750,0,0,3950.0,0,1400,3,ct
+s3-r2-l4,s3-r2-l4-m1-de_inferno,h1,2,Legacy,teamA,t,Natus Vincere,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,8050,2350,0.7740384615384616,2080.0,2000.0,470.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r2-l4,s3-r2-l4-m1-de_inferno,h2,14,Legacy,teamA,ct,Natus Vincere,teamB,loss,target_bombed,True,True,False,1,5,0,4,10500,9650,850,0.919047619047619,2100.0,2100.0,170.0,2400,0,0,19550,0,0,3910.0,0,1400,5,t
+s3-r2-l4,s3-r2-l4-m2-de_ancient,h1,2,Legacy,teamB,ct,Natus Vincere,teamA,loss,t_win,False,False,False,1,3,2,4,11200,8700,2500,0.7767857142857143,2240.0,2150.0,500.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s3-r2-l4,s3-r2-l4-m2-de_ancient,h2,14,Legacy,teamB,t,Natus Vincere,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14350,13450,900,0.9372822299651568,2870.0,2900.0,180.0,2400,0,0,21000,0,0,4200.0,0,1400,2,ct
+s3-r2-w1,s3-r2-w1-m1-de_nuke,h1,2,MOUZ,teamA,t,FURIA,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,500,10200,0.04672897196261682,2140.0,2050.0,2040.0,2400,0,0,19400,0,0,3880.0,0,1400,3,ct
+s3-r2-w1,s3-r2-w1-m1-de_nuke,h2,14,MOUZ,teamA,ct,FURIA,teamB,loss,target_bombed,True,True,False,1,4,1,4,10650,9750,900,0.9154929577464789,2130.0,2100.0,180.0,2400,0,0,19450,0,0,3890.0,0,1400,4,t
+s3-r2-w1,s3-r2-w1-m2-de_inferno,h1,2,MOUZ,teamB,ct,FURIA,teamA,loss,t_win,False,False,False,1,2,3,4,11600,10400,1200,0.896551724137931,2320.0,2350.0,240.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s3-r2-w1,s3-r2-w1-m2-de_inferno,h2,14,FURIA,teamA,ct,MOUZ,teamB,loss,t_win,False,False,False,1,3,2,4,11050,10250,800,0.9276018099547512,2210.0,2150.0,160.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s3-r2-w1,s3-r2-w1-m3-de_overpass,h1,2,MOUZ,teamA,t,FURIA,teamB,loss,ct_win,False,False,False,1,3,2,4,10550,0,10550,0.0,2110.0,2050.0,2110.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s3-r2-w1,s3-r2-w1-m3-de_overpass,h2,14,FURIA,teamB,t,MOUZ,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14250,13600,650,0.9543859649122807,2850.0,2800.0,130.0,2400,0,0,21000,0,0,4200.0,0,1400,2,ct
+s3-r2-w2,s3-r2-w2-m1-de_nuke,h1,2,Falcons,teamB,ct,BetBoom,teamA,loss,target_bombed,True,True,False,1,4,1,4,10650,9650,1000,0.9061032863849765,2130.0,2100.0,200.0,2400,0,0,19550,0,0,3910.0,0,1400,4,t
+s3-r2-w2,s3-r2-w2-m1-de_nuke,h2,14,BetBoom,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10450,750,0.9330357142857143,2240.0,2150.0,150.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s3-r2-w2,s3-r2-w2-m2-de_ancient,h1,2,Falcons,teamA,t,BetBoom,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13750,1900,11850,0.13818181818181818,2750.0,2650.0,2370.0,2400,0,0,21250,0,0,4250.0,0,1400,4,ct
+s3-r2-w2,s3-r2-w2-m2-de_ancient,h2,14,BetBoom,teamB,t,Falcons,teamA,loss,ct_win,False,False,False,1,4,1,4,10350,300,10050,0.028985507246376812,2070.0,2050.0,2010.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r2-w3,s3-r2-w3-m1-de_inferno,h1,2,9z,teamA,t,Vitality,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s3-r2-w3,s3-r2-w3-m1-de_inferno,h2,14,Vitality,teamB,t,9z,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14250,12950,1300,0.9087719298245615,2850.0,2650.0,260.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r2-w3,s3-r2-w3-m2-de_mirage,h1,2,Vitality,teamA,t,9z,teamB,loss,bomb_defused,True,False,True,0,3,2,5,14050,9750,4300,0.693950177935943,2810.0,2900.0,860.0,2400,0,0,21250,0,0,4250.0,0,1400,3,ct
+s3-r2-w3,s3-r2-w3-m2-de_mirage,h2,14,Vitality,teamA,ct,9z,teamB,loss,target_bombed,True,True,False,1,2,3,4,11700,11450,250,0.9786324786324786,2340.0,2350.0,50.0,2400,0,0,19650,0,0,3930.0,0,1400,2,t
+s3-r2-w3,s3-r2-w3-m3-de_dust2,h1,2,9z,teamA,t,Vitality,teamB,loss,ct_win,False,False,False,1,4,1,4,10450,0,10450,0.0,2090.0,2050.0,2090.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r2-w3,s3-r2-w3-m3-de_dust2,h2,14,9z,teamA,ct,Vitality,teamB,loss,t_win,False,False,False,1,3,2,4,11350,10300,1050,0.9074889867841409,2270.0,2150.0,210.0,2400,0,0,18400,0,0,3680.0,0,1400,3,t
+s3-r2-w4,s3-r2-w4-m1-de_dust2,h1,2,Spirit,teamA,t,Aurora,teamB,loss,ct_win,False,False,False,1,5,0,4,10050,9700,350,0.9651741293532339,2010.0,2050.0,70.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s3-r2-w4,s3-r2-w4-m1-de_dust2,h2,14,Aurora,teamB,t,Spirit,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,1700,9000,0.1588785046728972,2140.0,2050.0,1800.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s3-r2-w4,s3-r2-w4-m2-de_anubis,h1,2,Aurora,teamB,ct,Spirit,teamA,loss,t_win,False,False,False,1,2,3,4,11750,300,11450,0.02553191489361702,2350.0,2350.0,2290.0,2400,0,0,18400,0,0,3680.0,0,1400,2,t
+s3-r2-w4,s3-r2-w4-m2-de_anubis,h2,14,Aurora,teamB,t,Spirit,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14700,14100,600,0.9591836734693877,2940.0,2900.0,120.0,2400,0,0,21000,0,0,4200.0,0,1400,1,ct
+s3-r2-w4,s3-r2-w4-m3-de_nuke,h1,2,Spirit,teamA,t,Aurora,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14250,13850,400,0.9719298245614035,2850.0,2800.0,80.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r2-w4,s3-r2-w4-m3-de_nuke,h2,14,Aurora,teamB,t,Spirit,teamA,loss,ct_win,False,False,False,1,3,2,4,10650,0,10650,0.0,2130.0,2050.0,2130.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s3-r3-a1,s3-r3-a1-m1-de_overpass,h1,2,BetBoom,teamB,ct,FURIA,teamA,loss,t_win,False,False,False,1,4,1,4,10700,0,10700,0.0,2140.0,2100.0,2140.0,2400,0,0,18550,0,0,3710.0,0,1400,4,t
+s3-r3-a1,s3-r3-a1-m1-de_overpass,h2,14,BetBoom,teamB,t,FURIA,teamA,loss,ct_win,False,False,False,1,4,1,4,10250,0,10250,0.0,2050.0,2050.0,2050.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r3-a1,s3-r3-a1-m2-de_dust2,h1,2,BetBoom,teamA,t,FURIA,teamB,loss,ct_win,False,False,False,1,5,0,4,10150,300,9850,0.029556650246305417,2030.0,2050.0,1970.0,2400,0,0,19450,0,0,3890.0,0,1400,5,ct
+s3-r3-a1,s3-r3-a1-m2-de_dust2,h2,14,BetBoom,teamA,ct,FURIA,teamB,loss,t_win,False,False,False,1,4,1,4,10650,500,10150,0.046948356807511735,2130.0,2100.0,2030.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r3-a2,s3-r3-a2-m1-de_overpass,h1,2,Spirit,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,4,1,4,10500,9250,1250,0.8809523809523809,2100.0,2100.0,250.0,2400,0,0,18700,0,0,3740.0,0,1400,4,t
+s3-r3-a2,s3-r3-a2-m1-de_overpass,h2,14,Spirit,teamB,t,9z,teamA,loss,ct_win,False,False,False,1,3,2,4,10550,900,9650,0.08530805687203792,2110.0,2050.0,1930.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r3-a2,s3-r3-a2-m2-de_mirage,h1,2,9z,teamB,ct,Spirit,teamA,loss,target_bombed,True,True,False,1,3,2,4,11200,10900,300,0.9732142857142857,2240.0,2150.0,60.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s3-r3-a2,s3-r3-a2-m2-de_mirage,h2,14,Spirit,teamA,ct,9z,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10700,1050,0.9106382978723404,2350.0,2200.0,210.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r3-a2,s3-r3-a2-m3-de_dust2,h1,2,Spirit,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,3,2,4,11050,9250,1800,0.8371040723981901,2210.0,2150.0,360.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s3-r3-a2,s3-r3-a2-m3-de_dust2,h2,14,Spirit,teamB,t,9z,teamA,loss,ct_win,False,False,False,1,3,2,4,10650,1000,9650,0.09389671361502347,2130.0,2050.0,1930.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s3-r3-e1,s3-r3-e1-m1-de_dust2,h1,2,B8,teamB,ct,FUT,teamA,loss,t_win,False,False,False,1,1,4,4,12400,10400,2000,0.8387096774193549,2480.0,2550.0,400.0,2400,0,0,18700,0,0,3740.0,0,1400,1,t
+s3-r3-e1,s3-r3-e1-m1-de_dust2,h2,14,B8,teamB,t,FUT,teamA,loss,ct_win,False,False,False,1,4,1,4,10400,0,10400,0.0,2080.0,2050.0,2080.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s3-r3-e1,s3-r3-e1-m2-de_mirage,h1,2,FUT,teamB,ct,B8,teamA,loss,t_win,False,False,False,1,4,1,4,10650,10400,250,0.9765258215962441,2130.0,2100.0,50.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r3-e1,s3-r3-e1-m2-de_mirage,h2,14,B8,teamA,ct,FUT,teamB,loss,t_win,False,False,False,1,1,4,4,12450,12200,250,0.9799196787148594,2490.0,2550.0,50.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+s3-r3-e1,s3-r3-e1-m3-de_ancient,h1,2,B8,teamB,ct,FUT,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10850,900,0.9234042553191489,2350.0,2200.0,180.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r3-e1,s3-r3-e1-m3-de_ancient,h2,14,B8,teamB,t,FUT,teamA,loss,ct_win,False,False,False,1,2,3,4,11100,700,10400,0.06306306306306306,2220.0,2300.0,2080.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r3-e2,s3-r3-e2-m1-de_inferno,h1,2,PARIVISION,teamB,ct,Legacy,teamA,loss,target_bombed,True,True,False,1,0,5,4,12850,1600,11250,0.1245136186770428,2570.0,2300.0,2250.0,2400,0,0,19600,0,0,3920.0,0,1400,0,t
+s3-r3-e2,s3-r3-e2-m1-de_inferno,h2,14,Legacy,teamA,ct,PARIVISION,teamB,loss,target_bombed,True,True,False,1,3,2,4,11300,9350,1950,0.827433628318584,2260.0,2200.0,390.0,2400,0,0,19550,0,0,3910.0,0,1400,3,t
+s3-r3-e2,s3-r3-e2-m2-de_dust2,h1,2,PARIVISION,teamA,t,Legacy,teamB,loss,ct_win,False,False,False,1,3,2,4,10650,600,10050,0.056338028169014086,2130.0,2050.0,2010.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r3-e2,s3-r3-e2-m2-de_dust2,h2,14,Legacy,teamB,t,PARIVISION,teamA,loss,bomb_defused,True,False,True,1,2,3,4,14250,13900,350,0.9754385964912281,2850.0,2900.0,70.0,2400,0,0,21250,0,0,4250.0,0,1400,2,ct
+s3-r3-m1,s3-r3-m1-m1-de_nuke,h1,2,Natus Vincere,teamB,ct,The MongolZ,teamA,loss,t_win,False,False,False,1,1,4,4,12300,11150,1150,0.9065040650406504,2460.0,2550.0,230.0,2400,0,0,18650,0,0,3730.0,0,1400,1,t
+s3-r3-m1,s3-r3-m1-m1-de_nuke,h2,14,Natus Vincere,teamB,t,The MongolZ,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14400,12350,2050,0.8576388888888888,2880.0,2650.0,410.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r3-m1,s3-r3-m1-m2-de_ancient,h1,2,Natus Vincere,teamA,t,The MongolZ,teamB,loss,ct_win,False,False,False,1,5,0,4,10050,1000,9050,0.09950248756218906,2010.0,2050.0,1810.0,2400,0,0,19600,0,0,3920.0,0,1400,5,ct
+s3-r3-m1,s3-r3-m1-m2-de_ancient,h2,14,The MongolZ,teamB,t,Natus Vincere,teamA,loss,bomb_defused,True,False,True,0,3,2,5,13950,13300,650,0.953405017921147,2790.0,2900.0,130.0,2400,0,0,21150,0,0,4230.0,0,1400,3,ct
+s3-r3-m1,s3-r3-m1-m3-de_mirage,h1,2,Natus Vincere,teamB,ct,The MongolZ,teamA,loss,t_win,False,False,False,1,4,1,4,10500,10100,400,0.9619047619047619,2100.0,2100.0,80.0,2400,0,0,18800,0,0,3760.0,0,1400,4,t
+s3-r3-m1,s3-r3-m1-m3-de_mirage,h2,14,Natus Vincere,teamB,t,The MongolZ,teamA,loss,ct_win,False,False,False,1,3,2,4,10650,1400,9250,0.13145539906103287,2130.0,2050.0,1850.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r3-m2,s3-r3-m2-m1-de_inferno,h1,2,Falcons,teamB,ct,Monte,teamA,loss,target_bombed,True,True,False,1,3,2,4,11050,10400,650,0.9411764705882353,2210.0,2150.0,130.0,2400,0,0,19400,0,0,3880.0,0,1400,3,t
+s3-r3-m2,s3-r3-m2-m1-de_inferno,h2,14,Falcons,teamB,t,Monte,teamA,loss,ct_win,False,False,False,1,2,3,4,10950,700,10250,0.0639269406392694,2190.0,2050.0,2050.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s3-r3-m2,s3-r3-m2-m2-de_dust2,h1,2,Monte,teamB,ct,Falcons,teamA,loss,t_win,False,False,False,1,1,4,4,12150,10450,1700,0.8600823045267489,2430.0,2550.0,340.0,2400,0,0,18650,0,0,3730.0,0,1400,1,t
+s3-r3-m2,s3-r3-m2-m2-de_dust2,h2,14,Falcons,teamA,ct,Monte,teamB,loss,t_win,False,False,False,1,2,3,4,11600,10250,1350,0.8836206896551724,2320.0,2350.0,270.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r3-m2,s3-r3-m2-m3-de_mirage,h1,2,Falcons,teamB,ct,Monte,teamA,loss,t_win,False,False,False,1,1,4,4,12150,1900,10250,0.15637860082304528,2430.0,2550.0,2050.0,2400,0,0,18650,0,0,3730.0,0,1400,1,t
+s3-r3-m2,s3-r3-m2-m3-de_mirage,h2,14,Monte,teamA,ct,Falcons,teamB,loss,t_win,False,False,False,1,2,3,4,11850,9350,2500,0.7890295358649789,2370.0,2200.0,500.0,2400,0,0,18600,0,0,3720.0,0,1400,2,t
+s3-r3-m3,s3-r3-m3-m1-de_overpass,h1,2,Aurora,teamB,ct,G2,teamA,loss,t_win,False,False,False,1,2,3,4,11750,700,11050,0.059574468085106386,2350.0,2200.0,2210.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s3-r3-m3,s3-r3-m3-m1-de_overpass,h2,14,G2,teamA,ct,Aurora,teamB,loss,t_win,False,False,False,1,2,3,4,11750,10300,1450,0.8765957446808511,2350.0,2200.0,290.0,2400,0,0,18750,0,0,3750.0,0,1400,2,t
+s3-r3-m3,s3-r3-m3-m2-de_anubis,h1,2,G2,teamA,t,Aurora,teamB,loss,bomb_defused,True,False,True,3,4,1,2,13750,13000,750,0.9454545454545454,2750.0,2650.0,150.0,2400,0,0,21100,0,0,4220.0,0,1400,4,ct
+s3-r3-m3,s3-r3-m3-m2-de_anubis,h2,14,G2,teamA,ct,Aurora,teamB,loss,t_win,False,False,False,1,4,1,4,10650,9650,1000,0.9061032863849765,2130.0,2100.0,200.0,2400,0,0,18650,0,0,3730.0,0,1400,4,t
+s3-r3-m4,s3-r3-m4-m1-de_mirage,h1,2,MOUZ,teamA,t,Vitality,teamB,loss,bomb_defused,True,False,True,0,1,4,5,14500,14150,350,0.9758620689655172,2900.0,2850.0,70.0,2400,0,0,21250,0,0,4250.0,0,1400,1,ct
+s3-r3-m4,s3-r3-m4-m1-de_mirage,h2,14,MOUZ,teamA,ct,Vitality,teamB,loss,t_win,False,False,False,1,2,3,4,12000,11100,900,0.925,2400.0,2400.0,180.0,2400,0,0,18350,0,0,3670.0,0,1400,2,t
+s3-r3-m4,s3-r3-m4-m2-de_dust2,h1,2,Vitality,teamA,t,MOUZ,teamB,loss,bomb_defused,True,False,True,0,3,2,5,14050,13700,350,0.9750889679715302,2810.0,2650.0,70.0,2400,0,0,21000,0,0,4200.0,0,1400,3,ct
+s3-r3-m4,s3-r3-m4-m2-de_dust2,h2,14,MOUZ,teamB,t,Vitality,teamA,loss,bomb_defused,True,False,True,0,4,1,5,13650,13400,250,0.9816849816849816,2730.0,2650.0,50.0,2400,0,0,21150,0,0,4230.0,0,1400,4,ct
+s3-r3-m4,s3-r3-m4-m3-de_inferno,h1,2,MOUZ,teamA,t,Vitality,teamB,loss,bomb_defused,True,False,True,0,3,2,5,13950,13350,600,0.956989247311828,2790.0,2800.0,120.0,2400,0,0,21250,0,0,4250.0,0,1400,3,ct
+s3-r3-m4,s3-r3-m4-m3-de_inferno,h2,14,MOUZ,teamA,ct,Vitality,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10500,700,0.9375,2240.0,2150.0,140.0,2400,0,0,18400,0,0,3680.0,0,1400,3,t
+s3-r4-a1,s3-r4-a1-m1-de_overpass,h1,2,BetBoom,teamB,ct,Vitality,teamA,loss,t_win,False,False,False,1,2,3,4,11700,700,11000,0.05982905982905983,2340.0,2200.0,2200.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r4-a1,s3-r4-a1-m1-de_overpass,h2,14,Vitality,teamA,ct,BetBoom,teamB,loss,t_win,False,False,False,1,1,4,4,12400,10700,1700,0.8629032258064516,2480.0,2500.0,340.0,2400,0,0,18600,0,0,3720.0,0,1400,1,t
+s3-r4-a1,s3-r4-a1-m2-de_nuke,h1,2,Vitality,teamB,ct,BetBoom,teamA,loss,t_win,False,False,False,1,4,1,4,10650,10150,500,0.9530516431924883,2130.0,2100.0,100.0,2400,0,0,18750,0,0,3750.0,0,1400,4,t
+s3-r4-a1,s3-r4-a1-m2-de_nuke,h2,14,BetBoom,teamA,ct,Vitality,teamB,loss,target_bombed,True,True,False,1,4,1,4,10650,9600,1050,0.9014084507042254,2130.0,2100.0,210.0,2400,0,0,19550,0,0,3910.0,0,1400,4,t
+s3-r4-a2,s3-r4-a2-m1-de_nuke,h1,2,9z,teamA,t,Aurora,teamB,loss,ct_win,False,False,False,1,3,2,4,10700,700,10000,0.06542056074766354,2140.0,2050.0,2000.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r4-a2,s3-r4-a2-m1-de_nuke,h2,14,9z,teamA,ct,Aurora,teamB,loss,t_win,False,False,False,1,3,2,4,11350,10900,450,0.960352422907489,2270.0,2150.0,90.0,2400,0,0,18500,0,0,3700.0,0,1400,3,t
+s3-r4-a2,s3-r4-a2-m2-de_dust2,h1,2,Aurora,teamA,t,9z,teamB,loss,ct_win,False,False,False,1,5,0,4,10200,1700,8500,0.16666666666666666,2040.0,2050.0,1700.0,2400,0,0,19750,0,0,3950.0,0,1400,5,ct
+s3-r4-a2,s3-r4-a2-m2-de_dust2,h2,14,Aurora,teamA,ct,9z,teamB,loss,t_win,False,False,False,1,4,1,4,10600,10100,500,0.9528301886792453,2120.0,2100.0,100.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r4-a3,s3-r4-a3-m1-de_dust2,h1,2,Natus Vincere,teamB,ct,Falcons,teamA,loss,t_win,False,False,False,1,2,3,4,11750,10350,1400,0.8808510638297873,2350.0,2200.0,280.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r4-a3,s3-r4-a3-m1-de_dust2,h2,14,Natus Vincere,teamB,t,Falcons,teamA,loss,bomb_defused,True,False,True,0,2,3,5,14350,13950,400,0.9721254355400697,2870.0,2900.0,80.0,2400,0,0,21000,0,0,4200.0,0,1400,2,ct
+s3-r4-a3,s3-r4-a3-m2-de_mirage,h1,2,Natus Vincere,teamA,t,Falcons,teamB,loss,bomb_defused,True,False,True,0,4,1,5,13750,12950,800,0.9418181818181818,2750.0,2650.0,160.0,2400,0,0,21100,0,0,4220.0,0,1400,4,ct
+s3-r4-a3,s3-r4-a3-m2-de_mirage,h2,14,Falcons,teamB,t,Natus Vincere,teamA,loss,ct_win,False,False,False,1,2,3,4,10950,700,10250,0.0639269406392694,2190.0,2050.0,2050.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s3-r4-a3,s3-r4-a3-m3-de_anubis,h1,2,Natus Vincere,teamA,t,Falcons,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,1400,9000,0.1346153846153846,2080.0,2050.0,1800.0,2400,0,0,19700,0,0,3940.0,0,1400,4,ct
+s3-r4-a3,s3-r4-a3-m3-de_anubis,h2,14,Falcons,teamB,t,Natus Vincere,teamA,loss,ct_win,False,False,False,1,2,3,4,10850,700,10150,0.06451612903225806,2170.0,2200.0,2030.0,2400,0,0,19700,0,0,3940.0,0,1400,2,ct
+s3-r4-e1,s3-r4-e1-m1-de_ancient,h1,2,MOUZ,teamB,ct,FUT,teamA,loss,t_win,False,False,False,1,3,2,4,11200,10150,1050,0.90625,2240.0,2150.0,210.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s3-r4-e1,s3-r4-e1-m1-de_ancient,h2,14,FUT,teamA,ct,MOUZ,teamB,loss,t_win,False,False,False,1,2,3,4,11850,10850,1000,0.9156118143459916,2370.0,2500.0,200.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r4-e1,s3-r4-e1-m2-de_nuke,h1,2,FUT,teamB,ct,MOUZ,teamA,loss,t_win,False,False,False,1,4,1,4,10650,10400,250,0.9765258215962441,2130.0,2100.0,50.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r4-e1,s3-r4-e1-m2-de_nuke,h2,14,FUT,teamB,t,MOUZ,teamA,loss,ct_win,False,False,False,1,2,3,4,11100,10950,150,0.9864864864864865,2220.0,2050.0,30.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r4-e1,s3-r4-e1-m3-de_mirage,h1,2,MOUZ,teamB,ct,FUT,teamA,loss,t_win,False,False,False,1,2,3,4,11750,11250,500,0.9574468085106383,2350.0,2200.0,100.0,2400,0,0,18500,0,0,3700.0,0,1400,2,t
+s3-r4-e1,s3-r4-e1-m3-de_mirage,h2,14,FUT,teamA,ct,MOUZ,teamB,loss,t_win,False,False,False,1,3,2,4,11050,9900,1150,0.8959276018099548,2210.0,2150.0,230.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s3-r4-e2,s3-r4-e2-m1-de_nuke,h1,2,The MongolZ,teamB,ct,Monte,teamA,loss,t_win,False,False,False,1,4,1,4,10650,9700,950,0.9107981220657277,2130.0,2100.0,190.0,2400,0,0,18600,0,0,3720.0,0,1400,4,t
+s3-r4-e2,s3-r4-e2-m1-de_nuke,h2,14,Monte,teamA,ct,The MongolZ,teamB,loss,target_bombed,True,True,False,1,0,5,4,12850,11750,1100,0.914396887159533,2570.0,2600.0,220.0,2400,0,0,19700,0,0,3940.0,0,1400,0,t
+s3-r4-e2,s3-r4-e2-m2-de_inferno,h1,2,The MongolZ,teamA,t,Monte,teamB,loss,ct_win,False,False,False,1,2,3,4,11050,900,10150,0.08144796380090498,2210.0,2050.0,2030.0,2400,0,0,19450,0,0,3890.0,0,1400,2,ct
+s3-r4-e2,s3-r4-e2-m2-de_inferno,h2,14,Monte,teamB,t,The MongolZ,teamA,loss,ct_win,False,False,False,1,4,1,4,10350,0,10350,0.0,2070.0,2050.0,2070.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r4-e2,s3-r4-e2-m3-de_dust2,h1,2,Monte,teamA,t,The MongolZ,teamB,loss,ct_win,False,False,False,1,3,2,4,10750,0,10750,0.0,2150.0,2050.0,2150.0,2400,0,0,19700,0,0,3940.0,0,1400,3,ct
+s3-r4-e2,s3-r4-e2-m3-de_dust2,h2,14,Monte,teamA,ct,The MongolZ,teamB,loss,t_win,False,False,False,1,2,3,4,12250,5400,6850,0.44081632653061226,2450.0,2350.0,1370.0,2400,0,0,18650,0,0,3730.0,0,1400,2,t
+s3-r4-e3,s3-r4-e3-m1-de_dust2,h1,2,Legacy,teamA,t,G2,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14250,13750,500,0.9649122807017544,2850.0,2900.0,100.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r4-e3,s3-r4-e3-m1-de_dust2,h2,14,G2,teamB,t,Legacy,teamA,loss,bomb_defused,True,False,True,0,1,4,5,14550,14000,550,0.9621993127147767,2910.0,2650.0,110.0,2400,0,0,21300,0,0,4260.0,0,1400,1,ct
+s3-r4-e3,s3-r4-e3-m2-de_overpass,h1,2,Legacy,teamB,ct,G2,teamA,loss,t_win,False,False,False,1,3,2,4,11200,300,10900,0.026785714285714284,2240.0,2150.0,2180.0,2400,0,0,18700,0,0,3740.0,0,1400,3,t
+s3-r4-e3,s3-r4-e3-m2-de_overpass,h2,14,Legacy,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,4,1,4,10450,200,10250,0.019138755980861243,2090.0,2050.0,2050.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r5-d1,s3-r5-d1-m1-de_inferno,h1,2,9z,teamB,ct,The MongolZ,teamA,loss,t_win,False,False,False,1,3,2,4,11350,9850,1500,0.8678414096916299,2270.0,2150.0,300.0,2400,0,0,18650,0,0,3730.0,0,1400,3,t
+s3-r5-d1,s3-r5-d1-m1-de_inferno,h2,14,The MongolZ,teamA,ct,9z,teamB,loss,t_win,False,False,False,1,3,2,4,11050,10150,900,0.918552036199095,2210.0,2150.0,180.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t
+s3-r5-d1,s3-r5-d1-m2-de_overpass,h1,2,The MongolZ,teamB,ct,9z,teamA,loss,t_win,False,False,False,1,3,2,4,11200,7900,3300,0.7053571428571429,2240.0,2150.0,660.0,2400,0,0,18400,0,0,3680.0,0,1400,3,t
+s3-r5-d1,s3-r5-d1-m2-de_overpass,h2,14,The MongolZ,teamB,t,9z,teamA,loss,bomb_defused,True,False,True,1,2,3,4,14400,13950,450,0.96875,2880.0,2900.0,90.0,2400,0,0,21150,0,0,4230.0,0,1400,2,ct
+s3-r5-d2,s3-r5-d2-m1-de_mirage,h1,2,FUT,teamA,t,BetBoom,teamB,loss,ct_win,False,False,False,1,4,1,4,10400,10050,350,0.9663461538461539,2080.0,2050.0,70.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r5-d2,s3-r5-d2-m1-de_mirage,h2,14,BetBoom,teamB,t,FUT,teamA,loss,ct_win,False,False,False,1,4,1,4,10400,0,10400,0.0,2080.0,2050.0,2080.0,2400,0,0,19600,0,0,3920.0,0,1400,4,ct
+s3-r5-d2,s3-r5-d2-m2-de_dust2,h1,2,BetBoom,teamA,t,FUT,teamB,loss,bomb_defused,True,False,True,0,2,3,5,14100,13500,600,0.9574468085106383,2820.0,2800.0,120.0,2400,0,0,21250,0,0,4250.0,0,1400,2,ct
+s3-r5-d2,s3-r5-d2-m2-de_dust2,h2,14,BetBoom,teamA,ct,FUT,teamB,loss,target_bombed,True,True,False,2,5,0,3,10100,9800,300,0.9702970297029703,2020.0,2050.0,60.0,2400,0,0,19250,0,0,3850.0,0,1400,5,t
+s3-r5-d3,s3-r5-d3-m1-de_dust2,h1,2,G2,teamA,t,Natus Vincere,teamB,loss,ct_win,False,False,False,1,2,3,4,10950,10600,350,0.9680365296803652,2190.0,2300.0,70.0,2400,0,0,19600,0,0,3920.0,0,1400,2,ct
+s3-r5-d3,s3-r5-d3-m1-de_dust2,h2,14,Natus Vincere,teamB,t,G2,teamA,loss,ct_win,False,False,False,1,3,2,4,10750,7000,3750,0.6511627906976745,2150.0,2050.0,750.0,2400,0,0,19600,0,0,3920.0,0,1400,3,ct
+s3-r5-d3,s3-r5-d3-m2-de_inferno,h1,2,G2,teamB,ct,Natus Vincere,teamA,loss,t_win,False,False,False,1,2,3,4,11600,10950,650,0.9439655172413793,2320.0,2200.0,130.0,2400,0,0,18700,0,0,3740.0,0,1400,2,t
+s3-r5-d3,s3-r5-d3-m2-de_inferno,h2,14,G2,teamB,t,Natus Vincere,teamA,loss,ct_win,False,False,False,1,3,2,4,10700,500,10200,0.04672897196261682,2140.0,2000.0,2040.0,2400,0,0,19450,0,0,3890.0,0,1400,3,ct
+s3-r5-d3,s3-r5-d3-m3-de_mirage,h1,2,G2,teamA,t,Natus Vincere,teamB,loss,ct_win,False,False,False,1,4,1,4,10500,700,9800,0.06666666666666667,2100.0,2050.0,1960.0,2400,0,0,19450,0,0,3890.0,0,1400,4,ct
+s3-r5-d3,s3-r5-d3-m3-de_mirage,h2,14,G2,teamA,ct,Natus Vincere,teamB,loss,t_win,False,False,False,1,3,2,4,11200,10300,900,0.9196428571428571,2240.0,2150.0,180.0,2400,0,0,18600,0,0,3720.0,0,1400,3,t

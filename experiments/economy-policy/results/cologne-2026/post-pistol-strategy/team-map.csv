@@ -1,0 +1,405 @@
+map,series,teamKey,team,spec_teamA,spec_teamB,method,n_matched
+p-r1-qf1-m1-de_dust2,p-r1-qf1,teamA,9z,9z,FURIA,exact,5
+p-r1-qf1-m1-de_dust2,p-r1-qf1,teamB,FURIA,9z,FURIA,exact,5
+p-r1-qf1-m2-de_mirage,p-r1-qf1,teamA,FURIA,9z,FURIA,exact,5
+p-r1-qf1-m2-de_mirage,p-r1-qf1,teamB,9z,9z,FURIA,exact,5
+p-r1-qf1-m3-de_overpass,p-r1-qf1,teamA,9z,9z,FURIA,exact,5
+p-r1-qf1-m3-de_overpass,p-r1-qf1,teamB,FURIA,9z,FURIA,exact,5
+p-r1-qf2-m1-de_nuke,p-r1-qf2,teamA,BetBoom,Aurora,BetBoom,alias-team,4
+p-r1-qf2-m1-de_nuke,p-r1-qf2,teamB,Aurora,Aurora,BetBoom,exact,5
+p-r1-qf2-m2-de_anubis,p-r1-qf2,teamA,BetBoom,Aurora,BetBoom,alias-team,4
+p-r1-qf2-m2-de_anubis,p-r1-qf2,teamB,Aurora,Aurora,BetBoom,exact,5
+p-r1-qf3-m1-de_overpass,p-r1-qf3,teamA,G2,G2,Spirit,exact,5
+p-r1-qf3-m1-de_overpass,p-r1-qf3,teamB,Spirit,G2,Spirit,exact,5
+p-r1-qf3-m2-de_dust2,p-r1-qf3,teamA,Spirit,G2,Spirit,exact,5
+p-r1-qf3-m2-de_dust2,p-r1-qf3,teamB,G2,G2,Spirit,exact,5
+p-r1-qf3-m3-de_mirage,p-r1-qf3,teamA,G2,G2,Spirit,exact,5
+p-r1-qf3-m3-de_mirage,p-r1-qf3,teamB,Spirit,G2,Spirit,exact,5
+p-r1-qf4-m1-de_anubis,p-r1-qf4,teamA,Vitality,Falcons,Vitality,exact,5
+p-r1-qf4-m1-de_anubis,p-r1-qf4,teamB,Falcons,Falcons,Vitality,exact,5
+p-r1-qf4-m2-de_inferno,p-r1-qf4,teamA,Vitality,Falcons,Vitality,exact,5
+p-r1-qf4-m2-de_inferno,p-r1-qf4,teamB,Falcons,Falcons,Vitality,exact,5
+p-r1-qf4-m3-de_dust2,p-r1-qf4,teamA,Falcons,Falcons,Vitality,exact,5
+p-r1-qf4-m3-de_dust2,p-r1-qf4,teamB,Vitality,Falcons,Vitality,exact,5
+p-r2-sf1-m1-de_dust2,p-r2-sf1,teamA,FURIA,Aurora,FURIA,exact,5
+p-r2-sf1-m1-de_dust2,p-r2-sf1,teamB,Aurora,Aurora,FURIA,exact,5
+p-r2-sf1-m2-de_nuke,p-r2-sf1,teamA,FURIA,Aurora,FURIA,exact,5
+p-r2-sf1-m2-de_nuke,p-r2-sf1,teamB,Aurora,Aurora,FURIA,exact,5
+p-r2-sf2-m1-de_anubis,p-r2-sf2,teamA,Spirit,Spirit,Falcons,exact,5
+p-r2-sf2-m1-de_anubis,p-r2-sf2,teamB,Falcons,Spirit,Falcons,exact,5
+p-r2-sf2-m2-de_mirage,p-r2-sf2,teamA,Spirit,Spirit,Falcons,exact,5
+p-r2-sf2-m2-de_mirage,p-r2-sf2,teamB,Falcons,Spirit,Falcons,exact,5
+p-r2-sf2-m3-de_dust2,p-r2-sf2,teamA,Falcons,Spirit,Falcons,exact,5
+p-r2-sf2-m3-de_dust2,p-r2-sf2,teamB,Spirit,Spirit,Falcons,exact,5
+p-r3-gf1-m1-de_mirage,p-r3-gf1,teamA,FURIA,FURIA,Falcons,exact,5
+p-r3-gf1-m1-de_mirage,p-r3-gf1,teamB,Falcons,FURIA,Falcons,exact,5
+p-r3-gf1-m2-de_anubis,p-r3-gf1,teamA,FURIA,FURIA,Falcons,exact,5
+p-r3-gf1-m2-de_anubis,p-r3-gf1,teamB,Falcons,FURIA,Falcons,exact,5
+p-r3-gf1-m3-de_inferno,p-r3-gf1,teamA,FURIA,FURIA,Falcons,exact,5
+p-r3-gf1-m3-de_inferno,p-r3-gf1,teamB,Falcons,FURIA,Falcons,exact,5
+s1-r1-m1-m1-de_inferno,s1-r1-m1,teamA,Lynn Vision,Lynn Vision Gaming,M80,exact,5
+s1-r1-m1-m1-de_inferno,s1-r1-m1,teamB,M80,Lynn Vision Gaming,M80,exact,5
+s1-r1-m2-m1-de_ancient,s1-r1-m2,teamA,FlyQuest,FlyQuest,SINNERS,exact,5
+s1-r1-m2-m1-de_ancient,s1-r1-m2,teamB,SINNERS,FlyQuest,SINNERS,exact,5
+s1-r1-m3-m1-de_inferno,s1-r1-m3,teamA,THUNDER dOWNUNDER,THUNDERdOWNUNDER,MIBR,exact,5
+s1-r1-m3-m1-de_inferno,s1-r1-m3,teamB,MIBR,THUNDERdOWNUNDER,MIBR,alias-team,4
+s1-r1-m4-m1-de_mirage,s1-r1-m4,teamA,TYLOO,TYLOO,B8 Esports,exact,5
+s1-r1-m4-m1-de_mirage,s1-r1-m4,teamB,B8,TYLOO,B8 Esports,exact,5
+s1-r1-m5-m1-de_nuke,s1-r1-m5,teamA,Sharks,HEROIC,Sharks,exact,5
+s1-r1-m5-m1-de_nuke,s1-r1-m5,teamB,HEROIC,HEROIC,Sharks,alias-team,4
+s1-r1-m6-m1-de_inferno,s1-r1-m6,teamA,NRG,NRG,GamerLegion,exact,5
+s1-r1-m6-m1-de_inferno,s1-r1-m6,teamB,GamerLegion,NRG,GamerLegion,exact,5
+s1-r1-m7-m1-de_dust2,s1-r1-m7,teamA,Gaimin Gladiators,Gaimin Gladiators,BetBoom,exact,5
+s1-r1-m7-m1-de_dust2,s1-r1-m7,teamB,BetBoom,Gaimin Gladiators,BetBoom,alias-team,4
+s1-r1-m8-m1-de_nuke,s1-r1-m8,teamA,Liquid,Liquid,BIG,exact,5
+s1-r1-m8-m1-de_nuke,s1-r1-m8,teamB,BIG,Liquid,BIG,exact,5
+s1-r2-l1-m1-de_dust2,s1-r2-l1,teamA,Lynn Vision,Lynn Vision Gaming,HEROIC,exact,5
+s1-r2-l1-m1-de_dust2,s1-r2-l1,teamB,HEROIC,Lynn Vision Gaming,HEROIC,alias-team,4
+s1-r2-l2-m1-de_nuke,s1-r2-l2,teamA,TYLOO,TYLOO,MIBR,exact,5
+s1-r2-l2-m1-de_nuke,s1-r2-l2,teamB,MIBR,TYLOO,MIBR,alias-team,4
+s1-r2-l3-m1-de_nuke,s1-r2-l3,teamA,NRG,NRG,SINNERS,exact,5
+s1-r2-l3-m1-de_nuke,s1-r2-l3,teamB,SINNERS,NRG,SINNERS,exact,5
+s1-r2-l4-m1-de_nuke,s1-r2-l4,teamA,Gaimin Gladiators,Gaimin Gladiators,BIG,exact,5
+s1-r2-l4-m1-de_nuke,s1-r2-l4,teamB,BIG,Gaimin Gladiators,BIG,exact,5
+s1-r2-w1-m1-de_dust2,s1-r2-w1,teamA,THUNDER dOWNUNDER,THUNDERdOWNUNDER,B8 Esports,exact,5
+s1-r2-w1-m1-de_dust2,s1-r2-w1,teamB,B8,THUNDERdOWNUNDER,B8 Esports,exact,5
+s1-r2-w2-m1-de_mirage,s1-r2-w2,teamA,Sharks,Sharks,M80,exact,5
+s1-r2-w2-m1-de_mirage,s1-r2-w2,teamB,M80,Sharks,M80,exact,5
+s1-r2-w3-m1-de_inferno,s1-r2-w3,teamA,FlyQuest,FlyQuest,GamerLegion,exact,5
+s1-r2-w3-m1-de_inferno,s1-r2-w3,teamB,GamerLegion,FlyQuest,GamerLegion,exact,5
+s1-r2-w4-m1-de_dust2,s1-r2-w4,teamA,Liquid,Liquid,BetBoom,exact,5
+s1-r2-w4-m1-de_dust2,s1-r2-w4,teamB,BetBoom,Liquid,BetBoom,alias-team,4
+s1-r3-a1-m1-de_nuke,s1-r3-a1,teamA,BetBoom,BetBoom,GamerLegion,alias-team,4
+s1-r3-a1-m1-de_nuke,s1-r3-a1,teamB,GamerLegion,BetBoom,GamerLegion,exact,5
+s1-r3-a1-m2-de_ancient,s1-r3-a1,teamA,GamerLegion,BetBoom,GamerLegion,exact,5
+s1-r3-a1-m2-de_ancient,s1-r3-a1,teamB,BetBoom,BetBoom,GamerLegion,alias-team,4
+s1-r3-a2-m1-de_ancient,s1-r3-a2,teamA,B8,B8 Esports,M80,exact,5
+s1-r3-a2-m1-de_ancient,s1-r3-a2,teamB,M80,B8 Esports,M80,exact,5
+s1-r3-a2-m2-de_inferno,s1-r3-a2,teamA,B8,B8 Esports,M80,exact,5
+s1-r3-a2-m2-de_inferno,s1-r3-a2,teamB,M80,B8 Esports,M80,exact,5
+s1-r3-e1-m1-de_ancient,s1-r3-e1,teamA,SINNERS,SINNERS,TYLOO,exact,5
+s1-r3-e1-m1-de_ancient,s1-r3-e1,teamB,TYLOO,SINNERS,TYLOO,exact,5
+s1-r3-e1-m2-de_inferno,s1-r3-e1,teamA,TYLOO,SINNERS,TYLOO,exact,5
+s1-r3-e1-m2-de_inferno,s1-r3-e1,teamB,SINNERS,SINNERS,TYLOO,exact,5
+s1-r3-e2-m1-de_dust2,s1-r3-e2,teamA,HEROIC,HEROIC,Gaimin Gladiators,alias-team,4
+s1-r3-e2-m1-de_dust2,s1-r3-e2,teamB,Gaimin Gladiators,HEROIC,Gaimin Gladiators,exact,5
+s1-r3-e2-m2-de_inferno,s1-r3-e2,teamA,Gaimin Gladiators,HEROIC,Gaimin Gladiators,exact,5
+s1-r3-e2-m2-de_inferno,s1-r3-e2,teamB,HEROIC,HEROIC,Gaimin Gladiators,alias-team,4
+s1-r3-m1-m1-de_mirage,s1-r3-m1,teamA,FlyQuest,FlyQuest,NRG,exact,5
+s1-r3-m1-m1-de_mirage,s1-r3-m1,teamB,NRG,FlyQuest,NRG,exact,5
+s1-r3-m2-m1-de_overpass,s1-r3-m2,teamA,Lynn Vision,Lynn Vision Gaming,Sharks,exact,5
+s1-r3-m2-m1-de_overpass,s1-r3-m2,teamB,Sharks,Lynn Vision Gaming,Sharks,exact,5
+s1-r3-m3-m1-de_inferno,s1-r3-m3,teamA,BIG,BIG,THUNDERdOWNUNDER,exact,5
+s1-r3-m3-m1-de_inferno,s1-r3-m3,teamB,THUNDER dOWNUNDER,BIG,THUNDERdOWNUNDER,exact,5
+s1-r3-m4-m1-de_mirage,s1-r3-m4,teamA,MIBR,MIBR,Liquid,alias-team,4
+s1-r3-m4-m1-de_mirage,s1-r3-m4,teamB,Liquid,MIBR,Liquid,exact,5
+s1-r4-a1-m1-de_overpass,s1-r4-a1,teamA,BIG,BIG,GamerLegion,exact,5
+s1-r4-a1-m1-de_overpass,s1-r4-a1,teamB,GamerLegion,BIG,GamerLegion,exact,5
+s1-r4-a1-m2-de_ancient,s1-r4-a1,teamA,GamerLegion,BIG,GamerLegion,exact,5
+s1-r4-a1-m2-de_ancient,s1-r4-a1,teamB,BIG,BIG,GamerLegion,exact,5
+s1-r4-a2-m1-de_anubis,s1-r4-a2,teamA,Lynn Vision,MIBR,Lynn Vision Gaming,exact,5
+s1-r4-a2-m1-de_anubis,s1-r4-a2,teamB,MIBR,MIBR,Lynn Vision Gaming,alias-team,4
+s1-r4-a2-m2-de_inferno,s1-r4-a2,teamA,Lynn Vision,MIBR,Lynn Vision Gaming,exact,5
+s1-r4-a2-m2-de_inferno,s1-r4-a2,teamB,MIBR,MIBR,Lynn Vision Gaming,alias-team,4
+s1-r4-a3-m1-de_ancient,s1-r4-a3,teamA,NRG,NRG,M80,exact,5
+s1-r4-a3-m1-de_ancient,s1-r4-a3,teamB,M80,NRG,M80,exact,5
+s1-r4-a3-m2-de_inferno,s1-r4-a3,teamA,M80,NRG,M80,exact,5
+s1-r4-a3-m2-de_inferno,s1-r4-a3,teamB,NRG,NRG,M80,exact,5
+s1-r4-e1-m1-de_anubis,s1-r4-e1,teamA,THUNDER dOWNUNDER,FlyQuest,THUNDERdOWNUNDER,exact,5
+s1-r4-e1-m1-de_anubis,s1-r4-e1,teamB,FlyQuest,FlyQuest,THUNDERdOWNUNDER,exact,5
+s1-r4-e1-m2-de_inferno,s1-r4-e1,teamA,THUNDER dOWNUNDER,FlyQuest,THUNDERdOWNUNDER,exact,5
+s1-r4-e1-m2-de_inferno,s1-r4-e1,teamB,FlyQuest,FlyQuest,THUNDERdOWNUNDER,exact,5
+s1-r4-e2-m1-de_nuke,s1-r4-e2,teamA,Sharks,Sharks,TYLOO,exact,5
+s1-r4-e2-m1-de_nuke,s1-r4-e2,teamB,TYLOO,Sharks,TYLOO,exact,5
+s1-r4-e2-m2-de_inferno,s1-r4-e2,teamA,TYLOO,Sharks,TYLOO,exact,5
+s1-r4-e2-m2-de_inferno,s1-r4-e2,teamB,Sharks,Sharks,TYLOO,exact,5
+s1-r4-e2-m3-de_anubis,s1-r4-e2,teamA,TYLOO,Sharks,TYLOO,exact,5
+s1-r4-e2-m3-de_anubis,s1-r4-e2,teamB,Sharks,Sharks,TYLOO,exact,5
+s1-r4-e3-m1-de_nuke,s1-r4-e3,teamA,HEROIC,HEROIC,Liquid,alias-team,4
+s1-r4-e3-m1-de_nuke,s1-r4-e3,teamB,Liquid,HEROIC,Liquid,exact,5
+s1-r4-e3-m2-de_inferno,s1-r4-e3,teamA,Liquid,HEROIC,Liquid,exact,5
+s1-r4-e3-m2-de_inferno,s1-r4-e3,teamB,HEROIC,HEROIC,Liquid,alias-team,4
+s1-r5-d1-m1-de_ancient,s1-r5-d1,teamA,Lynn Vision,Lynn Vision Gaming,TYLOO,exact,5
+s1-r5-d1-m1-de_ancient,s1-r5-d1,teamB,TYLOO,Lynn Vision Gaming,TYLOO,exact,5
+s1-r5-d1-m2-de_inferno,s1-r5-d1,teamA,TYLOO,Lynn Vision Gaming,TYLOO,exact,5
+s1-r5-d1-m2-de_inferno,s1-r5-d1,teamB,Lynn Vision,Lynn Vision Gaming,TYLOO,exact,5
+s1-r5-d2-m1-de_anubis,s1-r5-d2,teamA,Liquid,FlyQuest,Liquid,exact,5
+s1-r5-d2-m1-de_anubis,s1-r5-d2,teamB,FlyQuest,FlyQuest,Liquid,exact,5
+s1-r5-d2-m2-de_inferno,s1-r5-d2,teamA,Liquid,FlyQuest,Liquid,exact,5
+s1-r5-d2-m2-de_inferno,s1-r5-d2,teamB,FlyQuest,FlyQuest,Liquid,exact,5
+s1-r5-d3-m1-de_dust2,s1-r5-d3,teamA,BIG,BIG,NRG,exact,5
+s1-r5-d3-m1-de_dust2,s1-r5-d3,teamB,NRG,BIG,NRG,exact,5
+s1-r5-d3-m2-de_nuke,s1-r5-d3,teamA,NRG,BIG,NRG,exact,5
+s1-r5-d3-m2-de_nuke,s1-r5-d3,teamB,BIG,BIG,NRG,exact,5
+s1-r5-d3-m3-de_mirage,s1-r5-d3,teamA,BIG,BIG,NRG,exact,5
+s1-r5-d3-m3-de_mirage,s1-r5-d3,teamB,NRG,BIG,NRG,exact,5
+s2-r1-m1-m1-de_ancient,s2-r1-m1,teamA,GamerLegion,GamerLegion,Astralis,exact,5
+s2-r1-m1-m1-de_ancient,s2-r1-m1,teamB,Astralis,GamerLegion,Astralis,exact,5
+s2-r1-m2-m1-de_dust2,s2-r1-m2,teamA,FlyQuest,FlyQuest,9z,exact,5
+s2-r1-m2-m1-de_dust2,s2-r1-m2,teamB,9z,FlyQuest,9z,exact,5
+s2-r1-m3-m1-de_ancient,s2-r1-m3,teamA,B8,B8,FUT,exact,5
+s2-r1-m3-m1-de_ancient,s2-r1-m3,teamB,FUT,B8,FUT,exact,5
+s2-r1-m4-m1-de_mirage,s2-r1-m4,teamA,TYLOO,TYLOO,paiN,exact,5
+s2-r1-m4-m1-de_mirage,s2-r1-m4,teamB,paiN,TYLOO,paiN,alias-team,4
+s2-r1-m5-m1-de_mirage,s2-r1-m5,teamA,M80,M80,G2,exact,5
+s2-r1-m5-m1-de_mirage,s2-r1-m5,teamB,G2,M80,G2,exact,5
+s2-r1-m6-m1-de_mirage,s2-r1-m6,teamA,Monte,BIG,Monte,exact,5
+s2-r1-m6-m1-de_mirage,s2-r1-m6,teamB,BIG,BIG,Monte,exact,5
+s2-r1-m7-m1-de_mirage,s2-r1-m7,teamA,BetBoom,BetBoom,Spirit,alias-team,4
+s2-r1-m7-m1-de_mirage,s2-r1-m7,teamB,Spirit,BetBoom,Spirit,exact,5
+s2-r1-m8-m1-de_nuke,s2-r1-m8,teamA,MIBR,MIBR,Legacy,alias-team,4
+s2-r1-m8-m1-de_nuke,s2-r1-m8,teamB,Legacy,MIBR,Legacy,exact,5
+s2-r2-l1-m1-de_overpass,s2-r2-l1,teamA,paiN,BIG,paiN,alias-team,4
+s2-r2-l1-m1-de_overpass,s2-r2-l1,teamB,BIG,BIG,paiN,exact,5
+s2-r2-l2-m1-de_dust2,s2-r2-l2,teamA,FlyQuest,FlyQuest,Legacy,exact,5
+s2-r2-l2-m1-de_dust2,s2-r2-l2,teamB,Legacy,FlyQuest,Legacy,exact,5
+s2-r2-l3-m1-de_nuke,s2-r2-l3,teamA,GamerLegion,GamerLegion,BetBoom,exact,5
+s2-r2-l3-m1-de_nuke,s2-r2-l3,teamB,BetBoom,GamerLegion,BetBoom,alias-team,4
+s2-r2-l4-m1-de_mirage,s2-r2-l4,teamA,M80,M80,B8,exact,5
+s2-r2-l4-m1-de_mirage,s2-r2-l4,teamB,B8,M80,B8,exact,5
+s2-r2-w1-m1-de_overpass,s2-r2-w1,teamA,TYLOO,TYLOO,FUT,exact,5
+s2-r2-w1-m1-de_overpass,s2-r2-w1,teamB,FUT,TYLOO,FUT,exact,5
+s2-r2-w2-m1-de_nuke,s2-r2-w2,teamA,9z,9z,Astralis,exact,5
+s2-r2-w2-m1-de_nuke,s2-r2-w2,teamB,Astralis,9z,Astralis,exact,5
+s2-r2-w3-m1-de_mirage,s2-r2-w3,teamA,Monte,Monte,G2,exact,5
+s2-r2-w3-m1-de_mirage,s2-r2-w3,teamB,G2,Monte,G2,exact,5
+s2-r2-w4-m1-de_mirage,s2-r2-w4,teamA,MIBR,MIBR,Spirit,alias-team,4
+s2-r2-w4-m1-de_mirage,s2-r2-w4,teamB,Spirit,MIBR,Spirit,exact,5
+s2-r3-a1-m1-de_mirage,s2-r3-a1,teamA,Spirit,Spirit,9z,exact,5
+s2-r3-a1-m1-de_mirage,s2-r3-a1,teamB,9z,Spirit,9z,exact,5
+s2-r3-a1-m2-de_nuke,s2-r3-a1,teamA,9z,Spirit,9z,exact,5
+s2-r3-a1-m2-de_nuke,s2-r3-a1,teamB,Spirit,Spirit,9z,exact,5
+s2-r3-a2-m1-de_anubis,s2-r3-a2,teamA,G2,FUT,G2,exact,5
+s2-r3-a2-m1-de_anubis,s2-r3-a2,teamB,FUT,FUT,G2,exact,5
+s2-r3-a2-m2-de_overpass,s2-r3-a2,teamA,G2,FUT,G2,exact,5
+s2-r3-a2-m2-de_overpass,s2-r3-a2,teamB,FUT,FUT,G2,exact,5
+s2-r3-a2-m3-de_ancient,s2-r3-a2,teamA,G2,FUT,G2,exact,5
+s2-r3-a2-m3-de_ancient,s2-r3-a2,teamB,FUT,FUT,G2,exact,5
+s2-r3-e1-m1-de_nuke,s2-r3-e1,teamA,paiN,paiN,FlyQuest,alias-team,4
+s2-r3-e1-m1-de_nuke,s2-r3-e1,teamB,FlyQuest,paiN,FlyQuest,exact,5
+s2-r3-e1-m2-de_anubis,s2-r3-e1,teamA,paiN,paiN,FlyQuest,alias-team,4
+s2-r3-e1-m2-de_anubis,s2-r3-e1,teamB,FlyQuest,paiN,FlyQuest,exact,5
+s2-r3-e2-m1-de_inferno,s2-r3-e2,teamA,B8,GamerLegion,B8,exact,5
+s2-r3-e2-m1-de_inferno,s2-r3-e2,teamB,GamerLegion,GamerLegion,B8,exact,5
+s2-r3-e2-m2-de_mirage,s2-r3-e2,teamA,B8,GamerLegion,B8,exact,5
+s2-r3-e2-m2-de_mirage,s2-r3-e2,teamB,GamerLegion,GamerLegion,B8,exact,5
+s2-r3-e2-m3-de_nuke,s2-r3-e2,teamA,GamerLegion,GamerLegion,B8,exact,5
+s2-r3-e2-m3-de_nuke,s2-r3-e2,teamB,B8,GamerLegion,B8,exact,5
+s2-r3-m1-m1-de_ancient,s2-r3-m1,teamA,Legacy,Legacy,Monte,exact,5
+s2-r3-m1-m1-de_ancient,s2-r3-m1,teamB,Monte,Legacy,Monte,exact,5
+s2-r3-m2-m1-de_nuke,s2-r3-m2,teamA,TYLOO,TYLOO,Astralis,exact,5
+s2-r3-m2-m1-de_nuke,s2-r3-m2,teamB,Astralis,TYLOO,Astralis,exact,5
+s2-r3-m3-m1-de_inferno,s2-r3-m3,teamA,BIG,BIG,MIBR,exact,5
+s2-r3-m3-m1-de_inferno,s2-r3-m3,teamB,MIBR,BIG,MIBR,alias-team,4
+s2-r3-m4-m1-de_dust2,s2-r3-m4,teamA,M80,M80,BetBoom,exact,5
+s2-r3-m4-m1-de_dust2,s2-r3-m4,teamB,BetBoom,M80,BetBoom,alias-team,4
+s2-r4-a1-m1-de_nuke,s2-r4-a1,teamA,BetBoom,BetBoom,Monte,alias-team,4
+s2-r4-a1-m1-de_nuke,s2-r4-a1,teamB,Monte,BetBoom,Monte,exact,5
+s2-r4-a1-m2-de_mirage,s2-r4-a1,teamA,Monte,BetBoom,Monte,exact,5
+s2-r4-a1-m2-de_mirage,s2-r4-a1,teamB,BetBoom,BetBoom,Monte,alias-team,4
+s2-r4-a1-m3-de_dust2,s2-r4-a1,teamA,BetBoom,BetBoom,Monte,alias-team,4
+s2-r4-a1-m3-de_dust2,s2-r4-a1,teamB,Monte,BetBoom,Monte,exact,5
+s2-r4-a2-m1-de_overpass,s2-r4-a2,teamA,9z,9z,TYLOO,exact,5
+s2-r4-a2-m1-de_overpass,s2-r4-a2,teamB,TYLOO,9z,TYLOO,exact,5
+s2-r4-a2-m2-de_inferno,s2-r4-a2,teamA,TYLOO,9z,TYLOO,exact,5
+s2-r4-a2-m2-de_inferno,s2-r4-a2,teamB,9z,9z,TYLOO,exact,5
+s2-r4-a3-m1-de_inferno,s2-r4-a3,teamA,BIG,BIG,G2,exact,5
+s2-r4-a3-m1-de_inferno,s2-r4-a3,teamB,G2,BIG,G2,exact,5
+s2-r4-a3-m2-de_mirage,s2-r4-a3,teamA,G2,BIG,G2,exact,5
+s2-r4-a3-m2-de_mirage,s2-r4-a3,teamB,BIG,BIG,G2,exact,5
+s2-r4-e1-m1-de_nuke,s2-r4-e1,teamA,paiN,paiN,Astralis,alias-team,4
+s2-r4-e1-m1-de_nuke,s2-r4-e1,teamB,Astralis,paiN,Astralis,exact,5
+s2-r4-e1-m2-de_overpass,s2-r4-e1,teamA,Astralis,paiN,Astralis,exact,5
+s2-r4-e1-m2-de_overpass,s2-r4-e1,teamB,paiN,paiN,Astralis,alias-team,4
+s2-r4-e2-m1-de_mirage,s2-r4-e2,teamA,B8,B8,MIBR,exact,5
+s2-r4-e2-m1-de_mirage,s2-r4-e2,teamB,MIBR,B8,MIBR,alias-team,4
+s2-r4-e2-m2-de_nuke,s2-r4-e2,teamA,MIBR,B8,MIBR,alias-team,4
+s2-r4-e2-m2-de_nuke,s2-r4-e2,teamB,B8,B8,MIBR,exact,5
+s2-r4-e2-m3-de_ancient,s2-r4-e2,teamA,B8,B8,MIBR,exact,5
+s2-r4-e2-m3-de_ancient,s2-r4-e2,teamB,MIBR,B8,MIBR,alias-team,4
+s2-r4-e3-m1-de_dust2,s2-r4-e3,teamA,Legacy,Legacy,M80,exact,5
+s2-r4-e3-m1-de_dust2,s2-r4-e3,teamB,M80,Legacy,M80,exact,5
+s2-r4-e3-m2-de_inferno,s2-r4-e3,teamA,M80,Legacy,M80,exact,5
+s2-r4-e3-m2-de_inferno,s2-r4-e3,teamB,Legacy,Legacy,M80,exact,5
+s2-r5-d1-m1-de_nuke,s2-r5-d1,teamA,paiN,paiN,Monte,alias-team,4
+s2-r5-d1-m1-de_nuke,s2-r5-d1,teamB,Monte,paiN,Monte,exact,5
+s2-r5-d1-m2-de_dust2,s2-r5-d1,teamA,Monte,paiN,Monte,exact,5
+s2-r5-d1-m2-de_dust2,s2-r5-d1,teamB,paiN,paiN,Monte,alias-team,4
+s2-r5-d2-m1-de_mirage,s2-r5-d2,teamA,Legacy,Legacy,TYLOO,exact,5
+s2-r5-d2-m1-de_mirage,s2-r5-d2,teamB,TYLOO,Legacy,TYLOO,exact,5
+s2-r5-d2-m2-de_inferno,s2-r5-d2,teamA,TYLOO,Legacy,TYLOO,exact,5
+s2-r5-d2-m2-de_inferno,s2-r5-d2,teamB,Legacy,Legacy,TYLOO,exact,5
+s2-r5-d3-m1-de_ancient,s2-r5-d3,teamA,B8,B8,BIG,exact,5
+s2-r5-d3-m1-de_ancient,s2-r5-d3,teamB,BIG,B8,BIG,exact,5
+s2-r5-d3-m2-de_overpass,s2-r5-d3,teamA,BIG,B8,BIG,exact,5
+s2-r5-d3-m2-de_overpass,s2-r5-d3,teamB,B8,B8,BIG,exact,5
+s2-r5-d3-m3-de_dust2,s2-r5-d3,teamA,B8,B8,BIG,exact,5
+s2-r5-d3-m3-de_dust2,s2-r5-d3,teamB,BIG,B8,BIG,exact,5
+s3-r1-m1-m1-de_overpass,s3-r1-m1,teamA,9z,9z,PARIVISION,exact,5
+s3-r1-m1-m1-de_overpass,s3-r1-m1,teamB,PARIVISION,9z,PARIVISION,exact,5
+s3-r1-m1-m2-de_dust2,s3-r1-m1,teamA,PARIVISION,9z,PARIVISION,exact,5
+s3-r1-m1-m2-de_dust2,s3-r1-m1,teamB,9z,9z,PARIVISION,exact,5
+s3-r1-m1-m3-de_inferno,s3-r1-m1,teamA,9z,9z,PARIVISION,exact,5
+s3-r1-m1-m3-de_inferno,s3-r1-m1,teamB,PARIVISION,9z,PARIVISION,exact,5
+s3-r1-m2-m1-de_dust2,s3-r1-m2,teamA,BetBoom,BetBoom,The MongolZ,alias-team,4
+s3-r1-m2-m1-de_dust2,s3-r1-m2,teamB,The MongolZ,BetBoom,The MongolZ,alias-team,4
+s3-r1-m2-m2-de_mirage,s3-r1-m2,teamA,The MongolZ,BetBoom,The MongolZ,alias-team,4
+s3-r1-m2-m2-de_mirage,s3-r1-m2,teamB,BetBoom,BetBoom,The MongolZ,alias-team,4
+s3-r1-m2-m3-de_ancient,s3-r1-m2,teamA,BetBoom,BetBoom,The MongolZ,alias-team,4
+s3-r1-m2-m3-de_ancient,s3-r1-m2,teamB,The MongolZ,BetBoom,The MongolZ,alias-team,4
+s3-r1-m3-m1-de_anubis,s3-r1-m3,teamA,Vitality,FUT,Vitality,exact,5
+s3-r1-m3-m1-de_anubis,s3-r1-m3,teamB,FUT,FUT,Vitality,exact,5
+s3-r1-m3-m2-de_overpass,s3-r1-m3,teamA,Vitality,FUT,Vitality,exact,5
+s3-r1-m3-m2-de_overpass,s3-r1-m3,teamB,FUT,FUT,Vitality,exact,5
+s3-r1-m3-m3-de_nuke,s3-r1-m3,teamA,FUT,FUT,Vitality,exact,5
+s3-r1-m3-m3-de_nuke,s3-r1-m3,teamB,Vitality,FUT,Vitality,exact,5
+s3-r1-m4-m1-de_dust2,s3-r1-m4,teamA,Legacy,Legacy,MOUZ,exact,5
+s3-r1-m4-m1-de_dust2,s3-r1-m4,teamB,MOUZ,Legacy,MOUZ,exact,5
+s3-r1-m4-m2-de_nuke,s3-r1-m4,teamA,MOUZ,Legacy,MOUZ,exact,5
+s3-r1-m4-m2-de_nuke,s3-r1-m4,teamB,Legacy,Legacy,MOUZ,exact,5
+s3-r1-m5-m1-de_mirage,s3-r1-m5,teamA,B8,B8,FURIA,exact,5
+s3-r1-m5-m1-de_mirage,s3-r1-m5,teamB,FURIA,B8,FURIA,exact,5
+s3-r1-m5-m2-de_inferno,s3-r1-m5,teamA,B8,B8,FURIA,exact,5
+s3-r1-m5-m2-de_inferno,s3-r1-m5,teamB,FURIA,B8,FURIA,exact,5
+s3-r1-m6-m1-de_inferno,s3-r1-m6,teamA,G2,G2,Falcons,exact,5
+s3-r1-m6-m1-de_inferno,s3-r1-m6,teamB,Falcons,G2,Falcons,exact,5
+s3-r1-m6-m2-de_dust2,s3-r1-m6,teamA,Falcons,G2,Falcons,exact,5
+s3-r1-m6-m2-de_dust2,s3-r1-m6,teamB,G2,G2,Falcons,exact,5
+s3-r1-m6-m3-de_ancient,s3-r1-m6,teamA,G2,G2,Falcons,exact,5
+s3-r1-m6-m3-de_ancient,s3-r1-m6,teamB,Falcons,G2,Falcons,exact,5
+s3-r1-m7-m1-de_nuke,s3-r1-m7,teamA,Monte,Monte,Aurora,exact,5
+s3-r1-m7-m1-de_nuke,s3-r1-m7,teamB,Aurora,Monte,Aurora,exact,5
+s3-r1-m7-m2-de_anubis,s3-r1-m7,teamA,Monte,Monte,Aurora,exact,5
+s3-r1-m7-m2-de_anubis,s3-r1-m7,teamB,Aurora,Monte,Aurora,exact,5
+s3-r1-m8-m1-de_dust2,s3-r1-m8,teamA,Spirit,Spirit,Natus Vincere,exact,5
+s3-r1-m8-m1-de_dust2,s3-r1-m8,teamB,Natus Vincere,Spirit,Natus Vincere,exact,5
+s3-r1-m8-m2-de_anubis,s3-r1-m8,teamA,Spirit,Spirit,Natus Vincere,exact,5
+s3-r1-m8-m2-de_anubis,s3-r1-m8,teamB,Natus Vincere,Spirit,Natus Vincere,exact,5
+s3-r2-l1-m1-de_mirage,s3-r2-l1,teamA,B8,The MongolZ,B8,exact,5
+s3-r2-l1-m1-de_mirage,s3-r2-l1,teamB,The MongolZ,The MongolZ,B8,alias-team,4
+s3-r2-l1-m2-de_overpass,s3-r2-l1,teamA,The MongolZ,The MongolZ,B8,alias-team,4
+s3-r2-l1-m2-de_overpass,s3-r2-l1,teamB,B8,The MongolZ,B8,exact,5
+s3-r2-l2-m1-de_mirage,s3-r2-l2,teamA,Monte,PARIVISION,Monte,exact,5
+s3-r2-l2-m1-de_mirage,s3-r2-l2,teamB,PARIVISION,PARIVISION,Monte,exact,5
+s3-r2-l2-m2-de_ancient,s3-r2-l2,teamA,PARIVISION,PARIVISION,Monte,exact,5
+s3-r2-l2-m2-de_ancient,s3-r2-l2,teamB,Monte,PARIVISION,Monte,exact,5
+s3-r2-l2-m3-de_inferno,s3-r2-l2,teamA,Monte,PARIVISION,Monte,exact,5
+s3-r2-l2-m3-de_inferno,s3-r2-l2,teamB,PARIVISION,PARIVISION,Monte,exact,5
+s3-r2-l3-m1-de_overpass,s3-r2-l3,teamA,G2,FUT,G2,exact,5
+s3-r2-l3-m1-de_overpass,s3-r2-l3,teamB,FUT,FUT,G2,exact,5
+s3-r2-l3-m2-de_ancient,s3-r2-l3,teamA,FUT,FUT,G2,exact,5
+s3-r2-l3-m2-de_ancient,s3-r2-l3,teamB,G2,FUT,G2,exact,5
+s3-r2-l3-m3-de_mirage,s3-r2-l3,teamA,G2,FUT,G2,exact,5
+s3-r2-l3-m3-de_mirage,s3-r2-l3,teamB,FUT,FUT,G2,exact,5
+s3-r2-l4-m1-de_inferno,s3-r2-l4,teamA,Legacy,Natus Vincere,Legacy,exact,5
+s3-r2-l4-m1-de_inferno,s3-r2-l4,teamB,Natus Vincere,Natus Vincere,Legacy,exact,5
+s3-r2-l4-m2-de_ancient,s3-r2-l4,teamA,Natus Vincere,Natus Vincere,Legacy,exact,5
+s3-r2-l4-m2-de_ancient,s3-r2-l4,teamB,Legacy,Natus Vincere,Legacy,exact,5
+s3-r2-w1-m1-de_nuke,s3-r2-w1,teamA,MOUZ,MOUZ,FURIA,exact,5
+s3-r2-w1-m1-de_nuke,s3-r2-w1,teamB,FURIA,MOUZ,FURIA,exact,5
+s3-r2-w1-m2-de_inferno,s3-r2-w1,teamA,FURIA,MOUZ,FURIA,exact,5
+s3-r2-w1-m2-de_inferno,s3-r2-w1,teamB,MOUZ,MOUZ,FURIA,exact,5
+s3-r2-w1-m3-de_overpass,s3-r2-w1,teamA,MOUZ,MOUZ,FURIA,exact,5
+s3-r2-w1-m3-de_overpass,s3-r2-w1,teamB,FURIA,MOUZ,FURIA,exact,5
+s3-r2-w2-m1-de_nuke,s3-r2-w2,teamA,BetBoom,BetBoom,Falcons,alias-team,4
+s3-r2-w2-m1-de_nuke,s3-r2-w2,teamB,Falcons,BetBoom,Falcons,exact,5
+s3-r2-w2-m2-de_ancient,s3-r2-w2,teamA,Falcons,BetBoom,Falcons,exact,5
+s3-r2-w2-m2-de_ancient,s3-r2-w2,teamB,BetBoom,BetBoom,Falcons,alias-team,4
+s3-r2-w3-m1-de_inferno,s3-r2-w3,teamA,9z,9z,Vitality,exact,5
+s3-r2-w3-m1-de_inferno,s3-r2-w3,teamB,Vitality,9z,Vitality,exact,5
+s3-r2-w3-m2-de_mirage,s3-r2-w3,teamA,Vitality,9z,Vitality,exact,5
+s3-r2-w3-m2-de_mirage,s3-r2-w3,teamB,9z,9z,Vitality,exact,5
+s3-r2-w3-m3-de_dust2,s3-r2-w3,teamA,9z,9z,Vitality,exact,5
+s3-r2-w3-m3-de_dust2,s3-r2-w3,teamB,Vitality,9z,Vitality,exact,5
+s3-r2-w4-m1-de_dust2,s3-r2-w4,teamA,Spirit,Spirit,Aurora,exact,5
+s3-r2-w4-m1-de_dust2,s3-r2-w4,teamB,Aurora,Spirit,Aurora,exact,5
+s3-r2-w4-m2-de_anubis,s3-r2-w4,teamA,Spirit,Spirit,Aurora,exact,5
+s3-r2-w4-m2-de_anubis,s3-r2-w4,teamB,Aurora,Spirit,Aurora,exact,5
+s3-r2-w4-m3-de_nuke,s3-r2-w4,teamA,Spirit,Spirit,Aurora,exact,5
+s3-r2-w4-m3-de_nuke,s3-r2-w4,teamB,Aurora,Spirit,Aurora,exact,5
+s3-r3-a1-m1-de_overpass,s3-r3-a1,teamA,FURIA,BetBoom,FURIA,exact,5
+s3-r3-a1-m1-de_overpass,s3-r3-a1,teamB,BetBoom,BetBoom,FURIA,alias-team,4
+s3-r3-a1-m2-de_dust2,s3-r3-a1,teamA,BetBoom,BetBoom,FURIA,alias-team,4
+s3-r3-a1-m2-de_dust2,s3-r3-a1,teamB,FURIA,BetBoom,FURIA,exact,5
+s3-r3-a2-m1-de_overpass,s3-r3-a2,teamA,9z,Spirit,9z,exact,5
+s3-r3-a2-m1-de_overpass,s3-r3-a2,teamB,Spirit,Spirit,9z,exact,5
+s3-r3-a2-m2-de_mirage,s3-r3-a2,teamA,Spirit,Spirit,9z,exact,5
+s3-r3-a2-m2-de_mirage,s3-r3-a2,teamB,9z,Spirit,9z,exact,5
+s3-r3-a2-m3-de_dust2,s3-r3-a2,teamA,9z,Spirit,9z,exact,5
+s3-r3-a2-m3-de_dust2,s3-r3-a2,teamB,Spirit,Spirit,9z,exact,5
+s3-r3-e1-m1-de_dust2,s3-r3-e1,teamA,FUT,B8,FUT,exact,5
+s3-r3-e1-m1-de_dust2,s3-r3-e1,teamB,B8,B8,FUT,exact,5
+s3-r3-e1-m2-de_mirage,s3-r3-e1,teamA,B8,B8,FUT,exact,5
+s3-r3-e1-m2-de_mirage,s3-r3-e1,teamB,FUT,B8,FUT,exact,5
+s3-r3-e1-m3-de_ancient,s3-r3-e1,teamA,FUT,B8,FUT,exact,5
+s3-r3-e1-m3-de_ancient,s3-r3-e1,teamB,B8,B8,FUT,exact,5
+s3-r3-e2-m1-de_inferno,s3-r3-e2,teamA,Legacy,PARIVISION,Legacy,exact,5
+s3-r3-e2-m1-de_inferno,s3-r3-e2,teamB,PARIVISION,PARIVISION,Legacy,exact,5
+s3-r3-e2-m2-de_dust2,s3-r3-e2,teamA,PARIVISION,PARIVISION,Legacy,exact,5
+s3-r3-e2-m2-de_dust2,s3-r3-e2,teamB,Legacy,PARIVISION,Legacy,exact,5
+s3-r3-m1-m1-de_nuke,s3-r3-m1,teamA,The MongolZ,Natus Vincere,The MongolZ,alias-team,4
+s3-r3-m1-m1-de_nuke,s3-r3-m1,teamB,Natus Vincere,Natus Vincere,The MongolZ,exact,5
+s3-r3-m1-m2-de_ancient,s3-r3-m1,teamA,Natus Vincere,Natus Vincere,The MongolZ,exact,5
+s3-r3-m1-m2-de_ancient,s3-r3-m1,teamB,The MongolZ,Natus Vincere,The MongolZ,alias-team,4
+s3-r3-m1-m3-de_mirage,s3-r3-m1,teamA,The MongolZ,Natus Vincere,The MongolZ,alias-team,4
+s3-r3-m1-m3-de_mirage,s3-r3-m1,teamB,Natus Vincere,Natus Vincere,The MongolZ,exact,5
+s3-r3-m2-m1-de_inferno,s3-r3-m2,teamA,Monte,Falcons,Monte,exact,5
+s3-r3-m2-m1-de_inferno,s3-r3-m2,teamB,Falcons,Falcons,Monte,exact,5
+s3-r3-m2-m2-de_dust2,s3-r3-m2,teamA,Falcons,Falcons,Monte,exact,5
+s3-r3-m2-m2-de_dust2,s3-r3-m2,teamB,Monte,Falcons,Monte,exact,5
+s3-r3-m2-m3-de_mirage,s3-r3-m2,teamA,Monte,Falcons,Monte,exact,5
+s3-r3-m2-m3-de_mirage,s3-r3-m2,teamB,Falcons,Falcons,Monte,exact,5
+s3-r3-m3-m1-de_overpass,s3-r3-m3,teamA,G2,Aurora,G2,exact,5
+s3-r3-m3-m1-de_overpass,s3-r3-m3,teamB,Aurora,Aurora,G2,exact,5
+s3-r3-m3-m2-de_anubis,s3-r3-m3,teamA,G2,Aurora,G2,exact,5
+s3-r3-m3-m2-de_anubis,s3-r3-m3,teamB,Aurora,Aurora,G2,exact,5
+s3-r3-m4-m1-de_mirage,s3-r3-m4,teamA,MOUZ,Vitality,MOUZ,exact,5
+s3-r3-m4-m1-de_mirage,s3-r3-m4,teamB,Vitality,Vitality,MOUZ,exact,5
+s3-r3-m4-m2-de_dust2,s3-r3-m4,teamA,Vitality,Vitality,MOUZ,exact,5
+s3-r3-m4-m2-de_dust2,s3-r3-m4,teamB,MOUZ,Vitality,MOUZ,exact,5
+s3-r3-m4-m3-de_inferno,s3-r3-m4,teamA,MOUZ,Vitality,MOUZ,exact,5
+s3-r3-m4-m3-de_inferno,s3-r3-m4,teamB,Vitality,Vitality,MOUZ,exact,5
+s3-r4-a1-m1-de_overpass,s3-r4-a1,teamA,Vitality,BetBoom,Vitality,exact,5
+s3-r4-a1-m1-de_overpass,s3-r4-a1,teamB,BetBoom,BetBoom,Vitality,alias-team,4
+s3-r4-a1-m2-de_nuke,s3-r4-a1,teamA,BetBoom,BetBoom,Vitality,alias-team,4
+s3-r4-a1-m2-de_nuke,s3-r4-a1,teamB,Vitality,BetBoom,Vitality,exact,5
+s3-r4-a2-m1-de_nuke,s3-r4-a2,teamA,9z,Aurora,9z,exact,5
+s3-r4-a2-m1-de_nuke,s3-r4-a2,teamB,Aurora,Aurora,9z,exact,5
+s3-r4-a2-m2-de_dust2,s3-r4-a2,teamA,Aurora,Aurora,9z,exact,5
+s3-r4-a2-m2-de_dust2,s3-r4-a2,teamB,9z,Aurora,9z,exact,5
+s3-r4-a3-m1-de_dust2,s3-r4-a3,teamA,Falcons,Natus Vincere,Falcons,exact,5
+s3-r4-a3-m1-de_dust2,s3-r4-a3,teamB,Natus Vincere,Natus Vincere,Falcons,exact,5
+s3-r4-a3-m2-de_mirage,s3-r4-a3,teamA,Natus Vincere,Natus Vincere,Falcons,exact,5
+s3-r4-a3-m2-de_mirage,s3-r4-a3,teamB,Falcons,Natus Vincere,Falcons,exact,5
+s3-r4-a3-m3-de_anubis,s3-r4-a3,teamA,Natus Vincere,Natus Vincere,Falcons,exact,5
+s3-r4-a3-m3-de_anubis,s3-r4-a3,teamB,Falcons,Natus Vincere,Falcons,exact,5
+s3-r4-e1-m1-de_ancient,s3-r4-e1,teamA,FUT,MOUZ,FUT,exact,5
+s3-r4-e1-m1-de_ancient,s3-r4-e1,teamB,MOUZ,MOUZ,FUT,exact,5
+s3-r4-e1-m2-de_nuke,s3-r4-e1,teamA,MOUZ,MOUZ,FUT,exact,5
+s3-r4-e1-m2-de_nuke,s3-r4-e1,teamB,FUT,MOUZ,FUT,exact,5
+s3-r4-e1-m3-de_mirage,s3-r4-e1,teamA,FUT,MOUZ,FUT,exact,5
+s3-r4-e1-m3-de_mirage,s3-r4-e1,teamB,MOUZ,MOUZ,FUT,exact,5
+s3-r4-e2-m1-de_nuke,s3-r4-e2,teamA,Monte,The MongolZ,Monte,exact,5
+s3-r4-e2-m1-de_nuke,s3-r4-e2,teamB,The MongolZ,The MongolZ,Monte,alias-team,4
+s3-r4-e2-m2-de_inferno,s3-r4-e2,teamA,The MongolZ,The MongolZ,Monte,alias-team,4
+s3-r4-e2-m2-de_inferno,s3-r4-e2,teamB,Monte,The MongolZ,Monte,exact,5
+s3-r4-e2-m3-de_dust2,s3-r4-e2,teamA,Monte,The MongolZ,Monte,exact,5
+s3-r4-e2-m3-de_dust2,s3-r4-e2,teamB,The MongolZ,The MongolZ,Monte,alias-team,4
+s3-r4-e3-m1-de_dust2,s3-r4-e3,teamA,Legacy,G2,Legacy,exact,5
+s3-r4-e3-m1-de_dust2,s3-r4-e3,teamB,G2,G2,Legacy,exact,5
+s3-r4-e3-m2-de_overpass,s3-r4-e3,teamA,G2,G2,Legacy,exact,5
+s3-r4-e3-m2-de_overpass,s3-r4-e3,teamB,Legacy,G2,Legacy,exact,5
+s3-r5-d1-m1-de_inferno,s3-r5-d1,teamA,The MongolZ,9z,The MongolZ,alias-team,4
+s3-r5-d1-m1-de_inferno,s3-r5-d1,teamB,9z,9z,The MongolZ,exact,5
+s3-r5-d1-m2-de_overpass,s3-r5-d1,teamA,9z,9z,The MongolZ,exact,5
+s3-r5-d1-m2-de_overpass,s3-r5-d1,teamB,The MongolZ,9z,The MongolZ,alias-team,4
+s3-r5-d2-m1-de_mirage,s3-r5-d2,teamA,FUT,BetBoom,FUT,exact,5
+s3-r5-d2-m1-de_mirage,s3-r5-d2,teamB,BetBoom,BetBoom,FUT,alias-team,4
+s3-r5-d2-m2-de_dust2,s3-r5-d2,teamA,BetBoom,BetBoom,FUT,alias-team,4
+s3-r5-d2-m2-de_dust2,s3-r5-d2,teamB,FUT,BetBoom,FUT,exact,5
+s3-r5-d3-m1-de_dust2,s3-r5-d3,teamA,G2,Natus Vincere,G2,exact,5
+s3-r5-d3-m1-de_dust2,s3-r5-d3,teamB,Natus Vincere,Natus Vincere,G2,exact,5
+s3-r5-d3-m2-de_inferno,s3-r5-d3,teamA,Natus Vincere,Natus Vincere,G2,exact,5
+s3-r5-d3-m2-de_inferno,s3-r5-d3,teamB,G2,Natus Vincere,G2,exact,5
+s3-r5-d3-m3-de_mirage,s3-r5-d3,teamA,G2,Natus Vincere,G2,exact,5
+s3-r5-d3-m3-de_mirage,s3-r5-d3,teamB,Natus Vincere,Natus Vincere,G2,exact,5
