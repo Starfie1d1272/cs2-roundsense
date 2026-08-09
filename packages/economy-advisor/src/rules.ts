@@ -149,6 +149,13 @@ export function weaponIdToItem(weaponId: string): ItemId | undefined {
   return WEAPON_TO_ITEM[weaponId];
 }
 
+/** Canonical weapon family from the generated weapon table.  Policy code
+ * must not duplicate a hand-maintained rifle/sniper list. */
+export function weaponClassOf(item: ItemId): string | undefined {
+  const weaponId = ITEM_TO_WEAPON[item];
+  return weaponId ? WP.weapons[weaponId]?.class : undefined;
+}
+
 export function price(rules: EconomyRules, item: ItemId): number {
   const wid = ITEM_TO_WEAPON[item];
   if (wid) {

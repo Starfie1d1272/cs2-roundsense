@@ -8,107 +8,27 @@
  * presenter.ts — NOT here.
  *
  * Product rules:
- * - lossStreak comes from map.team_*.consecutive_round_losses when GSI
- *   provides it (runtime-check #1); when absent, assumed 1 and flagged.
- * - OT start money is a server profile — never inferred here; the live
- *   money read comes straight from player.state.money.
+ * - missing facts remain explicit UNKNOWN in PolicyStateTracker;
+ * - OT start money is never inferred; live money comes straight from GSI.
  */
-import { recommend, weaponIdToItem, type AdvisorInput, type AdvisorOutput, type InventoryState } from "@roundsense/economy-advisor";
+import { recommendPolicyV3, type PolicyV3Output, type UserPreference } from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
-import type { ItemId, NextRoundGoal } from "@roundsense/shared-types";
+import { inventoryFrom } from "./inventory.js";
+import { PolicyStateTracker } from "./policy-state.js";
+
+export { inventoryFrom } from "./inventory.js";
 
 export interface EngineOptions {
-  nextRoundGoal: NextRoundGoal;
+  preference?: UserPreference;
+  tracker?: PolicyStateTracker;
+  seq?: number;
 }
 
 export interface AdviceTick {
   side: "CT" | "T";
   roundNumber: number;
   money: number;
-  lossStreak: number;
-  lossStreakSource: "gsi" | "assumed-1";
-  goal: NextRoundGoal;
-  recommended: {
-    character: string;
-    label: string;
-    /** actual required purchases from the current inventory */
-    purchases: { item: ItemId; quantity: number }[];
-    /** incremental spend */
-    totalCost: number;
-    /** full target value (empty inventory) */
-    targetCost: number;
-    /** current armor/helmet — display context for armor wording */
-    armor: number;
-    helmet: boolean;
-  } | null;
-  alternatives: { character: string; label: string; purchases: { item: ItemId; quantity: number }[]; totalCost: number; targetCost: number }[];
-  breaksGoal: string | null;
-}
-
-/** Non-weapon GSI names (runtime-observed representation): grenades live in
- * player.weapons; armor/kit live in player.state (never in weapons). The
- * weapon-table reverse mapping (weaponIdToItem) is the single source of
- * truth for all firearms. */
-const GSI_NON_WEAPON: Record<string, ItemId> = {
-  weapon_smokegrenade: "smoke",
-  weapon_flashbang: "flash",
-  weapon_hegrenade: "he",
-  weapon_molotov: "molotov",
-  weapon_incgrenade: "incendiary",
-  weapon_decoy: "decoy",
-};
-
-/** GSI class-name aliases that differ from the canonical weapon-table ids
- * (m4a4's game class is weapon_m4a4; the weapon table key is weapon_m4a1). */
-const GSI_NAME_ALIASES: Record<string, ItemId> = {
-  weapon_m4a4: "m4a4",
-};
-
-/** GSI weapon `type` values observed live (Windows build 14174): SMGs send
- * "Submachine Gun" and machine guns send "Machine Gun" — match the real
- * strings. */
-const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machine Gun", "SniperRifle"];
-
-export function inventoryFrom(payload: GsiPayload): InventoryState {
-  const state = payload.player?.state;
-  const weapons = payload.player?.weapons ?? {};
-  let primary: ItemId | null = null;
-  let secondary: ItemId | undefined;
-  const grenades: ItemId[] = [];
-  for (const w of Object.values(weapons)) {
-    const name = w?.name;
-    if (!name) continue;
-    const item = GSI_NON_WEAPON[name] ?? GSI_NAME_ALIASES[name] ?? weaponIdToItem(name);
-    if (!item) continue;
-    if (item === "smoke" || item === "flash" || item === "he" || item === "molotov" || item === "incendiary" || item === "decoy") {
-      // Grenade quantity is ammo_reserve on the single weapon entry
-      // (observed build 14174: flash ×2 = one weapon_flashbang, reserve=2).
-      // Missing reserve still proves ≥1 carried.
-      const reserve = w?.ammo_reserve;
-      const count = reserve !== undefined && reserve >= 0 ? reserve : 1;
-      for (let i = 0; i < count; i++) grenades.push(item);
-      continue;
-    }
-    if (item === "kevlar" || item === "kevlar_helmet") continue;
-    const type = w?.type ?? "";
-    if (PRIMARY_TYPE_HINTS.some((h) => type.includes(h))) {
-      primary = item;
-    } else if (type.includes("Pistol")) {
-      secondary = item;
-    }
-  }
-  return {
-    primary,
-    secondary,
-    // numeric armor — keep the exact GSI value (0..100), do not fold any
-    // positive value into a boolean
-    armor: state?.armor ?? 0,
-    hasHelmet: state?.helmet === true,
-    // observed build 14174: player.state.defusekit=true — the kit never
-    // appears in player.weapons
-    hasDefuseKit: state?.defusekit === true,
-    grenades,
-  };
+  policy: PolicyV3Output;
 }
 
 export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | null {
@@ -124,49 +44,12 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   if (state?.money === undefined) return null;
   // map.round must be present — no silent round-1 guess.
   if (map?.round === undefined) return null;
-  const side = player.team;
-  const teamInfo = side === "T" ? map?.team_t : map?.team_ct;
-  const lossStreakGsi = teamInfo?.consecutive_round_losses;
-  const lossStreak = lossStreakGsi ?? 1;
-  const input: AdvisorInput = {
-    side,
+  const tracker = opts.tracker ?? new PolicyStateTracker();
+  const policy = recommendPolicyV3(tracker.observe(payload, opts.seq ?? 0, opts.preference));
+  return {
+    side: player.team,
     roundNumber: map.round,
     money: state.money,
-    lossStreak,
-    inventory: inventoryFrom(payload),
-    // C3: current GSI money already includes rewards earned before this
-    // payload (observed: money 1650 → 2250 exactly when round_kills 0 → 1,
-    // Windows build 14174). Past round_kills are NOT future income — never
-    // re-add them to the projection.
-    killsThisRound: [],
-    nextRoundGoal: opts.nextRoundGoal,
-  };
-  const out: AdvisorOutput = recommend(input);
-  return {
-    side,
-    roundNumber: input.roundNumber,
-    money: state.money,
-    lossStreak,
-    lossStreakSource: lossStreakGsi !== undefined ? "gsi" : "assumed-1",
-    goal: out.goal,
-    recommended: out.recommended
-      ? {
-          character: out.recommended.character,
-          label: out.recommended.label,
-          purchases: out.recommended.purchases,
-          totalCost: out.recommended.totalCost,
-          targetCost: out.recommended.targetCost,
-          armor: input.inventory.armor,
-          helmet: input.inventory.hasHelmet,
-        }
-      : null,
-    alternatives: out.alternatives.map((s) => ({
-      character: s.character,
-      label: s.label,
-      purchases: s.purchases,
-      totalCost: s.totalCost,
-      targetCost: s.targetCost,
-    })),
-    breaksGoal: out.recommended?.breaksGoal ? out.recommended.breaksGoalReason ?? "yes" : null,
+    policy,
   };
 }
