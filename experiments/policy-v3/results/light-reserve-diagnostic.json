@@ -1,0 +1,5848 @@
+{
+  "schema_version": 1,
+  "baseline_sha": "584ec5ce91c6d1bf8d138783a42d137fe7276a47",
+  "scope": "offline LIGHT reserve / next-round-money diagnostic; no production policy input or modification",
+  "inputs": {
+    "corpus_sha256": "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6",
+    "expected_corpus_sha256": "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6",
+    "corpus_contract": "frozen IEM Cologne Major 2026 player-round table and replay pre-state packages",
+    "canonical_rules": "cs2-competitive-2026-08",
+    "main_scenario": "LOSS_NO_PLANT; N = current money - actual spend + current loss reward",
+    "secondary_t_plant_scenario": "N_plant = N + $600; hypothetical comparison only"
+  },
+  "eligibility": {
+    "raw_player_rows": 43620,
+    "regulation_player_rows": 41940,
+    "overtime_player_rows": 1680,
+    "strict_regulation_player_rows": 25986,
+    "eligible_player_rows": 23552,
+    "eligible_regulation": 22428,
+    "eligible_overtime": 1124,
+    "maps": 202,
+    "exclusions": {
+      "overtime_drop_sensitive": 552,
+      "regulation_drop_gave": 9842,
+      "regulation_drop_received": 5103,
+      "regulation_loss_index_ambiguous": 1009,
+      "regulation_pistol_round": 3028,
+      "regulation_retained_primary_unknown": 114,
+      "resulting_grenade_below_retained": 419,
+      "utility_budget_out_of_range": 1
+    },
+    "replay_prestate": {
+      "requested_rows": 23352,
+      "extracted_rows": 23352,
+      "maps": 202,
+      "extraction_sha256": "31d3d1d3fffab95a5026ad494818ff1aa9a5252f71a4744f908189b2fd43cf2d"
+    }
+  },
+  "requested_light_fields": {
+    "computed_rows": 2330,
+    "canonical_row_sha256": "57e92eae5267765e82bde22169ea4aba01fe22aa1c076b5156482dca434806de",
+    "fields": [
+      "map",
+      "round",
+      "player_index",
+      "side",
+      "context",
+      "current_money",
+      "actual_spend",
+      "residual_cash",
+      "loss_index",
+      "loss_reward",
+      "next_cash_loss_no_plant",
+      "next_cash_loss_with_plant",
+      "retained_primary",
+      "retained_primary_family",
+      "retained_armor",
+      "retained_armor_state",
+      "resulting_primary_family",
+      "resulting_armor",
+      "resulting_armor_state",
+      "resulting_secondary_class"
+    ],
+    "note": "row-level values are deterministically recomputed from the frozen corpus; artifact stays aggregate-only"
+  },
+  "actual_light": {
+    "overall": {
+      "n": 2330,
+      "current_money": {
+        "n": 2330,
+        "min": 0,
+        "p25": 2950,
+        "median": 3450,
+        "p75": 3800,
+        "max": 10000,
+        "iqr": 850,
+        "median_absolute_deviation": 450,
+        "shortest_50pct_interval": {
+          "low": 2900,
+          "high": 3650,
+          "width": 750
+        },
+        "shortest_75pct_interval": {
+          "low": 2400,
+          "high": 3950,
+          "width": 1550
+        },
+        "top_exact_amounts": {
+          "2900": {
+            "n": 75,
+            "rate": 0.0322
+          },
+          "2950": {
+            "n": 106,
+            "rate": 0.0455
+          },
+          "3000": {
+            "n": 89,
+            "rate": 0.0382
+          },
+          "3050": {
+            "n": 90,
+            "rate": 0.0386
+          },
+          "3400": {
+            "n": 67,
+            "rate": 0.0288
+          },
+          "3450": {
+            "n": 99,
+            "rate": 0.0425
+          },
+          "3500": {
+            "n": 115,
+            "rate": 0.0494
+          },
+          "3550": {
+            "n": 112,
+            "rate": 0.0481
+          },
+          "3600": {
+            "n": 64,
+            "rate": 0.0275
+          },
+          "3650": {
+            "n": 80,
+            "rate": 0.0343
+          },
+          "3700": {
+            "n": 70,
+            "rate": 0.03
+          },
+          "3850": {
+            "n": 62,
+            "rate": 0.0266
+          }
+        },
+        "common_500_bands": {
+          "3500-3999": {
+            "n": 696,
+            "rate": 0.2987
+          },
+          "3000-3499": {
+            "n": 649,
+            "rate": 0.2785
+          },
+          "2500-2999": {
+            "n": 362,
+            "rate": 0.1554
+          },
+          "4000-4499": {
+            "n": 217,
+            "rate": 0.0931
+          },
+          "2000-2499": {
+            "n": 161,
+            "rate": 0.0691
+          },
+          "4500-4999": {
+            "n": 73,
+            "rate": 0.0313
+          },
+          "5000-5499": {
+            "n": 40,
+            "rate": 0.0172
+          },
+          "1500-1999": {
+            "n": 36,
+            "rate": 0.0155
+          },
+          "0-499": {
+            "n": 28,
+            "rate": 0.012
+          },
+          "5500-5999": {
+            "n": 28,
+            "rate": 0.012
+          }
+        }
+      },
+      "actual_spend": {
+        "n": 2330,
+        "min": 0,
+        "p25": 1200,
+        "median": 1650,
+        "p75": 2100,
+        "max": 4250,
+        "iqr": 900,
+        "median_absolute_deviation": 450,
+        "shortest_50pct_interval": {
+          "low": 1450,
+          "high": 2200,
+          "width": 750
+        },
+        "shortest_75pct_interval": {
+          "low": 900,
+          "high": 2450,
+          "width": 1550
+        },
+        "top_exact_amounts": {
+          "0": {
+            "n": 106,
+            "rate": 0.0455
+          },
+          "1000": {
+            "n": 103,
+            "rate": 0.0442
+          },
+          "1150": {
+            "n": 97,
+            "rate": 0.0416
+          },
+          "1350": {
+            "n": 70,
+            "rate": 0.03
+          },
+          "1450": {
+            "n": 202,
+            "rate": 0.0867
+          },
+          "1650": {
+            "n": 158,
+            "rate": 0.0678
+          },
+          "1750": {
+            "n": 79,
+            "rate": 0.0339
+          },
+          "1800": {
+            "n": 104,
+            "rate": 0.0446
+          },
+          "1850": {
+            "n": 100,
+            "rate": 0.0429
+          },
+          "2000": {
+            "n": 94,
+            "rate": 0.0403
+          },
+          "2050": {
+            "n": 62,
+            "rate": 0.0266
+          },
+          "2200": {
+            "n": 116,
+            "rate": 0.0498
+          }
+        },
+        "common_500_bands": {
+          "1500-1999": {
+            "n": 637,
+            "rate": 0.2734
+          },
+          "1000-1499": {
+            "n": 605,
+            "rate": 0.2597
+          },
+          "2000-2499": {
+            "n": 472,
+            "rate": 0.2026
+          },
+          "2500-2999": {
+            "n": 177,
+            "rate": 0.076
+          },
+          "0-499": {
+            "n": 174,
+            "rate": 0.0747
+          },
+          "500-999": {
+            "n": 158,
+            "rate": 0.0678
+          },
+          "3000-3499": {
+            "n": 75,
+            "rate": 0.0322
+          },
+          "3500-3999": {
+            "n": 31,
+            "rate": 0.0133
+          },
+          "4000-4499": {
+            "n": 1,
+            "rate": 0.0004
+          }
+        }
+      },
+      "residual_cash": {
+        "n": 2330,
+        "min": 0,
+        "p25": 1300,
+        "median": 1650,
+        "p75": 2050,
+        "max": 8700,
+        "iqr": 750,
+        "median_absolute_deviation": 350,
+        "shortest_50pct_interval": {
+          "low": 1200,
+          "high": 1900,
+          "width": 700
+        },
+        "shortest_75pct_interval": {
+          "low": 850,
+          "high": 2200,
+          "width": 1350
+        },
+        "top_exact_amounts": {
+          "1400": {
+            "n": 88,
+            "rate": 0.0378
+          },
+          "1450": {
+            "n": 92,
+            "rate": 0.0395
+          },
+          "1500": {
+            "n": 83,
+            "rate": 0.0356
+          },
+          "1550": {
+            "n": 106,
+            "rate": 0.0455
+          },
+          "1600": {
+            "n": 88,
+            "rate": 0.0378
+          },
+          "1650": {
+            "n": 71,
+            "rate": 0.0305
+          },
+          "1700": {
+            "n": 114,
+            "rate": 0.0489
+          },
+          "1750": {
+            "n": 77,
+            "rate": 0.033
+          },
+          "1800": {
+            "n": 85,
+            "rate": 0.0365
+          },
+          "1850": {
+            "n": 73,
+            "rate": 0.0313
+          },
+          "1900": {
+            "n": 70,
+            "rate": 0.03
+          },
+          "2050": {
+            "n": 66,
+            "rate": 0.0283
+          }
+        },
+        "common_500_bands": {
+          "1500-1999": {
+            "n": 823,
+            "rate": 0.3532
+          },
+          "1000-1499": {
+            "n": 575,
+            "rate": 0.2468
+          },
+          "2000-2499": {
+            "n": 375,
+            "rate": 0.1609
+          },
+          "500-999": {
+            "n": 219,
+            "rate": 0.094
+          },
+          "2500-2999": {
+            "n": 152,
+            "rate": 0.0652
+          },
+          "3000-3499": {
+            "n": 62,
+            "rate": 0.0266
+          },
+          "0-499": {
+            "n": 54,
+            "rate": 0.0232
+          },
+          "3500-3999": {
+            "n": 28,
+            "rate": 0.012
+          },
+          "4000-4499": {
+            "n": 17,
+            "rate": 0.0073
+          },
+          "5500-5999": {
+            "n": 6,
+            "rate": 0.0026
+          }
+        }
+      },
+      "next_cash_loss_no_plant": {
+        "n": 2330,
+        "min": 1900,
+        "p25": 3950,
+        "median": 4700,
+        "p75": 5050,
+        "max": 10100,
+        "iqr": 1100,
+        "median_absolute_deviation": 500,
+        "shortest_50pct_interval": {
+          "low": 4350,
+          "high": 5250,
+          "width": 900
+        },
+        "shortest_75pct_interval": {
+          "low": 3450,
+          "high": 5550,
+          "width": 2100
+        },
+        "top_exact_amounts": {
+          "4450": {
+            "n": 53,
+            "rate": 0.0227
+          },
+          "4600": {
+            "n": 71,
+            "rate": 0.0305
+          },
+          "4650": {
+            "n": 56,
+            "rate": 0.024
+          },
+          "4700": {
+            "n": 63,
+            "rate": 0.027
+          },
+          "4750": {
+            "n": 57,
+            "rate": 0.0245
+          },
+          "4800": {
+            "n": 71,
+            "rate": 0.0305
+          },
+          "4850": {
+            "n": 88,
+            "rate": 0.0378
+          },
+          "4900": {
+            "n": 90,
+            "rate": 0.0386
+          },
+          "4950": {
+            "n": 90,
+            "rate": 0.0386
+          },
+          "5000": {
+            "n": 69,
+            "rate": 0.0296
+          },
+          "5050": {
+            "n": 72,
+            "rate": 0.0309
+          },
+          "5100": {
+            "n": 73,
+            "rate": 0.0313
+          }
+        },
+        "common_500_bands": {
+          "4500-4999": {
+            "n": 677,
+            "rate": 0.2906
+          },
+          "5000-5499": {
+            "n": 477,
+            "rate": 0.2047
+          },
+          "4000-4499": {
+            "n": 330,
+            "rate": 0.1416
+          },
+          "3000-3499": {
+            "n": 196,
+            "rate": 0.0841
+          },
+          "3500-3999": {
+            "n": 188,
+            "rate": 0.0807
+          },
+          "5500-5999": {
+            "n": 153,
+            "rate": 0.0657
+          },
+          "2500-2999": {
+            "n": 122,
+            "rate": 0.0524
+          },
+          "2000-2499": {
+            "n": 92,
+            "rate": 0.0395
+          },
+          "6000-6499": {
+            "n": 59,
+            "rate": 0.0253
+          },
+          "6500-6999": {
+            "n": 14,
+            "rate": 0.006
+          }
+        }
+      }
+    },
+    "categorical": {
+      "side": {
+        "CT": {
+          "n": 893,
+          "rate": 0.3833
+        },
+        "T": {
+          "n": 1437,
+          "rate": 0.6167
+        }
+      },
+      "context": {
+        "NORMAL": {
+          "n": 2113,
+          "rate": 0.9069
+        },
+        "OVERTIME": {
+          "n": 3,
+          "rate": 0.0013
+        },
+        "POST_PISTOL": {
+          "n": 214,
+          "rate": 0.0918
+        }
+      },
+      "loss_index_and_reward": {
+        "index_0_reward_1400": {
+          "n": 295,
+          "rate": 0.1266
+        },
+        "index_1_reward_1900": {
+          "n": 256,
+          "rate": 0.1099
+        },
+        "index_2_reward_2400": {
+          "n": 360,
+          "rate": 0.1545
+        },
+        "index_3_reward_2900": {
+          "n": 383,
+          "rate": 0.1644
+        },
+        "index_4_reward_3400": {
+          "n": 1036,
+          "rate": 0.4446
+        }
+      },
+      "retained_primary": {
+        "no": {
+          "n": 2133,
+          "rate": 0.9155
+        },
+        "yes": {
+          "n": 197,
+          "rate": 0.0845
+        }
+      },
+      "retained_armor": {
+        "no": {
+          "n": 2033,
+          "rate": 0.8725
+        },
+        "yes": {
+          "n": 297,
+          "rate": 0.1275
+        }
+      },
+      "resulting_primary_family": {
+        "heavy": {
+          "n": 6,
+          "rate": 0.0026
+        },
+        "none": {
+          "n": 1701,
+          "rate": 0.73
+        },
+        "rifle": {
+          "n": 141,
+          "rate": 0.0605
+        },
+        "smg": {
+          "n": 421,
+          "rate": 0.1807
+        },
+        "sniper": {
+          "n": 61,
+          "rate": 0.0262
+        }
+      },
+      "resulting_armor": {
+        "kevlar": {
+          "n": 1126,
+          "rate": 0.4833
+        },
+        "none": {
+          "n": 253,
+          "rate": 0.1086
+        },
+        "vesthelm": {
+          "n": 951,
+          "rate": 0.4082
+        }
+      },
+      "resulting_primary_and_armor": {
+        "heavy+kevlar": {
+          "n": 3,
+          "rate": 0.0013
+        },
+        "heavy+none": {
+          "n": 3,
+          "rate": 0.0013
+        },
+        "none+kevlar": {
+          "n": 921,
+          "rate": 0.3953
+        },
+        "none+none": {
+          "n": 202,
+          "rate": 0.0867
+        },
+        "none+vesthelm": {
+          "n": 578,
+          "rate": 0.2481
+        },
+        "rifle+kevlar": {
+          "n": 64,
+          "rate": 0.0275
+        },
+        "rifle+none": {
+          "n": 5,
+          "rate": 0.0021
+        },
+        "rifle+vesthelm": {
+          "n": 72,
+          "rate": 0.0309
+        },
+        "smg+kevlar": {
+          "n": 116,
+          "rate": 0.0498
+        },
+        "smg+none": {
+          "n": 8,
+          "rate": 0.0034
+        },
+        "smg+vesthelm": {
+          "n": 297,
+          "rate": 0.1275
+        },
+        "sniper+kevlar": {
+          "n": 22,
+          "rate": 0.0094
+        },
+        "sniper+none": {
+          "n": 35,
+          "rate": 0.015
+        },
+        "sniper+vesthelm": {
+          "n": 4,
+          "rate": 0.0017
+        }
+      }
+    },
+    "subgroup_distributions": {
+      "side": {
+        "CT": {
+          "n": 893,
+          "current_money": {
+            "n": 893,
+            "min": 1400,
+            "p25": 2650,
+            "median": 3250,
+            "p75": 3700,
+            "max": 7750,
+            "iqr": 1050,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 2850,
+              "high": 3800,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 2350,
+              "high": 3950,
+              "width": 1600
+            }
+          },
+          "actual_spend": {
+            "n": 893,
+            "min": 0,
+            "p25": 1000,
+            "median": 1450,
+            "p75": 1900,
+            "max": 4250,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1800,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 500,
+              "high": 2350,
+              "width": 1850
+            }
+          },
+          "residual_cash": {
+            "n": 893,
+            "min": 350,
+            "p25": 1400,
+            "median": 1750,
+            "p75": 2150,
+            "max": 6650,
+            "iqr": 750,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 1400,
+              "high": 2150,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 600,
+              "high": 2200,
+              "width": 1600
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 893,
+            "min": 2150,
+            "p25": 3800,
+            "median": 4650,
+            "p75": 5100,
+            "max": 8050,
+            "iqr": 1300,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 4150,
+              "high": 5250,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 3100,
+              "high": 5450,
+              "width": 2350
+            }
+          }
+        },
+        "T": {
+          "n": 1437,
+          "current_money": {
+            "n": 1437,
+            "min": 0,
+            "p25": 3050,
+            "median": 3450,
+            "p75": 3850,
+            "max": 10000,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 3550,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 4100,
+              "width": 1200
+            }
+          },
+          "actual_spend": {
+            "n": 1437,
+            "min": 0,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2150,
+            "max": 3700,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 2050,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2300,
+              "width": 1350
+            }
+          },
+          "residual_cash": {
+            "n": 1437,
+            "min": 0,
+            "p25": 1250,
+            "median": 1600,
+            "p75": 1950,
+            "max": 8700,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1100,
+              "high": 1750,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 850,
+              "high": 2050,
+              "width": 1200
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1437,
+            "min": 1900,
+            "p25": 4000,
+            "median": 4700,
+            "p75": 5050,
+            "max": 10100,
+            "iqr": 1050,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 4300,
+              "high": 5150,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 3400,
+              "high": 5400,
+              "width": 2000
+            }
+          }
+        }
+      },
+      "context": {
+        "NORMAL": {
+          "n": 2113,
+          "current_money": {
+            "n": 2113,
+            "min": 0,
+            "p25": 3000,
+            "median": 3450,
+            "p75": 3800,
+            "max": 9000,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 3600,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 2850,
+              "high": 4200,
+              "width": 1350
+            }
+          },
+          "actual_spend": {
+            "n": 2113,
+            "min": 0,
+            "p25": 1150,
+            "median": 1650,
+            "p75": 2050,
+            "max": 4250,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2200,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2400,
+              "width": 1500
+            }
+          },
+          "residual_cash": {
+            "n": 2113,
+            "min": 0,
+            "p25": 1400,
+            "median": 1700,
+            "p75": 2050,
+            "max": 8700,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1250,
+              "high": 1900,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2150,
+              "width": 1250
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2113,
+            "min": 1900,
+            "p25": 4250,
+            "median": 4800,
+            "p75": 5100,
+            "max": 10100,
+            "iqr": 850,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 4350,
+              "high": 5150,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 3800,
+              "high": 5550,
+              "width": 1750
+            }
+          }
+        },
+        "OVERTIME": {
+          "n": 3,
+          "current_money": {
+            "n": 3,
+            "min": 2900,
+            "p25": 2975,
+            "median": 3050,
+            "p75": 6525,
+            "max": 10000,
+            "iqr": 3550,
+            "median_absolute_deviation": 150,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 3050,
+              "width": 150
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 10000,
+              "width": 7100
+            }
+          },
+          "actual_spend": {
+            "n": 3,
+            "min": 1300,
+            "p25": 1500,
+            "median": 1700,
+            "p75": 1900,
+            "max": 2100,
+            "iqr": 400,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1700,
+              "width": 400
+            },
+            "shortest_75pct_interval": {
+              "low": 1300,
+              "high": 2100,
+              "width": 800
+            }
+          },
+          "residual_cash": {
+            "n": 3,
+            "min": 1350,
+            "p25": 1475,
+            "median": 1600,
+            "p75": 4750,
+            "max": 7900,
+            "iqr": 3275,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 1600,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 7900,
+              "width": 6550
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 3,
+            "min": 4250,
+            "p25": 4375,
+            "median": 4500,
+            "p75": 7150,
+            "max": 9800,
+            "iqr": 2775,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4250,
+              "high": 4500,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 4250,
+              "high": 9800,
+              "width": 5550
+            }
+          }
+        },
+        "POST_PISTOL": {
+          "n": 214,
+          "current_money": {
+            "n": 214,
+            "min": 1950,
+            "p25": 2200,
+            "median": 2650,
+            "p75": 3700,
+            "max": 4750,
+            "iqr": 1500,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 2050,
+              "high": 2650,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 2050,
+              "high": 3700,
+              "width": 1650
+            }
+          },
+          "actual_spend": {
+            "n": 214,
+            "min": 0,
+            "p25": 1500,
+            "median": 1775,
+            "p75": 2400,
+            "max": 3550,
+            "iqr": 900,
+            "median_absolute_deviation": 425,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 2050,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 1300,
+              "high": 2750,
+              "width": 1450
+            }
+          },
+          "residual_cash": {
+            "n": 214,
+            "min": 450,
+            "p25": 700,
+            "median": 950,
+            "p75": 1400,
+            "max": 3200,
+            "iqr": 700,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 500,
+              "high": 950,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 450,
+              "high": 1400,
+              "width": 950
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 214,
+            "min": 2100,
+            "p25": 2800,
+            "median": 3050,
+            "p75": 3250,
+            "max": 4700,
+            "iqr": 450,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 2800,
+              "high": 3250,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 3300,
+              "width": 1100
+            }
+          }
+        }
+      },
+      "loss_index_and_reward": {
+        "index_0_reward_1400": {
+          "n": 295,
+          "current_money": {
+            "n": 295,
+            "min": 3250,
+            "p25": 3650,
+            "median": 3950,
+            "p75": 4500,
+            "max": 9000,
+            "iqr": 850,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 3400,
+              "high": 3950,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 3350,
+              "high": 4550,
+              "width": 1200
+            }
+          },
+          "actual_spend": {
+            "n": 295,
+            "min": 0,
+            "p25": 1000,
+            "median": 2250,
+            "p75": 2750,
+            "max": 3750,
+            "iqr": 1750,
+            "median_absolute_deviation": 850,
+            "shortest_50pct_interval": {
+              "low": 2200,
+              "high": 3250,
+              "width": 1050
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 3250,
+              "width": 2350
+            }
+          },
+          "residual_cash": {
+            "n": 295,
+            "min": 700,
+            "p25": 1150,
+            "median": 1950,
+            "p75": 3125,
+            "max": 8700,
+            "iqr": 1975,
+            "median_absolute_deviation": 900,
+            "shortest_50pct_interval": {
+              "low": 750,
+              "high": 1950,
+              "width": 1200
+            },
+            "shortest_75pct_interval": {
+              "low": 750,
+              "high": 3150,
+              "width": 2400
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 295,
+            "min": 2100,
+            "p25": 2550,
+            "median": 3350,
+            "p75": 4525,
+            "max": 10100,
+            "iqr": 1975,
+            "median_absolute_deviation": 900,
+            "shortest_50pct_interval": {
+              "low": 2150,
+              "high": 3350,
+              "width": 1200
+            },
+            "shortest_75pct_interval": {
+              "low": 2150,
+              "high": 4550,
+              "width": 2400
+            }
+          }
+        },
+        "index_1_reward_1900": {
+          "n": 256,
+          "current_money": {
+            "n": 256,
+            "min": 0,
+            "p25": 2587.5,
+            "median": 3250,
+            "p75": 3700,
+            "max": 10000,
+            "iqr": 1112.5,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 2800,
+              "high": 3800,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2100,
+              "high": 4350,
+              "width": 2250
+            }
+          },
+          "actual_spend": {
+            "n": 256,
+            "min": 0,
+            "p25": 1150,
+            "median": 1500,
+            "p75": 2000,
+            "max": 3700,
+            "iqr": 850,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1700,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2200,
+              "width": 1250
+            }
+          },
+          "residual_cash": {
+            "n": 256,
+            "min": 0,
+            "p25": 900,
+            "median": 1575,
+            "p75": 2000,
+            "max": 7900,
+            "iqr": 1100,
+            "median_absolute_deviation": 525,
+            "shortest_50pct_interval": {
+              "low": 1050,
+              "high": 2050,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 400,
+              "high": 2100,
+              "width": 1700
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 256,
+            "min": 1900,
+            "p25": 2800,
+            "median": 3475,
+            "p75": 3900,
+            "max": 9800,
+            "iqr": 1100,
+            "median_absolute_deviation": 525,
+            "shortest_50pct_interval": {
+              "low": 2950,
+              "high": 3950,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2300,
+              "high": 4000,
+              "width": 1700
+            }
+          }
+        },
+        "index_2_reward_2400": {
+          "n": 360,
+          "current_money": {
+            "n": 360,
+            "min": 100,
+            "p25": 2237.5,
+            "median": 2800,
+            "p75": 3450,
+            "max": 6500,
+            "iqr": 1212.5,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 1950,
+              "high": 2850,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 3450,
+              "width": 1550
+            }
+          },
+          "actual_spend": {
+            "n": 360,
+            "min": 0,
+            "p25": 1150,
+            "median": 1500,
+            "p75": 1800,
+            "max": 3700,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1150,
+              "high": 1800,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2300,
+              "width": 1400
+            }
+          },
+          "residual_cash": {
+            "n": 360,
+            "min": 100,
+            "p25": 850,
+            "median": 1550,
+            "p75": 2000,
+            "max": 4300,
+            "iqr": 1150,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 2250,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 550,
+              "high": 2050,
+              "width": 1500
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 360,
+            "min": 2500,
+            "p25": 3250,
+            "median": 3950,
+            "p75": 4400,
+            "max": 6700,
+            "iqr": 1150,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 3700,
+              "high": 4650,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 2950,
+              "high": 4450,
+              "width": 1500
+            }
+          }
+        },
+        "index_3_reward_2900": {
+          "n": 383,
+          "current_money": {
+            "n": 383,
+            "min": 150,
+            "p25": 2650,
+            "median": 3050,
+            "p75": 3350,
+            "max": 5550,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 2450,
+              "high": 3050,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 2400,
+              "high": 3400,
+              "width": 1000
+            }
+          },
+          "actual_spend": {
+            "n": 383,
+            "min": 0,
+            "p25": 725,
+            "median": 1350,
+            "p75": 1750,
+            "max": 3700,
+            "iqr": 1025,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1100,
+              "high": 1900,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 300,
+              "high": 1850,
+              "width": 1550
+            }
+          },
+          "residual_cash": {
+            "n": 383,
+            "min": 150,
+            "p25": 1450,
+            "median": 1750,
+            "p75": 2100,
+            "max": 3500,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1600,
+              "high": 2150,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1200,
+              "high": 2200,
+              "width": 1000
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 383,
+            "min": 3050,
+            "p25": 4350,
+            "median": 4650,
+            "p75": 5000,
+            "max": 6400,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 4500,
+              "high": 5050,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 4100,
+              "high": 5100,
+              "width": 1000
+            }
+          }
+        },
+        "index_4_reward_3400": {
+          "n": 1036,
+          "current_money": {
+            "n": 1036,
+            "min": 0,
+            "p25": 3100,
+            "median": 3500,
+            "p75": 3750,
+            "max": 6350,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 3300,
+              "high": 3850,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 3800,
+              "width": 900
+            }
+          },
+          "actual_spend": {
+            "n": 1036,
+            "min": 0,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2100,
+            "max": 4250,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2000,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1150,
+              "high": 2200,
+              "width": 1050
+            }
+          },
+          "residual_cash": {
+            "n": 1036,
+            "min": 0,
+            "p25": 1400,
+            "median": 1600,
+            "p75": 1900,
+            "max": 4450,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1750,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 1200,
+              "high": 2100,
+              "width": 900
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1036,
+            "min": 3400,
+            "p25": 4800,
+            "median": 5000,
+            "p75": 5300,
+            "max": 7850,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4700,
+              "high": 5150,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 4600,
+              "high": 5500,
+              "width": 900
+            }
+          }
+        }
+      },
+      "side_by_loss_index_and_reward": {
+        "CT:index_0_reward_1400": {
+          "n": 134,
+          "current_money": {
+            "n": 134,
+            "min": 3500,
+            "p25": 3650,
+            "median": 3900,
+            "p75": 4250,
+            "max": 7750,
+            "iqr": 600,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 3600,
+              "high": 3950,
+              "width": 350
+            },
+            "shortest_75pct_interval": {
+              "low": 3500,
+              "high": 4250,
+              "width": 750
+            }
+          },
+          "actual_spend": {
+            "n": 134,
+            "min": 0,
+            "p25": 1000,
+            "median": 2250,
+            "p75": 2587.5,
+            "max": 3750,
+            "iqr": 1587.5,
+            "median_absolute_deviation": 750,
+            "shortest_50pct_interval": {
+              "low": 2200,
+              "high": 3350,
+              "width": 1150
+            },
+            "shortest_75pct_interval": {
+              "low": 800,
+              "high": 3000,
+              "width": 2200
+            }
+          },
+          "residual_cash": {
+            "n": 134,
+            "min": 750,
+            "p25": 1362.5,
+            "median": 1875,
+            "p75": 3037.5,
+            "max": 6650,
+            "iqr": 1675,
+            "median_absolute_deviation": 825,
+            "shortest_50pct_interval": {
+              "low": 750,
+              "high": 1850,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 800,
+              "high": 3050,
+              "width": 2250
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 134,
+            "min": 2150,
+            "p25": 2762.5,
+            "median": 3275,
+            "p75": 4437.5,
+            "max": 8050,
+            "iqr": 1675,
+            "median_absolute_deviation": 825,
+            "shortest_50pct_interval": {
+              "low": 2150,
+              "high": 3250,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 4450,
+              "width": 2250
+            }
+          }
+        },
+        "CT:index_1_reward_1900": {
+          "n": 84,
+          "current_money": {
+            "n": 84,
+            "min": 1400,
+            "p25": 2475,
+            "median": 3375,
+            "p75": 3912.5,
+            "max": 5800,
+            "iqr": 1437.5,
+            "median_absolute_deviation": 675,
+            "shortest_50pct_interval": {
+              "low": 3000,
+              "high": 4100,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 1700,
+              "high": 3950,
+              "width": 2250
+            }
+          },
+          "actual_spend": {
+            "n": 84,
+            "min": 0,
+            "p25": 1150,
+            "median": 1450,
+            "p75": 2012.5,
+            "max": 3550,
+            "iqr": 862.5,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1150,
+              "high": 1900,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2600,
+              "width": 1650
+            }
+          },
+          "residual_cash": {
+            "n": 84,
+            "min": 350,
+            "p25": 900,
+            "median": 1700,
+            "p75": 2100,
+            "max": 4350,
+            "iqr": 1200,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 1200,
+              "high": 2200,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 400,
+              "high": 2100,
+              "width": 1700
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 84,
+            "min": 2250,
+            "p25": 2800,
+            "median": 3600,
+            "p75": 4000,
+            "max": 6250,
+            "iqr": 1200,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 3100,
+              "high": 4100,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2300,
+              "high": 4000,
+              "width": 1700
+            }
+          }
+        },
+        "CT:index_2_reward_2400": {
+          "n": 186,
+          "current_money": {
+            "n": 186,
+            "min": 1900,
+            "p25": 2150,
+            "median": 2450,
+            "p75": 3000,
+            "max": 5000,
+            "iqr": 850,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 2050,
+              "high": 2500,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 3000,
+              "width": 1100
+            }
+          },
+          "actual_spend": {
+            "n": 186,
+            "min": 0,
+            "p25": 950,
+            "median": 1450,
+            "p75": 1700,
+            "max": 3550,
+            "iqr": 750,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 1950,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 650,
+              "high": 1950,
+              "width": 1300
+            }
+          },
+          "residual_cash": {
+            "n": 186,
+            "min": 450,
+            "p25": 750,
+            "median": 1450,
+            "p75": 1950,
+            "max": 4300,
+            "iqr": 1200,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 450,
+              "high": 1450,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 450,
+              "high": 1950,
+              "width": 1500
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 186,
+            "min": 2850,
+            "p25": 3150,
+            "median": 3850,
+            "p75": 4350,
+            "max": 6700,
+            "iqr": 1200,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 2850,
+              "high": 3850,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2850,
+              "high": 4350,
+              "width": 1500
+            }
+          }
+        },
+        "CT:index_3_reward_2900": {
+          "n": 210,
+          "current_money": {
+            "n": 210,
+            "min": 2400,
+            "p25": 2550,
+            "median": 2850,
+            "p75": 3150,
+            "max": 5250,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 2400,
+              "high": 2850,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 2400,
+              "high": 3150,
+              "width": 750
+            }
+          },
+          "actual_spend": {
+            "n": 210,
+            "min": 0,
+            "p25": 300,
+            "median": 1000,
+            "p75": 1450,
+            "max": 3550,
+            "iqr": 1150,
+            "median_absolute_deviation": 475,
+            "shortest_50pct_interval": {
+              "low": 300,
+              "high": 1150,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 300,
+              "high": 1650,
+              "width": 1350
+            }
+          },
+          "residual_cash": {
+            "n": 210,
+            "min": 750,
+            "p25": 1600,
+            "median": 1950,
+            "p75": 2187.5,
+            "max": 3500,
+            "iqr": 587.5,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1700,
+              "high": 2200,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 2400,
+              "width": 1050
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 210,
+            "min": 3650,
+            "p25": 4500,
+            "median": 4850,
+            "p75": 5087.5,
+            "max": 6400,
+            "iqr": 587.5,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4600,
+              "high": 5100,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 4250,
+              "high": 5300,
+              "width": 1050
+            }
+          }
+        },
+        "CT:index_4_reward_3400": {
+          "n": 279,
+          "current_money": {
+            "n": 279,
+            "min": 2900,
+            "p25": 3150,
+            "median": 3500,
+            "p75": 3700,
+            "max": 6350,
+            "iqr": 550,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 2950,
+              "high": 3500,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 3700,
+              "width": 800
+            }
+          },
+          "actual_spend": {
+            "n": 279,
+            "min": 0,
+            "p25": 1450,
+            "median": 1750,
+            "p75": 2175,
+            "max": 4250,
+            "iqr": 725,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 1950,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 1000,
+              "high": 2200,
+              "width": 1200
+            }
+          },
+          "residual_cash": {
+            "n": 279,
+            "min": 900,
+            "p25": 1500,
+            "median": 1750,
+            "p75": 2100,
+            "max": 4450,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1800,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 1250,
+              "high": 2150,
+              "width": 900
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 279,
+            "min": 4300,
+            "p25": 4900,
+            "median": 5150,
+            "p75": 5500,
+            "max": 7850,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 4700,
+              "high": 5200,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 4650,
+              "high": 5550,
+              "width": 900
+            }
+          }
+        },
+        "T:index_0_reward_1400": {
+          "n": 161,
+          "current_money": {
+            "n": 161,
+            "min": 3250,
+            "p25": 3650,
+            "median": 4100,
+            "p75": 4900,
+            "max": 9000,
+            "iqr": 1250,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 3400,
+              "high": 4150,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 3350,
+              "high": 4950,
+              "width": 1600
+            }
+          },
+          "actual_spend": {
+            "n": 161,
+            "min": 0,
+            "p25": 900,
+            "median": 2350,
+            "p75": 2850,
+            "max": 3600,
+            "iqr": 1950,
+            "median_absolute_deviation": 800,
+            "shortest_50pct_interval": {
+              "low": 2350,
+              "high": 3250,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 3250,
+              "width": 2350
+            }
+          },
+          "residual_cash": {
+            "n": 161,
+            "min": 700,
+            "p25": 1100,
+            "median": 1950,
+            "p75": 3200,
+            "max": 8700,
+            "iqr": 2100,
+            "median_absolute_deviation": 950,
+            "shortest_50pct_interval": {
+              "low": 750,
+              "high": 1950,
+              "width": 1200
+            },
+            "shortest_75pct_interval": {
+              "low": 800,
+              "high": 3200,
+              "width": 2400
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 161,
+            "min": 2100,
+            "p25": 2500,
+            "median": 3350,
+            "p75": 4600,
+            "max": 10100,
+            "iqr": 2100,
+            "median_absolute_deviation": 950,
+            "shortest_50pct_interval": {
+              "low": 2150,
+              "high": 3350,
+              "width": 1200
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 4600,
+              "width": 2400
+            }
+          }
+        },
+        "T:index_1_reward_1900": {
+          "n": 172,
+          "current_money": {
+            "n": 172,
+            "min": 0,
+            "p25": 2725,
+            "median": 3125,
+            "p75": 3612.5,
+            "max": 10000,
+            "iqr": 887.5,
+            "median_absolute_deviation": 475,
+            "shortest_50pct_interval": {
+              "low": 2750,
+              "high": 3600,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 4350,
+              "width": 2150
+            }
+          },
+          "actual_spend": {
+            "n": 172,
+            "min": 0,
+            "p25": 1087.5,
+            "median": 1500,
+            "p75": 2000,
+            "max": 3700,
+            "iqr": 912.5,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1650,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2150,
+              "width": 1200
+            }
+          },
+          "residual_cash": {
+            "n": 172,
+            "min": 0,
+            "p25": 900,
+            "median": 1525,
+            "p75": 1950,
+            "max": 7900,
+            "iqr": 1050,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 1050,
+              "high": 2000,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 400,
+              "high": 2050,
+              "width": 1650
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 172,
+            "min": 1900,
+            "p25": 2800,
+            "median": 3425,
+            "p75": 3850,
+            "max": 9800,
+            "iqr": 1050,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 2950,
+              "high": 3900,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 2300,
+              "high": 3950,
+              "width": 1650
+            }
+          }
+        },
+        "T:index_2_reward_2400": {
+          "n": 174,
+          "current_money": {
+            "n": 174,
+            "min": 100,
+            "p25": 2650,
+            "median": 3300,
+            "p75": 3650,
+            "max": 6500,
+            "iqr": 1000,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 2600,
+              "high": 3500,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 2300,
+              "high": 3950,
+              "width": 1650
+            }
+          },
+          "actual_spend": {
+            "n": 174,
+            "min": 0,
+            "p25": 1200,
+            "median": 1700,
+            "p75": 2050,
+            "max": 3700,
+            "iqr": 850,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2200,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2300,
+              "width": 1350
+            }
+          },
+          "residual_cash": {
+            "n": 174,
+            "min": 100,
+            "p25": 1100,
+            "median": 1600,
+            "p75": 2000,
+            "max": 3850,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1250,
+              "high": 2050,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2300,
+              "width": 1400
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 174,
+            "min": 2500,
+            "p25": 3500,
+            "median": 4000,
+            "p75": 4400,
+            "max": 6250,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 3650,
+              "high": 4450,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 3300,
+              "high": 4700,
+              "width": 1400
+            }
+          }
+        },
+        "T:index_3_reward_2900": {
+          "n": 173,
+          "current_money": {
+            "n": 173,
+            "min": 150,
+            "p25": 3000,
+            "median": 3250,
+            "p75": 3550,
+            "max": 5550,
+            "iqr": 550,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 3000,
+              "high": 3450,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 2700,
+              "high": 3700,
+              "width": 1000
+            }
+          },
+          "actual_spend": {
+            "n": 173,
+            "min": 0,
+            "p25": 1350,
+            "median": 1650,
+            "p75": 1950,
+            "max": 3700,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1850,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1000,
+              "high": 2050,
+              "width": 1050
+            }
+          },
+          "residual_cash": {
+            "n": 173,
+            "min": 150,
+            "p25": 1350,
+            "median": 1600,
+            "p75": 1850,
+            "max": 2850,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1200,
+              "high": 1700,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 1200,
+              "high": 2050,
+              "width": 850
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 173,
+            "min": 3050,
+            "p25": 4250,
+            "median": 4500,
+            "p75": 4750,
+            "max": 5750,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4100,
+              "high": 4600,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 4100,
+              "high": 4950,
+              "width": 850
+            }
+          }
+        },
+        "T:index_4_reward_3400": {
+          "n": 757,
+          "current_money": {
+            "n": 757,
+            "min": 0,
+            "p25": 3050,
+            "median": 3500,
+            "p75": 3800,
+            "max": 5850,
+            "iqr": 750,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 3400,
+              "high": 3950,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 3800,
+              "width": 900
+            }
+          },
+          "actual_spend": {
+            "n": 757,
+            "min": 0,
+            "p25": 1500,
+            "median": 1850,
+            "p75": 2100,
+            "max": 3700,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2000,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 2300,
+              "width": 950
+            }
+          },
+          "residual_cash": {
+            "n": 757,
+            "min": 0,
+            "p25": 1350,
+            "median": 1550,
+            "p75": 1850,
+            "max": 4050,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1250,
+              "high": 1700,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 1000,
+              "high": 1900,
+              "width": 900
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 757,
+            "min": 3400,
+            "p25": 4750,
+            "median": 4950,
+            "p75": 5250,
+            "max": 7450,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4650,
+              "high": 5100,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 4400,
+              "high": 5300,
+              "width": 900
+            }
+          }
+        }
+      },
+      "context_by_loss_index_and_reward": {
+        "NORMAL:index_0_reward_1400": {
+          "n": 203,
+          "current_money": {
+            "n": 203,
+            "min": 3250,
+            "p25": 3725,
+            "median": 4150,
+            "p75": 4900,
+            "max": 9000,
+            "iqr": 1175,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 3500,
+              "high": 4150,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 3250,
+              "high": 4900,
+              "width": 1650
+            }
+          },
+          "actual_spend": {
+            "n": 203,
+            "min": 0,
+            "p25": 800,
+            "median": 1650,
+            "p75": 2750,
+            "max": 3750,
+            "iqr": 1950,
+            "median_absolute_deviation": 950,
+            "shortest_50pct_interval": {
+              "low": 200,
+              "high": 1800,
+              "width": 1600
+            },
+            "shortest_75pct_interval": {
+              "low": 700,
+              "high": 3250,
+              "width": 2550
+            }
+          },
+          "residual_cash": {
+            "n": 203,
+            "min": 800,
+            "p25": 1675,
+            "median": 2700,
+            "p75": 3550,
+            "max": 8700,
+            "iqr": 1875,
+            "median_absolute_deviation": 950,
+            "shortest_50pct_interval": {
+              "low": 850,
+              "high": 2700,
+              "width": 1850
+            },
+            "shortest_75pct_interval": {
+              "low": 800,
+              "high": 3550,
+              "width": 2750
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 203,
+            "min": 2200,
+            "p25": 3075,
+            "median": 4100,
+            "p75": 4950,
+            "max": 10100,
+            "iqr": 1875,
+            "median_absolute_deviation": 950,
+            "shortest_50pct_interval": {
+              "low": 2250,
+              "high": 4100,
+              "width": 1850
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 4950,
+              "width": 2750
+            }
+          }
+        },
+        "NORMAL:index_1_reward_1900": {
+          "n": 255,
+          "current_money": {
+            "n": 255,
+            "min": 0,
+            "p25": 2575,
+            "median": 3250,
+            "p75": 3700,
+            "max": 7150,
+            "iqr": 1125,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 2800,
+              "high": 3800,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2100,
+              "high": 4350,
+              "width": 2250
+            }
+          },
+          "actual_spend": {
+            "n": 255,
+            "min": 0,
+            "p25": 1150,
+            "median": 1500,
+            "p75": 2000,
+            "max": 3700,
+            "iqr": 850,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1700,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2200,
+              "width": 1250
+            }
+          },
+          "residual_cash": {
+            "n": 255,
+            "min": 0,
+            "p25": 900,
+            "median": 1550,
+            "p75": 2000,
+            "max": 5000,
+            "iqr": 1100,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 1050,
+              "high": 2050,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 400,
+              "high": 2100,
+              "width": 1700
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 255,
+            "min": 1900,
+            "p25": 2800,
+            "median": 3450,
+            "p75": 3900,
+            "max": 6900,
+            "iqr": 1100,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 2950,
+              "high": 3950,
+              "width": 1000
+            },
+            "shortest_75pct_interval": {
+              "low": 2300,
+              "high": 4000,
+              "width": 1700
+            }
+          }
+        },
+        "NORMAL:index_2_reward_2400": {
+          "n": 238,
+          "current_money": {
+            "n": 238,
+            "min": 100,
+            "p25": 2650,
+            "median": 3300,
+            "p75": 3700,
+            "max": 6500,
+            "iqr": 1050,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 2800,
+              "high": 3700,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 3700,
+              "width": 1800
+            }
+          },
+          "actual_spend": {
+            "n": 238,
+            "min": 0,
+            "p25": 1000,
+            "median": 1450,
+            "p75": 1900,
+            "max": 3700,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1850,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 600,
+              "high": 2400,
+              "width": 1800
+            }
+          },
+          "residual_cash": {
+            "n": 238,
+            "min": 100,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2100,
+            "max": 4300,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1600,
+              "high": 2150,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1150,
+              "high": 2250,
+              "width": 1100
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 238,
+            "min": 2500,
+            "p25": 3850,
+            "median": 4200,
+            "p75": 4500,
+            "max": 6700,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 4000,
+              "high": 4550,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 3550,
+              "high": 4650,
+              "width": 1100
+            }
+          }
+        },
+        "NORMAL:index_3_reward_2900": {
+          "n": 381,
+          "current_money": {
+            "n": 381,
+            "min": 150,
+            "p25": 2650,
+            "median": 3050,
+            "p75": 3350,
+            "max": 5550,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 2450,
+              "high": 3050,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 2400,
+              "high": 3400,
+              "width": 1000
+            }
+          },
+          "actual_spend": {
+            "n": 381,
+            "min": 0,
+            "p25": 700,
+            "median": 1350,
+            "p75": 1750,
+            "max": 3700,
+            "iqr": 1050,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1100,
+              "high": 1900,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 300,
+              "high": 1850,
+              "width": 1550
+            }
+          },
+          "residual_cash": {
+            "n": 381,
+            "min": 150,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2100,
+            "max": 3500,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1600,
+              "high": 2150,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1200,
+              "high": 2200,
+              "width": 1000
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 381,
+            "min": 3050,
+            "p25": 4350,
+            "median": 4700,
+            "p75": 5000,
+            "max": 6400,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 4500,
+              "high": 5050,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 4100,
+              "high": 5100,
+              "width": 1000
+            }
+          }
+        },
+        "NORMAL:index_4_reward_3400": {
+          "n": 1036,
+          "current_money": {
+            "n": 1036,
+            "min": 0,
+            "p25": 3100,
+            "median": 3500,
+            "p75": 3750,
+            "max": 6350,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 3300,
+              "high": 3850,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 3800,
+              "width": 900
+            }
+          },
+          "actual_spend": {
+            "n": 1036,
+            "min": 0,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2100,
+            "max": 4250,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2000,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1150,
+              "high": 2200,
+              "width": 1050
+            }
+          },
+          "residual_cash": {
+            "n": 1036,
+            "min": 0,
+            "p25": 1400,
+            "median": 1600,
+            "p75": 1900,
+            "max": 4450,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1750,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 1200,
+              "high": 2100,
+              "width": 900
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1036,
+            "min": 3400,
+            "p25": 4800,
+            "median": 5000,
+            "p75": 5300,
+            "max": 7850,
+            "iqr": 500,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4700,
+              "high": 5150,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 4600,
+              "high": 5500,
+              "width": 900
+            }
+          }
+        },
+        "OVERTIME:index_1_reward_1900": {
+          "n": 1,
+          "current_money": {
+            "n": 1,
+            "min": 10000,
+            "p25": 10000,
+            "median": 10000,
+            "p75": 10000,
+            "max": 10000,
+            "iqr": 0,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 10000,
+              "high": 10000,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 10000,
+              "high": 10000,
+              "width": 0
+            }
+          },
+          "actual_spend": {
+            "n": 1,
+            "min": 2100,
+            "p25": 2100,
+            "median": 2100,
+            "p75": 2100,
+            "max": 2100,
+            "iqr": 0,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 2100,
+              "high": 2100,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 2100,
+              "high": 2100,
+              "width": 0
+            }
+          },
+          "residual_cash": {
+            "n": 1,
+            "min": 7900,
+            "p25": 7900,
+            "median": 7900,
+            "p75": 7900,
+            "max": 7900,
+            "iqr": 0,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 7900,
+              "high": 7900,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 7900,
+              "high": 7900,
+              "width": 0
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1,
+            "min": 9800,
+            "p25": 9800,
+            "median": 9800,
+            "p75": 9800,
+            "max": 9800,
+            "iqr": 0,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 9800,
+              "high": 9800,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 9800,
+              "high": 9800,
+              "width": 0
+            }
+          }
+        },
+        "OVERTIME:index_3_reward_2900": {
+          "n": 2,
+          "current_money": {
+            "n": 2,
+            "min": 2900,
+            "p25": 2937.5,
+            "median": 2975,
+            "p75": 3012.5,
+            "max": 3050,
+            "iqr": 75,
+            "median_absolute_deviation": 75,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 2900,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 3050,
+              "width": 150
+            }
+          },
+          "actual_spend": {
+            "n": 2,
+            "min": 1300,
+            "p25": 1400,
+            "median": 1500,
+            "p75": 1600,
+            "max": 1700,
+            "iqr": 200,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1300,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 1300,
+              "high": 1700,
+              "width": 400
+            }
+          },
+          "residual_cash": {
+            "n": 2,
+            "min": 1350,
+            "p25": 1412.5,
+            "median": 1475,
+            "p75": 1537.5,
+            "max": 1600,
+            "iqr": 125,
+            "median_absolute_deviation": 125,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 1350,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 1600,
+              "width": 250
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2,
+            "min": 4250,
+            "p25": 4312.5,
+            "median": 4375,
+            "p75": 4437.5,
+            "max": 4500,
+            "iqr": 125,
+            "median_absolute_deviation": 125,
+            "shortest_50pct_interval": {
+              "low": 4250,
+              "high": 4250,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 4250,
+              "high": 4500,
+              "width": 250
+            }
+          }
+        },
+        "POST_PISTOL:index_0_reward_1400": {
+          "n": 92,
+          "current_money": {
+            "n": 92,
+            "min": 3250,
+            "p25": 3650,
+            "median": 3850,
+            "p75": 3950,
+            "max": 4750,
+            "iqr": 300,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 3650,
+              "high": 3950,
+              "width": 300
+            },
+            "shortest_75pct_interval": {
+              "low": 3350,
+              "high": 3950,
+              "width": 600
+            }
+          },
+          "actual_spend": {
+            "n": 92,
+            "min": 650,
+            "p25": 2250,
+            "median": 2550,
+            "p75": 2800,
+            "max": 3550,
+            "iqr": 550,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 2250,
+              "high": 2750,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 3150,
+              "width": 950
+            }
+          },
+          "residual_cash": {
+            "n": 92,
+            "min": 700,
+            "p25": 950,
+            "median": 1250,
+            "p75": 1700,
+            "max": 3200,
+            "iqr": 750,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 750,
+              "high": 1250,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 800,
+              "high": 1700,
+              "width": 900
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 92,
+            "min": 2100,
+            "p25": 2350,
+            "median": 2650,
+            "p75": 3100,
+            "max": 4600,
+            "iqr": 750,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 2150,
+              "high": 2650,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 3100,
+              "width": 900
+            }
+          }
+        },
+        "POST_PISTOL:index_2_reward_2400": {
+          "n": 122,
+          "current_money": {
+            "n": 122,
+            "min": 1950,
+            "p25": 2150,
+            "median": 2300,
+            "p75": 2500,
+            "max": 2950,
+            "iqr": 350,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 2000,
+              "high": 2300,
+              "width": 300
+            },
+            "shortest_75pct_interval": {
+              "low": 2000,
+              "high": 2500,
+              "width": 500
+            }
+          },
+          "actual_spend": {
+            "n": 122,
+            "min": 0,
+            "p25": 1450,
+            "median": 1650,
+            "p75": 1750,
+            "max": 2200,
+            "iqr": 300,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 1700,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 2000,
+              "width": 650
+            }
+          },
+          "residual_cash": {
+            "n": 122,
+            "min": 450,
+            "p25": 600,
+            "median": 700,
+            "p75": 950,
+            "max": 2300,
+            "iqr": 350,
+            "median_absolute_deviation": 150,
+            "shortest_50pct_interval": {
+              "low": 450,
+              "high": 700,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 450,
+              "high": 950,
+              "width": 500
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 122,
+            "min": 2850,
+            "p25": 3000,
+            "median": 3100,
+            "p75": 3350,
+            "max": 4700,
+            "iqr": 350,
+            "median_absolute_deviation": 150,
+            "shortest_50pct_interval": {
+              "low": 2850,
+              "high": 3100,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 2850,
+              "high": 3350,
+              "width": 500
+            }
+          }
+        }
+      },
+      "retained_primary": {
+        "no": {
+          "n": 2133,
+          "current_money": {
+            "n": 2133,
+            "min": 100,
+            "p25": 3000,
+            "median": 3450,
+            "p75": 3800,
+            "max": 10000,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 3600,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 2800,
+              "high": 4150,
+              "width": 1350
+            }
+          },
+          "actual_spend": {
+            "n": 2133,
+            "min": 0,
+            "p25": 1400,
+            "median": 1750,
+            "p75": 2200,
+            "max": 4250,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 2050,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2250,
+              "width": 1300
+            }
+          },
+          "residual_cash": {
+            "n": 2133,
+            "min": 100,
+            "p25": 1300,
+            "median": 1600,
+            "p75": 1950,
+            "max": 7900,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1200,
+              "high": 1850,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2100,
+              "width": 1200
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2133,
+            "min": 2100,
+            "p25": 3900,
+            "median": 4700,
+            "p75": 5050,
+            "max": 9800,
+            "iqr": 1150,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 4300,
+              "high": 5200,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 3400,
+              "high": 5500,
+              "width": 2100
+            }
+          }
+        },
+        "yes": {
+          "n": 197,
+          "current_money": {
+            "n": 197,
+            "min": 0,
+            "p25": 2150,
+            "median": 3450,
+            "p75": 4100,
+            "max": 9000,
+            "iqr": 1950,
+            "median_absolute_deviation": 1000,
+            "shortest_50pct_interval": {
+              "low": 2400,
+              "high": 4100,
+              "width": 1700
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 5600,
+              "width": 3700
+            }
+          },
+          "actual_spend": {
+            "n": 197,
+            "min": 0,
+            "p25": 0,
+            "median": 400,
+            "p75": 800,
+            "max": 1700,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 400,
+              "width": 400
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 800,
+              "width": 800
+            }
+          },
+          "residual_cash": {
+            "n": 197,
+            "min": 0,
+            "p25": 1950,
+            "median": 2650,
+            "p75": 3450,
+            "max": 8700,
+            "iqr": 1500,
+            "median_absolute_deviation": 700,
+            "shortest_50pct_interval": {
+              "low": 1900,
+              "high": 3300,
+              "width": 1400
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 3450,
+              "width": 3450
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 197,
+            "min": 1900,
+            "p25": 4100,
+            "median": 4700,
+            "p75": 5250,
+            "max": 10100,
+            "iqr": 1150,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 4050,
+              "high": 5150,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 3300,
+              "high": 5650,
+              "width": 2350
+            }
+          }
+        }
+      },
+      "retained_armor": {
+        "no": {
+          "n": 2033,
+          "current_money": {
+            "n": 2033,
+            "min": 1400,
+            "p25": 3000,
+            "median": 3450,
+            "p75": 3800,
+            "max": 10000,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 2850,
+              "high": 3550,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 4150,
+              "width": 1250
+            }
+          },
+          "actual_spend": {
+            "n": 2033,
+            "min": 0,
+            "p25": 1450,
+            "median": 1750,
+            "p75": 2200,
+            "max": 4250,
+            "iqr": 750,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1450,
+              "high": 2100,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 1000,
+              "high": 2200,
+              "width": 1200
+            }
+          },
+          "residual_cash": {
+            "n": 2033,
+            "min": 300,
+            "p25": 1300,
+            "median": 1600,
+            "p75": 1900,
+            "max": 7900,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1300,
+              "high": 1900,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 1000,
+              "high": 2150,
+              "width": 1150
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2033,
+            "min": 2100,
+            "p25": 3950,
+            "median": 4700,
+            "p75": 5050,
+            "max": 9800,
+            "iqr": 1100,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 4250,
+              "high": 5150,
+              "width": 900
+            },
+            "shortest_75pct_interval": {
+              "low": 3450,
+              "high": 5500,
+              "width": 2050
+            }
+          }
+        },
+        "yes": {
+          "n": 297,
+          "current_money": {
+            "n": 297,
+            "min": 0,
+            "p25": 2400,
+            "median": 2900,
+            "p75": 3900,
+            "max": 9000,
+            "iqr": 1500,
+            "median_absolute_deviation": 800,
+            "shortest_50pct_interval": {
+              "low": 2400,
+              "high": 3750,
+              "width": 1350
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 4450,
+              "width": 2550
+            }
+          },
+          "actual_spend": {
+            "n": 297,
+            "min": 0,
+            "p25": 0,
+            "median": 500,
+            "p75": 800,
+            "max": 3250,
+            "iqr": 800,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 500,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 800,
+              "width": 800
+            }
+          },
+          "residual_cash": {
+            "n": 297,
+            "min": 0,
+            "p25": 1800,
+            "median": 2200,
+            "p75": 3050,
+            "max": 8700,
+            "iqr": 1250,
+            "median_absolute_deviation": 750,
+            "shortest_50pct_interval": {
+              "low": 1800,
+              "high": 3050,
+              "width": 1250
+            },
+            "shortest_75pct_interval": {
+              "low": 850,
+              "high": 3600,
+              "width": 2750
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 297,
+            "min": 1900,
+            "p25": 3900,
+            "median": 4700,
+            "p75": 5150,
+            "max": 10100,
+            "iqr": 1250,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 4050,
+              "high": 5200,
+              "width": 1150
+            },
+            "shortest_75pct_interval": {
+              "low": 3250,
+              "high": 5750,
+              "width": 2500
+            }
+          }
+        }
+      }
+    },
+    "reserve_adjustment_by_loss_reward": {
+      "tier_medians": [
+        {
+          "tier": "index_0_reward_1400",
+          "reward": 1400,
+          "residual_median": 1950,
+          "next_median": 3350
+        },
+        {
+          "tier": "index_1_reward_1900",
+          "reward": 1900,
+          "residual_median": 1575,
+          "next_median": 3475
+        },
+        {
+          "tier": "index_2_reward_2400",
+          "reward": 2400,
+          "residual_median": 1550,
+          "next_median": 3950
+        },
+        {
+          "tier": "index_3_reward_2900",
+          "reward": 2900,
+          "residual_median": 1750,
+          "next_median": 4650
+        },
+        {
+          "tier": "index_4_reward_3400",
+          "reward": 3400,
+          "residual_median": 1600,
+          "next_median": 5000
+        }
+      ],
+      "adjacent_tier_changes": [
+        {
+          "from_reward": 1400,
+          "to_reward": 1900,
+          "reward_delta": 500,
+          "residual_median_delta": -375,
+          "next_median_delta": 125
+        },
+        {
+          "from_reward": 1900,
+          "to_reward": 2400,
+          "reward_delta": 500,
+          "residual_median_delta": -25,
+          "next_median_delta": 475
+        },
+        {
+          "from_reward": 2400,
+          "to_reward": 2900,
+          "reward_delta": 500,
+          "residual_median_delta": 200,
+          "next_median_delta": 700
+        },
+        {
+          "from_reward": 2900,
+          "to_reward": 3400,
+          "reward_delta": 500,
+          "residual_median_delta": -150,
+          "next_median_delta": 350
+        }
+      ],
+      "rank_association": {
+        "overall": {
+          "n": 2330,
+          "spearman_loss_reward_vs_residual_cash": -0.0369,
+          "spearman_loss_reward_vs_next_cash": 0.6503,
+          "hypothesis_pattern": "reserve-target compensation predicts a negative reward-vs-residual association and a weaker reward-vs-next-cash association"
+        },
+        "by_side": {
+          "T": {
+            "n": 1437,
+            "spearman_loss_reward_vs_residual_cash": -0.0426,
+            "spearman_loss_reward_vs_next_cash": 0.6433,
+            "hypothesis_pattern": "reserve-target compensation predicts a negative reward-vs-residual association and a weaker reward-vs-next-cash association"
+          },
+          "CT": {
+            "n": 893,
+            "spearman_loss_reward_vs_residual_cash": 0.0328,
+            "spearman_loss_reward_vs_next_cash": 0.6885,
+            "hypothesis_pattern": "reserve-target compensation predicts a negative reward-vs-residual association and a weaker reward-vs-next-cash association"
+          }
+        },
+        "by_context": {
+          "NORMAL": {
+            "n": 2113,
+            "spearman_loss_reward_vs_residual_cash": -0.1583,
+            "spearman_loss_reward_vs_next_cash": 0.593,
+            "hypothesis_pattern": "reserve-target compensation predicts a negative reward-vs-residual association and a weaker reward-vs-next-cash association"
+          },
+          "POST_PISTOL": {
+            "n": 214,
+            "spearman_loss_reward_vs_residual_cash": -0.5766,
+            "spearman_loss_reward_vs_next_cash": 0.4868,
+            "hypothesis_pattern": "reserve-target compensation predicts a negative reward-vs-residual association and a weaker reward-vs-next-cash association"
+          }
+        }
+      }
+    },
+    "concentration": {
+      "overall": {
+        "n": 2330,
+        "residual_cash": {
+          "n": 2330,
+          "min": 0,
+          "p25": 1300,
+          "median": 1650,
+          "p75": 2050,
+          "max": 8700,
+          "iqr": 750,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 1200,
+            "high": 1900,
+            "width": 700
+          },
+          "shortest_75pct_interval": {
+            "low": 850,
+            "high": 2200,
+            "width": 1350
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 2330,
+          "min": 1900,
+          "p25": 3950,
+          "median": 4700,
+          "p75": 5050,
+          "max": 10100,
+          "iqr": 1100,
+          "median_absolute_deviation": 500,
+          "shortest_50pct_interval": {
+            "low": 4350,
+            "high": 5250,
+            "width": 900
+          },
+          "shortest_75pct_interval": {
+            "low": 3450,
+            "high": 5550,
+            "width": 2100
+          }
+        },
+        "relative_iqr_reduction": -0.4667,
+        "relative_mad_reduction": -0.4286,
+        "relative_shortest_50pct_width_reduction": -0.2857
+      },
+      "by_side": {
+        "T": {
+          "n": 1437,
+          "residual_cash": {
+            "n": 1437,
+            "min": 0,
+            "p25": 1250,
+            "median": 1600,
+            "p75": 1950,
+            "max": 8700,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1100,
+              "high": 1750,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 850,
+              "high": 2050,
+              "width": 1200
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1437,
+            "min": 1900,
+            "p25": 4000,
+            "median": 4700,
+            "p75": 5050,
+            "max": 10100,
+            "iqr": 1050,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 4300,
+              "high": 5150,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 3400,
+              "high": 5400,
+              "width": 2000
+            }
+          },
+          "relative_iqr_reduction": -0.5,
+          "relative_mad_reduction": -0.2857,
+          "relative_shortest_50pct_width_reduction": -0.3077
+        },
+        "CT": {
+          "n": 893,
+          "residual_cash": {
+            "n": 893,
+            "min": 350,
+            "p25": 1400,
+            "median": 1750,
+            "p75": 2150,
+            "max": 6650,
+            "iqr": 750,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 1400,
+              "high": 2150,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 600,
+              "high": 2200,
+              "width": 1600
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 893,
+            "min": 2150,
+            "p25": 3800,
+            "median": 4650,
+            "p75": 5100,
+            "max": 8050,
+            "iqr": 1300,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 4150,
+              "high": 5250,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 3100,
+              "high": 5450,
+              "width": 2350
+            }
+          },
+          "relative_iqr_reduction": -0.7333,
+          "relative_mad_reduction": -0.5,
+          "relative_shortest_50pct_width_reduction": -0.4667
+        }
+      },
+      "by_context": {
+        "NORMAL": {
+          "n": 2113,
+          "residual_cash": {
+            "n": 2113,
+            "min": 0,
+            "p25": 1400,
+            "median": 1700,
+            "p75": 2050,
+            "max": 8700,
+            "iqr": 650,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1250,
+              "high": 1900,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 900,
+              "high": 2150,
+              "width": 1250
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2113,
+            "min": 1900,
+            "p25": 4250,
+            "median": 4800,
+            "p75": 5100,
+            "max": 10100,
+            "iqr": 850,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 4350,
+              "high": 5150,
+              "width": 800
+            },
+            "shortest_75pct_interval": {
+              "low": 3800,
+              "high": 5550,
+              "width": 1750
+            }
+          },
+          "relative_iqr_reduction": -0.3077,
+          "relative_mad_reduction": -0.1429,
+          "relative_shortest_50pct_width_reduction": -0.2308
+        },
+        "POST_PISTOL": {
+          "n": 214,
+          "residual_cash": {
+            "n": 214,
+            "min": 450,
+            "p25": 700,
+            "median": 950,
+            "p75": 1400,
+            "max": 3200,
+            "iqr": 700,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 500,
+              "high": 950,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 450,
+              "high": 1400,
+              "width": 950
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 214,
+            "min": 2100,
+            "p25": 2800,
+            "median": 3050,
+            "p75": 3250,
+            "max": 4700,
+            "iqr": 450,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 2800,
+              "high": 3250,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 2200,
+              "high": 3300,
+              "width": 1100
+            }
+          },
+          "relative_iqr_reduction": 0.3571,
+          "relative_mad_reduction": 0.1667,
+          "relative_shortest_50pct_width_reduction": 0
+        },
+        "OVERTIME": {
+          "n": 3,
+          "residual_cash": {
+            "n": 3,
+            "min": 1350,
+            "p25": 1475,
+            "median": 1600,
+            "p75": 4750,
+            "max": 7900,
+            "iqr": 3275,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 1600,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 1350,
+              "high": 7900,
+              "width": 6550
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 3,
+            "min": 4250,
+            "p25": 4375,
+            "median": 4500,
+            "p75": 7150,
+            "max": 9800,
+            "iqr": 2775,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4250,
+              "high": 4500,
+              "width": 250
+            },
+            "shortest_75pct_interval": {
+              "low": 4250,
+              "high": 9800,
+              "width": 5550
+            }
+          },
+          "relative_iqr_reduction": 0.1527,
+          "relative_mad_reduction": 0,
+          "relative_shortest_50pct_width_reduction": 0
+        }
+      }
+    },
+    "t_plant_secondary_comparison": {
+      "n": 1437,
+      "loss_no_plant": {
+        "n": 1437,
+        "min": 1900,
+        "p25": 4000,
+        "median": 4700,
+        "p75": 5050,
+        "max": 10100,
+        "iqr": 1050,
+        "median_absolute_deviation": 450,
+        "shortest_50pct_interval": {
+          "low": 4300,
+          "high": 5150,
+          "width": 850
+        },
+        "shortest_75pct_interval": {
+          "low": 3400,
+          "high": 5400,
+          "width": 2000
+        },
+        "top_exact_amounts": {
+          "4550": {
+            "n": 35,
+            "rate": 0.0244
+          },
+          "4600": {
+            "n": 44,
+            "rate": 0.0306
+          },
+          "4650": {
+            "n": 40,
+            "rate": 0.0278
+          },
+          "4700": {
+            "n": 44,
+            "rate": 0.0306
+          },
+          "4750": {
+            "n": 36,
+            "rate": 0.0251
+          },
+          "4800": {
+            "n": 47,
+            "rate": 0.0327
+          },
+          "4850": {
+            "n": 63,
+            "rate": 0.0438
+          },
+          "4900": {
+            "n": 63,
+            "rate": 0.0438
+          },
+          "4950": {
+            "n": 61,
+            "rate": 0.0424
+          },
+          "5000": {
+            "n": 38,
+            "rate": 0.0264
+          },
+          "5050": {
+            "n": 36,
+            "rate": 0.0251
+          },
+          "5100": {
+            "n": 50,
+            "rate": 0.0348
+          }
+        },
+        "common_500_bands": {
+          "4500-4999": {
+            "n": 466,
+            "rate": 0.3243
+          },
+          "5000-5499": {
+            "n": 286,
+            "rate": 0.199
+          },
+          "4000-4499": {
+            "n": 200,
+            "rate": 0.1392
+          },
+          "3500-3999": {
+            "n": 116,
+            "rate": 0.0807
+          },
+          "3000-3499": {
+            "n": 109,
+            "rate": 0.0759
+          },
+          "5500-5999": {
+            "n": 83,
+            "rate": 0.0578
+          },
+          "2500-2999": {
+            "n": 65,
+            "rate": 0.0452
+          },
+          "2000-2499": {
+            "n": 54,
+            "rate": 0.0376
+          },
+          "6000-6499": {
+            "n": 33,
+            "rate": 0.023
+          },
+          "6500-6999": {
+            "n": 8,
+            "rate": 0.0056
+          }
+        }
+      },
+      "loss_with_plant": {
+        "n": 1437,
+        "min": 2500,
+        "p25": 4600,
+        "median": 5300,
+        "p75": 5650,
+        "max": 10700,
+        "iqr": 1050,
+        "median_absolute_deviation": 450,
+        "shortest_50pct_interval": {
+          "low": 4900,
+          "high": 5750,
+          "width": 850
+        },
+        "shortest_75pct_interval": {
+          "low": 4000,
+          "high": 6000,
+          "width": 2000
+        },
+        "top_exact_amounts": {
+          "5150": {
+            "n": 35,
+            "rate": 0.0244
+          },
+          "5200": {
+            "n": 44,
+            "rate": 0.0306
+          },
+          "5250": {
+            "n": 40,
+            "rate": 0.0278
+          },
+          "5300": {
+            "n": 44,
+            "rate": 0.0306
+          },
+          "5350": {
+            "n": 36,
+            "rate": 0.0251
+          },
+          "5400": {
+            "n": 47,
+            "rate": 0.0327
+          },
+          "5450": {
+            "n": 63,
+            "rate": 0.0438
+          },
+          "5500": {
+            "n": 63,
+            "rate": 0.0438
+          },
+          "5550": {
+            "n": 61,
+            "rate": 0.0424
+          },
+          "5600": {
+            "n": 38,
+            "rate": 0.0264
+          },
+          "5650": {
+            "n": 36,
+            "rate": 0.0251
+          },
+          "5700": {
+            "n": 50,
+            "rate": 0.0348
+          }
+        },
+        "common_500_bands": {
+          "5000-5499": {
+            "n": 398,
+            "rate": 0.277
+          },
+          "5500-5999": {
+            "n": 379,
+            "rate": 0.2637
+          },
+          "4500-4999": {
+            "n": 167,
+            "rate": 0.1162
+          },
+          "4000-4499": {
+            "n": 123,
+            "rate": 0.0856
+          },
+          "6000-6499": {
+            "n": 103,
+            "rate": 0.0717
+          },
+          "3500-3999": {
+            "n": 90,
+            "rate": 0.0626
+          },
+          "3000-3499": {
+            "n": 76,
+            "rate": 0.0529
+          },
+          "6500-6999": {
+            "n": 42,
+            "rate": 0.0292
+          },
+          "2500-2999": {
+            "n": 36,
+            "rate": 0.0251
+          },
+          "7500-7999": {
+            "n": 9,
+            "rate": 0.0063
+          }
+        }
+      }
+    }
+  },
+  "purchase_capability_interpretation": {
+    "T": {
+      "canonical_rifle": "ak47",
+      "thresholds": {
+        "rifle_plus_kevlar": 3350,
+        "rifle_plus_vesthelm": 3700,
+        "rifle_plus_kevlar_basic_utility": 3850,
+        "awp_plus_kevlar": 5400
+      },
+      "light_next_loss_affordability": {
+        "rifle_plus_kevlar": {
+          "n": 1242,
+          "rate": 0.8643
+        },
+        "rifle_plus_vesthelm": {
+          "n": 1162,
+          "rate": 0.8086
+        },
+        "rifle_plus_kevlar_basic_utility": {
+          "n": 1124,
+          "rate": 0.7822
+        },
+        "awp_plus_kevlar": {
+          "n": 168,
+          "rate": 0.1169
+        }
+      }
+    },
+    "CT": {
+      "canonical_rifle": "m4a4",
+      "thresholds": {
+        "rifle_plus_kevlar": 3550,
+        "rifle_plus_vesthelm": 3900,
+        "rifle_plus_kevlar_basic_utility": 4050,
+        "awp_plus_kevlar": 5400
+      },
+      "light_next_loss_affordability": {
+        "rifle_plus_kevlar": {
+          "n": 701,
+          "rate": 0.785
+        },
+        "rifle_plus_vesthelm": {
+          "n": 659,
+          "rate": 0.738
+        },
+        "rifle_plus_kevlar_basic_utility": {
+          "n": 632,
+          "rate": 0.7077
+        },
+        "awp_plus_kevlar": {
+          "n": 134,
+          "rate": 0.1501
+        }
+      }
+    }
+  },
+  "mode_contrast": {
+    "FORCE": {
+      "overall": {
+        "n": 3616,
+        "current_money": {
+          "n": 3616,
+          "min": 300,
+          "p25": 2200,
+          "median": 3000,
+          "p75": 3550,
+          "max": 4750,
+          "iqr": 1350,
+          "median_absolute_deviation": 650,
+          "shortest_50pct_interval": {
+            "low": 2900,
+            "high": 3900,
+            "width": 1000
+          },
+          "shortest_75pct_interval": {
+            "low": 2050,
+            "high": 3700,
+            "width": 1650
+          }
+        },
+        "actual_spend": {
+          "n": 3616,
+          "min": 300,
+          "p25": 2150,
+          "median": 2850,
+          "p75": 3400,
+          "max": 4400,
+          "iqr": 1250,
+          "median_absolute_deviation": 650,
+          "shortest_50pct_interval": {
+            "low": 2750,
+            "high": 3700,
+            "width": 950
+          },
+          "shortest_75pct_interval": {
+            "low": 1950,
+            "high": 3550,
+            "width": 1600
+          }
+        },
+        "residual_cash": {
+          "n": 3616,
+          "min": 0,
+          "p25": 50,
+          "median": 100,
+          "p75": 150,
+          "max": 900,
+          "iqr": 100,
+          "median_absolute_deviation": 50,
+          "shortest_50pct_interval": {
+            "low": 0,
+            "high": 100,
+            "width": 100
+          },
+          "shortest_75pct_interval": {
+            "low": 0,
+            "high": 150,
+            "width": 150
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 3616,
+          "min": 1400,
+          "p25": 1900,
+          "median": 2100,
+          "p75": 2500,
+          "max": 4300,
+          "iqr": 600,
+          "median_absolute_deviation": 400,
+          "shortest_50pct_interval": {
+            "low": 1900,
+            "high": 2500,
+            "width": 600
+          },
+          "shortest_75pct_interval": {
+            "low": 1400,
+            "high": 2500,
+            "width": 1100
+          }
+        }
+      },
+      "by_side": {
+        "CT": {
+          "n": 1536,
+          "current_money": {
+            "n": 1536,
+            "min": 1400,
+            "p25": 2150,
+            "median": 2550,
+            "p75": 3550,
+            "max": 4750,
+            "iqr": 1400,
+            "median_absolute_deviation": 500,
+            "shortest_50pct_interval": {
+              "low": 1900,
+              "high": 2750,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 1950,
+              "high": 3650,
+              "width": 1700
+            }
+          },
+          "actual_spend": {
+            "n": 1536,
+            "min": 1300,
+            "p25": 2100,
+            "median": 2500,
+            "p75": 3400,
+            "max": 4350,
+            "iqr": 1300,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 1700,
+              "high": 2550,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 1950,
+              "high": 3550,
+              "width": 1600
+            }
+          },
+          "residual_cash": {
+            "n": 1536,
+            "min": 0,
+            "p25": 50,
+            "median": 100,
+            "p75": 150,
+            "max": 900,
+            "iqr": 100,
+            "median_absolute_deviation": 50,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 100,
+              "width": 100
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 150,
+              "width": 150
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1536,
+            "min": 1400,
+            "p25": 1900,
+            "median": 2400,
+            "p75": 2500,
+            "max": 4150,
+            "iqr": 600,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1950,
+              "high": 2500,
+              "width": 550
+            },
+            "shortest_75pct_interval": {
+              "low": 1450,
+              "high": 2500,
+              "width": 1050
+            }
+          }
+        },
+        "T": {
+          "n": 2080,
+          "current_money": {
+            "n": 2080,
+            "min": 300,
+            "p25": 2537.5,
+            "median": 3250,
+            "p75": 3550,
+            "max": 4600,
+            "iqr": 1012.5,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 3200,
+              "high": 3850,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 2350,
+              "high": 3850,
+              "width": 1500
+            }
+          },
+          "actual_spend": {
+            "n": 2080,
+            "min": 300,
+            "p25": 2400,
+            "median": 3100,
+            "p75": 3450,
+            "max": 4400,
+            "iqr": 1050,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 3100,
+              "high": 3700,
+              "width": 600
+            },
+            "shortest_75pct_interval": {
+              "low": 2400,
+              "high": 3700,
+              "width": 1300
+            }
+          },
+          "residual_cash": {
+            "n": 2080,
+            "min": 0,
+            "p25": 50,
+            "median": 100,
+            "p75": 150,
+            "max": 900,
+            "iqr": 100,
+            "median_absolute_deviation": 50,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 100,
+              "width": 100
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 150,
+              "width": 150
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 2080,
+            "min": 1400,
+            "p25": 1700,
+            "median": 2050,
+            "p75": 2550,
+            "max": 4300,
+            "iqr": 850,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 1400,
+              "high": 2050,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 1400,
+              "high": 2550,
+              "width": 1150
+            }
+          }
+        }
+      }
+    },
+    "LIGHT": {
+      "overall": {
+        "n": 2330,
+        "current_money": {
+          "n": 2330,
+          "min": 0,
+          "p25": 2950,
+          "median": 3450,
+          "p75": 3800,
+          "max": 10000,
+          "iqr": 850,
+          "median_absolute_deviation": 450,
+          "shortest_50pct_interval": {
+            "low": 2900,
+            "high": 3650,
+            "width": 750
+          },
+          "shortest_75pct_interval": {
+            "low": 2400,
+            "high": 3950,
+            "width": 1550
+          }
+        },
+        "actual_spend": {
+          "n": 2330,
+          "min": 0,
+          "p25": 1200,
+          "median": 1650,
+          "p75": 2100,
+          "max": 4250,
+          "iqr": 900,
+          "median_absolute_deviation": 450,
+          "shortest_50pct_interval": {
+            "low": 1450,
+            "high": 2200,
+            "width": 750
+          },
+          "shortest_75pct_interval": {
+            "low": 900,
+            "high": 2450,
+            "width": 1550
+          }
+        },
+        "residual_cash": {
+          "n": 2330,
+          "min": 0,
+          "p25": 1300,
+          "median": 1650,
+          "p75": 2050,
+          "max": 8700,
+          "iqr": 750,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 1200,
+            "high": 1900,
+            "width": 700
+          },
+          "shortest_75pct_interval": {
+            "low": 850,
+            "high": 2200,
+            "width": 1350
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 2330,
+          "min": 1900,
+          "p25": 3950,
+          "median": 4700,
+          "p75": 5050,
+          "max": 10100,
+          "iqr": 1100,
+          "median_absolute_deviation": 500,
+          "shortest_50pct_interval": {
+            "low": 4350,
+            "high": 5250,
+            "width": 900
+          },
+          "shortest_75pct_interval": {
+            "low": 3450,
+            "high": 5550,
+            "width": 2100
+          }
+        }
+      },
+      "by_side": {
+        "CT": {
+          "n": 893,
+          "current_money": {
+            "n": 893,
+            "min": 1400,
+            "p25": 2650,
+            "median": 3250,
+            "p75": 3700,
+            "max": 7750,
+            "iqr": 1050,
+            "median_absolute_deviation": 550,
+            "shortest_50pct_interval": {
+              "low": 2850,
+              "high": 3800,
+              "width": 950
+            },
+            "shortest_75pct_interval": {
+              "low": 2350,
+              "high": 3950,
+              "width": 1600
+            }
+          },
+          "actual_spend": {
+            "n": 893,
+            "min": 0,
+            "p25": 1000,
+            "median": 1450,
+            "p75": 1900,
+            "max": 4250,
+            "iqr": 900,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 950,
+              "high": 1800,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 500,
+              "high": 2350,
+              "width": 1850
+            }
+          },
+          "residual_cash": {
+            "n": 893,
+            "min": 350,
+            "p25": 1400,
+            "median": 1750,
+            "p75": 2150,
+            "max": 6650,
+            "iqr": 750,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 1400,
+              "high": 2150,
+              "width": 750
+            },
+            "shortest_75pct_interval": {
+              "low": 600,
+              "high": 2200,
+              "width": 1600
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 893,
+            "min": 2150,
+            "p25": 3800,
+            "median": 4650,
+            "p75": 5100,
+            "max": 8050,
+            "iqr": 1300,
+            "median_absolute_deviation": 600,
+            "shortest_50pct_interval": {
+              "low": 4150,
+              "high": 5250,
+              "width": 1100
+            },
+            "shortest_75pct_interval": {
+              "low": 3100,
+              "high": 5450,
+              "width": 2350
+            }
+          }
+        },
+        "T": {
+          "n": 1437,
+          "current_money": {
+            "n": 1437,
+            "min": 0,
+            "p25": 3050,
+            "median": 3450,
+            "p75": 3850,
+            "max": 10000,
+            "iqr": 800,
+            "median_absolute_deviation": 400,
+            "shortest_50pct_interval": {
+              "low": 2900,
+              "high": 3550,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 2900,
+              "high": 4100,
+              "width": 1200
+            }
+          },
+          "actual_spend": {
+            "n": 1437,
+            "min": 0,
+            "p25": 1450,
+            "median": 1800,
+            "p75": 2150,
+            "max": 3700,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1350,
+              "high": 2050,
+              "width": 700
+            },
+            "shortest_75pct_interval": {
+              "low": 950,
+              "high": 2300,
+              "width": 1350
+            }
+          },
+          "residual_cash": {
+            "n": 1437,
+            "min": 0,
+            "p25": 1250,
+            "median": 1600,
+            "p75": 1950,
+            "max": 8700,
+            "iqr": 700,
+            "median_absolute_deviation": 350,
+            "shortest_50pct_interval": {
+              "low": 1100,
+              "high": 1750,
+              "width": 650
+            },
+            "shortest_75pct_interval": {
+              "low": 850,
+              "high": 2050,
+              "width": 1200
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1437,
+            "min": 1900,
+            "p25": 4000,
+            "median": 4700,
+            "p75": 5050,
+            "max": 10100,
+            "iqr": 1050,
+            "median_absolute_deviation": 450,
+            "shortest_50pct_interval": {
+              "low": 4300,
+              "high": 5150,
+              "width": 850
+            },
+            "shortest_75pct_interval": {
+              "low": 3400,
+              "high": 5400,
+              "width": 2000
+            }
+          }
+        }
+      }
+    },
+    "PRESERVE": {
+      "overall": {
+        "n": 2766,
+        "current_money": {
+          "n": 2766,
+          "min": 0,
+          "p25": 2050,
+          "median": 2350,
+          "p75": 2650,
+          "max": 5350,
+          "iqr": 600,
+          "median_absolute_deviation": 300,
+          "shortest_50pct_interval": {
+            "low": 1900,
+            "high": 2350,
+            "width": 450
+          },
+          "shortest_75pct_interval": {
+            "low": 1900,
+            "high": 2700,
+            "width": 800
+          }
+        },
+        "actual_spend": {
+          "n": 2766,
+          "min": 0,
+          "p25": 0,
+          "median": 0,
+          "p75": 500,
+          "max": 950,
+          "iqr": 500,
+          "median_absolute_deviation": 0,
+          "shortest_50pct_interval": {
+            "low": 0,
+            "high": 0,
+            "width": 0
+          },
+          "shortest_75pct_interval": {
+            "low": 0,
+            "high": 500,
+            "width": 500
+          }
+        },
+        "residual_cash": {
+          "n": 2766,
+          "min": 0,
+          "p25": 1950,
+          "median": 2050,
+          "p75": 2400,
+          "max": 5350,
+          "iqr": 450,
+          "median_absolute_deviation": 150,
+          "shortest_50pct_interval": {
+            "low": 1900,
+            "high": 2200,
+            "width": 300
+          },
+          "shortest_75pct_interval": {
+            "low": 1650,
+            "high": 2450,
+            "width": 800
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 2766,
+          "min": 2350,
+          "p25": 4350,
+          "median": 4500,
+          "p75": 4900,
+          "max": 8750,
+          "iqr": 550,
+          "median_absolute_deviation": 200,
+          "shortest_50pct_interval": {
+            "low": 4300,
+            "high": 4700,
+            "width": 400
+          },
+          "shortest_75pct_interval": {
+            "low": 4000,
+            "high": 5050,
+            "width": 1050
+          }
+        }
+      },
+      "by_side": {
+        "CT": {
+          "n": 973,
+          "current_money": {
+            "n": 973,
+            "min": 1400,
+            "p25": 2100,
+            "median": 2450,
+            "p75": 2750,
+            "max": 4700,
+            "iqr": 650,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1950,
+              "high": 2450,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 1950,
+              "high": 2800,
+              "width": 850
+            }
+          },
+          "actual_spend": {
+            "n": 973,
+            "min": 0,
+            "p25": 0,
+            "median": 0,
+            "p75": 500,
+            "max": 950,
+            "iqr": 500,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 0,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 500,
+              "width": 500
+            }
+          },
+          "residual_cash": {
+            "n": 973,
+            "min": 1150,
+            "p25": 2000,
+            "median": 2150,
+            "p75": 2500,
+            "max": 4500,
+            "iqr": 500,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 1850,
+              "high": 2200,
+              "width": 350
+            },
+            "shortest_75pct_interval": {
+              "low": 1750,
+              "high": 2550,
+              "width": 800
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 973,
+            "min": 3050,
+            "p25": 4450,
+            "median": 4650,
+            "p75": 5100,
+            "max": 7100,
+            "iqr": 650,
+            "median_absolute_deviation": 250,
+            "shortest_50pct_interval": {
+              "low": 4350,
+              "high": 4850,
+              "width": 500
+            },
+            "shortest_75pct_interval": {
+              "low": 4050,
+              "high": 5300,
+              "width": 1250
+            }
+          }
+        },
+        "T": {
+          "n": 1793,
+          "current_money": {
+            "n": 1793,
+            "min": 0,
+            "p25": 2050,
+            "median": 2300,
+            "p75": 2650,
+            "max": 5350,
+            "iqr": 600,
+            "median_absolute_deviation": 300,
+            "shortest_50pct_interval": {
+              "low": 1900,
+              "high": 2350,
+              "width": 450
+            },
+            "shortest_75pct_interval": {
+              "low": 1900,
+              "high": 2650,
+              "width": 750
+            }
+          },
+          "actual_spend": {
+            "n": 1793,
+            "min": 0,
+            "p25": 0,
+            "median": 0,
+            "p75": 300,
+            "max": 950,
+            "iqr": 300,
+            "median_absolute_deviation": 0,
+            "shortest_50pct_interval": {
+              "low": 0,
+              "high": 0,
+              "width": 0
+            },
+            "shortest_75pct_interval": {
+              "low": 0,
+              "high": 300,
+              "width": 300
+            }
+          },
+          "residual_cash": {
+            "n": 1793,
+            "min": 0,
+            "p25": 1950,
+            "median": 2050,
+            "p75": 2350,
+            "max": 5350,
+            "iqr": 400,
+            "median_absolute_deviation": 150,
+            "shortest_50pct_interval": {
+              "low": 1750,
+              "high": 2050,
+              "width": 300
+            },
+            "shortest_75pct_interval": {
+              "low": 1650,
+              "high": 2400,
+              "width": 750
+            }
+          },
+          "next_cash_loss_no_plant": {
+            "n": 1793,
+            "min": 2350,
+            "p25": 4350,
+            "median": 4450,
+            "p75": 4800,
+            "max": 8750,
+            "iqr": 450,
+            "median_absolute_deviation": 200,
+            "shortest_50pct_interval": {
+              "low": 4250,
+              "high": 4600,
+              "width": 350
+            },
+            "shortest_75pct_interval": {
+              "low": 4200,
+              "high": 5100,
+              "width": 900
+            }
+          }
+        }
+      }
+    }
+  },
+  "next_round_linkage": {
+    "all_light": 2330,
+    "linked_unambiguous": 1185,
+    "linked_rate": 0.5086,
+    "exclusions": {
+      "current_or_next_drop_transfer_sensitive": 1111,
+      "no_next_player_round_same_map": 19,
+      "regulation_pistol_round": 7,
+      "regulation_retained_primary_unknown": 1,
+      "resulting_grenade_below_retained": 7
+    },
+    "linked_by_current_outcome": {
+      "WIN": {
+        "n": 238,
+        "next_actual_mode": {
+          "FORCE": {
+            "n": 4,
+            "rate": 0.0168
+          },
+          "FULL": {
+            "n": 221,
+            "rate": 0.9286
+          },
+          "LIGHT": {
+            "n": 13,
+            "rate": 0.0546
+          }
+        }
+      },
+      "LOSS": {
+        "n": 947,
+        "next_actual_mode": {
+          "FORCE": {
+            "n": 32,
+            "rate": 0.0338
+          },
+          "FULL": {
+            "n": 833,
+            "rate": 0.8796
+          },
+          "LIGHT": {
+            "n": 24,
+            "rate": 0.0253
+          },
+          "PRESERVE": {
+            "n": 58,
+            "rate": 0.0612
+          }
+        }
+      }
+    },
+    "loss_only_next_state": {
+      "n": 947,
+      "actual_mode": {
+        "FORCE": {
+          "n": 32,
+          "rate": 0.0338
+        },
+        "FULL": {
+          "n": 833,
+          "rate": 0.8796
+        },
+        "LIGHT": {
+          "n": 24,
+          "rate": 0.0253
+        },
+        "PRESERVE": {
+          "n": 58,
+          "rate": 0.0612
+        }
+      },
+      "resulting_primary_family": {
+        "none": {
+          "n": 89,
+          "rate": 0.094
+        },
+        "rifle": {
+          "n": 804,
+          "rate": 0.849
+        },
+        "smg": {
+          "n": 11,
+          "rate": 0.0116
+        },
+        "sniper": {
+          "n": 43,
+          "rate": 0.0454
+        }
+      },
+      "resulting_armor": {
+        "kevlar": {
+          "n": 208,
+          "rate": 0.2196
+        },
+        "none": {
+          "n": 62,
+          "rate": 0.0655
+        },
+        "vesthelm": {
+          "n": 677,
+          "rate": 0.7149
+        }
+      },
+      "actual_full_n": 833,
+      "rifle_plus_armor_n": 804,
+      "rifle_plus_armor_rate": 0.849,
+      "strict_full_rifle_plus_armor_n": 794,
+      "strict_full_rifle_plus_armor_rate": 0.8384,
+      "full_buy_like_n": 831,
+      "full_buy_like_rate": 0.8775,
+      "definitions": {
+        "strict_full_rifle_plus_armor": "next actual mode FULL and resulting rifle with armor",
+        "full_buy_like": "next actual mode FULL and resulting rifle or sniper with armor"
+      }
+    }
+  },
+  "light_subtypes": {
+    "definition": {
+      "retained_primary_top_up": "retained primary exists, regardless of resulting family",
+      "no_primary_pistol_utility_or_armor": "no retained primary and no resulting primary; secondary/utility/armor may change",
+      "new_smg_plus_armor": "no retained primary; resulting SMG with armor",
+      "other_new_primary_bundle": "no retained primary; any other resulting primary bundle"
+    },
+    "counts": {
+      "new_smg_plus_armor": {
+        "n": 284,
+        "rate": 0.1219
+      },
+      "no_primary_pistol_utility_or_armor": {
+        "n": 1695,
+        "rate": 0.7275
+      },
+      "other_new_primary_bundle": {
+        "n": 154,
+        "rate": 0.0661
+      },
+      "retained_primary_top_up": {
+        "n": 197,
+        "rate": 0.0845
+      }
+    },
+    "distributions": {
+      "new_smg_plus_armor": {
+        "n": 284,
+        "current_money": {
+          "n": 284,
+          "min": 2250,
+          "p25": 3600,
+          "median": 3900,
+          "p75": 4300,
+          "max": 8800,
+          "iqr": 700,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 3350,
+            "high": 4000,
+            "width": 650
+          },
+          "shortest_75pct_interval": {
+            "low": 3200,
+            "high": 4550,
+            "width": 1350
+          }
+        },
+        "actual_spend": {
+          "n": 284,
+          "min": 200,
+          "p25": 2200,
+          "median": 2550,
+          "p75": 2850,
+          "max": 3750,
+          "iqr": 650,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 2200,
+            "high": 2750,
+            "width": 550
+          },
+          "shortest_75pct_interval": {
+            "low": 1900,
+            "high": 2950,
+            "width": 1050
+          }
+        },
+        "residual_cash": {
+          "n": 284,
+          "min": 500,
+          "p25": 1050,
+          "median": 1400,
+          "p75": 1762.5,
+          "max": 5650,
+          "iqr": 712.5,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 800,
+            "high": 1400,
+            "width": 600
+          },
+          "shortest_75pct_interval": {
+            "low": 800,
+            "high": 1800,
+            "width": 1000
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 284,
+          "min": 2100,
+          "p25": 2600,
+          "median": 3375,
+          "p75": 4700,
+          "max": 7050,
+          "iqr": 2100,
+          "median_absolute_deviation": 925,
+          "shortest_50pct_interval": {
+            "low": 2100,
+            "high": 3350,
+            "width": 1250
+          },
+          "shortest_75pct_interval": {
+            "low": 2200,
+            "high": 4700,
+            "width": 2500
+          }
+        }
+      },
+      "no_primary_pistol_utility_or_armor": {
+        "n": 1695,
+        "current_money": {
+          "n": 1695,
+          "min": 100,
+          "p25": 2950,
+          "median": 3300,
+          "p75": 3600,
+          "max": 10000,
+          "iqr": 650,
+          "median_absolute_deviation": 350,
+          "shortest_50pct_interval": {
+            "low": 2900,
+            "high": 3500,
+            "width": 600
+          },
+          "shortest_75pct_interval": {
+            "low": 2850,
+            "high": 3950,
+            "width": 1100
+          }
+        },
+        "actual_spend": {
+          "n": 1695,
+          "min": 0,
+          "p25": 1300,
+          "median": 1650,
+          "p75": 1950,
+          "max": 3000,
+          "iqr": 650,
+          "median_absolute_deviation": 300,
+          "shortest_50pct_interval": {
+            "low": 1450,
+            "high": 2000,
+            "width": 550
+          },
+          "shortest_75pct_interval": {
+            "low": 1150,
+            "high": 2200,
+            "width": 1050
+          }
+        },
+        "residual_cash": {
+          "n": 1695,
+          "min": 100,
+          "p25": 1400,
+          "median": 1650,
+          "p75": 2000,
+          "max": 7900,
+          "iqr": 600,
+          "median_absolute_deviation": 300,
+          "shortest_50pct_interval": {
+            "low": 1250,
+            "high": 1850,
+            "width": 600
+          },
+          "shortest_75pct_interval": {
+            "low": 1050,
+            "high": 2150,
+            "width": 1100
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 1695,
+          "min": 2200,
+          "p25": 4250,
+          "median": 4800,
+          "p75": 5100,
+          "max": 9800,
+          "iqr": 850,
+          "median_absolute_deviation": 400,
+          "shortest_50pct_interval": {
+            "low": 4500,
+            "high": 5250,
+            "width": 750
+          },
+          "shortest_75pct_interval": {
+            "low": 3750,
+            "high": 5500,
+            "width": 1750
+          }
+        }
+      },
+      "other_new_primary_bundle": {
+        "n": 154,
+        "current_money": {
+          "n": 154,
+          "min": 2050,
+          "p25": 3312.5,
+          "median": 3900,
+          "p75": 4600,
+          "max": 6350,
+          "iqr": 1287.5,
+          "median_absolute_deviation": 650,
+          "shortest_50pct_interval": {
+            "low": 3250,
+            "high": 4400,
+            "width": 1150
+          },
+          "shortest_75pct_interval": {
+            "low": 2150,
+            "high": 4650,
+            "width": 2500
+          }
+        },
+        "actual_spend": {
+          "n": 154,
+          "min": 1050,
+          "p25": 1700,
+          "median": 2650,
+          "p75": 3100,
+          "max": 4250,
+          "iqr": 1400,
+          "median_absolute_deviation": 700,
+          "shortest_50pct_interval": {
+            "low": 2650,
+            "high": 3700,
+            "width": 1050
+          },
+          "shortest_75pct_interval": {
+            "low": 1650,
+            "high": 3350,
+            "width": 1700
+          }
+        },
+        "residual_cash": {
+          "n": 154,
+          "min": 450,
+          "p25": 962.5,
+          "median": 1275,
+          "p75": 1687.5,
+          "max": 3600,
+          "iqr": 725,
+          "median_absolute_deviation": 325,
+          "shortest_50pct_interval": {
+            "low": 850,
+            "high": 1500,
+            "width": 650
+          },
+          "shortest_75pct_interval": {
+            "low": 500,
+            "high": 1700,
+            "width": 1200
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 154,
+          "min": 2250,
+          "p25": 3350,
+          "median": 4250,
+          "p75": 4750,
+          "max": 6850,
+          "iqr": 1400,
+          "median_absolute_deviation": 625,
+          "shortest_50pct_interval": {
+            "low": 3950,
+            "high": 4900,
+            "width": 950
+          },
+          "shortest_75pct_interval": {
+            "low": 2950,
+            "high": 4900,
+            "width": 1950
+          }
+        }
+      },
+      "retained_primary_top_up": {
+        "n": 197,
+        "current_money": {
+          "n": 197,
+          "min": 0,
+          "p25": 2150,
+          "median": 3450,
+          "p75": 4100,
+          "max": 9000,
+          "iqr": 1950,
+          "median_absolute_deviation": 1000,
+          "shortest_50pct_interval": {
+            "low": 2400,
+            "high": 4100,
+            "width": 1700
+          },
+          "shortest_75pct_interval": {
+            "low": 1900,
+            "high": 5600,
+            "width": 3700
+          }
+        },
+        "actual_spend": {
+          "n": 197,
+          "min": 0,
+          "p25": 0,
+          "median": 400,
+          "p75": 800,
+          "max": 1700,
+          "iqr": 800,
+          "median_absolute_deviation": 400,
+          "shortest_50pct_interval": {
+            "low": 0,
+            "high": 400,
+            "width": 400
+          },
+          "shortest_75pct_interval": {
+            "low": 0,
+            "high": 800,
+            "width": 800
+          }
+        },
+        "residual_cash": {
+          "n": 197,
+          "min": 0,
+          "p25": 1950,
+          "median": 2650,
+          "p75": 3450,
+          "max": 8700,
+          "iqr": 1500,
+          "median_absolute_deviation": 700,
+          "shortest_50pct_interval": {
+            "low": 1900,
+            "high": 3300,
+            "width": 1400
+          },
+          "shortest_75pct_interval": {
+            "low": 0,
+            "high": 3450,
+            "width": 3450
+          }
+        },
+        "next_cash_loss_no_plant": {
+          "n": 197,
+          "min": 1900,
+          "p25": 4100,
+          "median": 4700,
+          "p75": 5250,
+          "max": 10100,
+          "iqr": 1150,
+          "median_absolute_deviation": 600,
+          "shortest_50pct_interval": {
+            "low": 4050,
+            "high": 5150,
+            "width": 1100
+          },
+          "shortest_75pct_interval": {
+            "low": 3300,
+            "high": 5650,
+            "width": 2350
+          }
+        }
+      }
+    },
+    "no_primary_no_resulting_primary_secondary": {
+      "default": {
+        "n": 133,
+        "rate": 0.0785
+      },
+      "none": {
+        "n": 2,
+        "rate": 0.0012
+      },
+      "paid": {
+        "n": 1560,
+        "rate": 0.9204
+      }
+    }
+  },
+  "force_armor_invariant_audit": {
+    "invariant": "FORCE => armor > 0 except explicit AWP-no-armor path",
+    "production_reachable": true,
+    "canonical_empty_inventory_probes": [
+      {
+        "side": "T",
+        "money": 2700,
+        "option_present": true,
+        "spend": 2700,
+        "resulting_primary_family": "rifle",
+        "resulting_armor": 0,
+        "non_awp_no_armor_violation": true
+      },
+      {
+        "side": "CT",
+        "money": 2900,
+        "option_present": true,
+        "spend": 2900,
+        "resulting_primary_family": "rifle",
+        "resulting_armor": 0,
+        "non_awp_no_armor_violation": true
+      }
+    ],
+    "major_policy_candidates": {
+      "eligible_states": 23552,
+      "force_offered_states": 23432,
+      "force_resulting_armor_zero_states": 2022,
+      "rate_of_force_offered_states": 0.0863,
+      "explicit_awp_no_armor_states": 1,
+      "non_awp_no_armor_violation_states": 2021,
+      "non_awp_no_armor_violation_rate_of_force_offered_states": 0.0862,
+      "representative_cases": [
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 8,
+          "player_index": 8,
+          "side": "CT",
+          "money": 3050,
+          "retained_primary_family": "none",
+          "spend": 2900,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-m4a41"
+        },
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 20,
+          "player_index": 7,
+          "side": "T",
+          "money": 1400,
+          "retained_primary_family": "none",
+          "spend": 1350,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 20,
+          "player_index": 5,
+          "side": "T",
+          "money": 1550,
+          "retained_primary_family": "none",
+          "spend": 1550,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 2,
+          "player_index": 4,
+          "side": "T",
+          "money": 3250,
+          "retained_primary_family": "none",
+          "spend": 3200,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 3,
+          "player_index": 1,
+          "side": "T",
+          "money": 1400,
+          "retained_primary_family": "none",
+          "spend": 1350,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 3,
+          "player_index": 0,
+          "side": "T",
+          "money": 1600,
+          "retained_primary_family": "none",
+          "spend": 1550,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 3,
+          "player_index": 3,
+          "side": "T",
+          "money": 1400,
+          "retained_primary_family": "none",
+          "spend": 1350,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 6,
+          "player_index": 0,
+          "side": "T",
+          "money": 2950,
+          "retained_primary_family": "none",
+          "spend": 2900,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 6,
+          "player_index": 3,
+          "side": "T",
+          "money": 2900,
+          "retained_primary_family": "none",
+          "spend": 2900,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 9,
+          "player_index": 4,
+          "side": "T",
+          "money": 3250,
+          "retained_primary_family": "none",
+          "spend": 3200,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 9,
+          "player_index": 3,
+          "side": "T",
+          "money": 3000,
+          "retained_primary_family": "none",
+          "spend": 3000,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 15,
+          "player_index": 9,
+          "side": "T",
+          "money": 1450,
+          "retained_primary_family": "none",
+          "spend": 1350,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 15,
+          "player_index": 8,
+          "side": "T",
+          "money": 1450,
+          "retained_primary_family": "none",
+          "spend": 1350,
+          "resulting_primary_family": "smg",
+          "resulting_armor": 0,
+          "option_id": "force-mac101-smoke1"
+        },
+        {
+          "map": "p-r1-qf1-m3-de_overpass",
+          "round": 2,
+          "player_index": 9,
+          "side": "CT",
+          "money": 3500,
+          "retained_primary_family": "none",
+          "spend": 3400,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-m4a41-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf1-m3-de_overpass",
+          "round": 7,
+          "player_index": 1,
+          "side": "T",
+          "money": 3000,
+          "retained_primary_family": "none",
+          "spend": 3000,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-smoke1"
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 3,
+          "player_index": 5,
+          "side": "CT",
+          "money": 3200,
+          "retained_primary_family": "none",
+          "spend": 3200,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-m4a41-smoke1"
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 3,
+          "player_index": 7,
+          "side": "CT",
+          "money": 2950,
+          "retained_primary_family": "sniper",
+          "spend": 2900,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-m4a41"
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 4,
+          "player_index": 4,
+          "side": "T",
+          "money": 3300,
+          "retained_primary_family": "none",
+          "spend": 3200,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471-smoke1-flash1"
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 5,
+          "player_index": 2,
+          "side": "T",
+          "money": 2850,
+          "retained_primary_family": "none",
+          "spend": 2700,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471"
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 5,
+          "player_index": 4,
+          "side": "T",
+          "money": 2800,
+          "retained_primary_family": "none",
+          "spend": 2700,
+          "resulting_primary_family": "rifle",
+          "resulting_armor": 0,
+          "option_id": "force-ak471"
+        }
+      ]
+    },
+    "major_actual_force": {
+      "n": 3616,
+      "resulting_armor_zero_n": 53,
+      "resulting_armor_zero_rate": 0.0147,
+      "explicit_awp_no_armor_n": 0,
+      "non_awp_no_armor_n": 53,
+      "non_awp_no_armor_rate": 0.0147,
+      "representative_non_awp_cases": [
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 2,
+          "player_index": 9,
+          "side": "CT",
+          "money": 2100,
+          "spend": 2000,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 3,
+          "player_index": 1,
+          "side": "T",
+          "money": 1400,
+          "spend": 1400,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "p-r1-qf1-m2-de_mirage",
+          "round": 3,
+          "player_index": 3,
+          "side": "T",
+          "money": 1400,
+          "spend": 1400,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "p-r1-qf3-m2-de_dust2",
+          "round": 15,
+          "player_index": 8,
+          "side": "T",
+          "money": 1700,
+          "spend": 1700,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "p-r2-sf1-m1-de_dust2",
+          "round": 22,
+          "player_index": 0,
+          "side": "CT",
+          "money": 3250,
+          "spend": 3250,
+          "resulting_primary": "FAMAS",
+          "resulting_primary_family": "rifle"
+        },
+        {
+          "map": "s1-r1-m5-m1-de_nuke",
+          "round": 11,
+          "player_index": 1,
+          "side": "T",
+          "money": 1650,
+          "spend": 1600,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "s1-r2-l4-m1-de_nuke",
+          "round": 14,
+          "player_index": 2,
+          "side": "CT",
+          "money": 2150,
+          "spend": 2000,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s1-r2-w4-m1-de_dust2",
+          "round": 2,
+          "player_index": 4,
+          "side": "T",
+          "money": 1900,
+          "spend": 1700,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s1-r3-a1-m1-de_nuke",
+          "round": 2,
+          "player_index": 5,
+          "side": "CT",
+          "money": 2200,
+          "spend": 2000,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s1-r3-e2-m2-de_inferno",
+          "round": 3,
+          "player_index": 3,
+          "side": "T",
+          "money": 1550,
+          "spend": 1400,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "s1-r4-a2-m2-de_inferno",
+          "round": 14,
+          "player_index": 1,
+          "side": "CT",
+          "money": 2200,
+          "spend": 2000,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s1-r4-a3-m2-de_inferno",
+          "round": 14,
+          "player_index": 3,
+          "side": "CT",
+          "money": 2050,
+          "spend": 1950,
+          "resulting_primary": "MP9",
+          "resulting_primary_family": "smg"
+        },
+        {
+          "map": "s1-r4-a3-m2-de_inferno",
+          "round": 15,
+          "player_index": 6,
+          "side": "T",
+          "money": 1650,
+          "spend": 1400,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "s1-r4-e1-m1-de_anubis",
+          "round": 14,
+          "player_index": 6,
+          "side": "T",
+          "money": 2000,
+          "spend": 1800,
+          "resulting_primary": null,
+          "resulting_primary_family": "none"
+        },
+        {
+          "map": "s1-r4-e3-m1-de_nuke",
+          "round": 15,
+          "player_index": 9,
+          "side": "T",
+          "money": 2200,
+          "spend": 2200,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s1-r5-d1-m1-de_ancient",
+          "round": 14,
+          "player_index": 1,
+          "side": "CT",
+          "money": 2100,
+          "spend": 1700,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s2-r1-m2-m1-de_dust2",
+          "round": 8,
+          "player_index": 3,
+          "side": "T",
+          "money": 850,
+          "spend": 700,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s2-r1-m5-m1-de_mirage",
+          "round": 14,
+          "player_index": 0,
+          "side": "CT",
+          "money": 1950,
+          "spend": 1900,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s2-r1-m8-m1-de_nuke",
+          "round": 2,
+          "player_index": 7,
+          "side": "CT",
+          "money": 2100,
+          "spend": 1700,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        },
+        {
+          "map": "s2-r2-l1-m1-de_overpass",
+          "round": 3,
+          "player_index": 9,
+          "side": "CT",
+          "money": 2200,
+          "spend": 2000,
+          "resulting_primary": "SSG 08",
+          "resulting_primary_family": "sniper"
+        }
+      ]
+    }
+  },
+  "hypothesis_assessment": {
+    "verdict": "NOT_SUPPORTED",
+    "architecture_decision_ready": true,
+    "decision": "Do not replace LIGHT with a single reserveTarget formula from this corpus. Keep future affordability as explicit trajectory context; separately revisit the fixed SMG-plus-armor bundle and enforce the FORCE armor invariant in a later implementation round.",
+    "primary_reasons": [
+      "LOSS_NO_PLANT next cash is less concentrated than residual cash overall and on both sides.",
+      "Residual medians do not fall by approximately $500 when loss reward rises by $500; next-cash medians instead move materially with reward tier.",
+      "LIGHT has materially different POST_PISTOL, no-primary, new-SMG, other-primary, and retained-primary structures rather than one stable target."
+    ],
+    "qualifying_observations": [
+      "Retained-primary and retained-armor aggregates share a $4700 next-cash median with their non-retained counterparts.",
+      "Among conservatively linked LIGHT losses, 87.96% are actual FULL next round and 83.84% are strict FULL rifle-plus-armor states; this is observational and does not establish the reserve mechanism."
+    ]
+  },
+  "artifact_sha256": "8a85ecd2c885bcba6cd444c09b1a3eb1ace90e4071748395cb0b5a87ef61aa6b"
+}
