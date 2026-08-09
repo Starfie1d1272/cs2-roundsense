@@ -57,11 +57,11 @@ See `docs/runtime-checks.md` for the raw protocol and payload-level detail.
 
 - OT start money is configurable (`mp_overtime_startmoney` game default
   10000; FACEIT default 10000 with 12500/13000/16000 options; BLAST 2026 MR3
-  with 12500). Cologne corpus: odd-order OT openers (r25/r31/r37/r43) carry
-  over, even-order (r28/r34/r40/r46) reset to 10000 — 100% consistent, 0
-  exceptions. start_balance matches replay first-cash semantics (the pattern
-  is real server behavior, not a field artifact), but the mechanism is not
-  inferred. Live advisor: read `player_state.money`; never preset OT money.
+  with 12500). The final purchase-policy diagnostic rebuilt all 620 Cologne
+  reset-player rows as 10000; the first-half `startMoney` carry-over pattern
+  was a stale pre-restart capture, not live OT semantics. Live advisor reads
+  `player_state.money` and never presets OT money; see
+  `docs/experiments/purchase-policy-final-diagnostic.md`.
   Policy V3 therefore applies only the generic non-pistol, inventory-aware
   planner in OT; it does not encode a Cologne opener/reset template. See the
   final diagnostic at `experiments/policy-v3/results/opponent-economy-deployability.json`
