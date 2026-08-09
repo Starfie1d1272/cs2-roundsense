@@ -411,6 +411,13 @@ describe("canonical purchase legality", () => {
     expect(planPurchases({ ...empty, grenades: ["he", "smoke", "flash", "flash"] }, [{ item: "molotov", quantity: 1 }], DEFAULT_RULES, "T").isComplete).toBe(false);
     expect(planPurchases({ ...empty, grenades: ["he", "smoke", "molotov"] }, [{ item: "flash", quantity: 2 }], DEFAULT_RULES, "T").isComplete).toBe(false);
   });
+
+  it("treats decoy as a canonical capped grenade without recommending it", () => {
+    expect(planPurchases(empty, [{ item: "decoy", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ isComplete: true, purchases: [{ item: "decoy", quantity: 1 }] });
+    expect(planPurchases({ ...empty, grenades: ["decoy"] }, [{ item: "decoy", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ isComplete: true, purchases: [] });
+    expect(planPurchases(empty, [{ item: "decoy", quantity: 2 }], DEFAULT_RULES, "T").isComplete).toBe(false);
+    expect(planPurchases({ ...empty, grenades: ["smoke", "he", "flash", "decoy"] }, [{ item: "molotov", quantity: 1 }], DEFAULT_RULES, "T").isComplete).toBe(false);
+  });
 });
 
 describe("goal fulfillment semantics (Final Convergence)", () => {

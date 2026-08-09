@@ -13,7 +13,7 @@ export function smgFor(side: Side): ItemId {
 }
 
 /** Same rifle family definition as goal semantics (not re-invented here). */
-const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary", "decoy"] as const;
 export const PAID_PISTOLS = ["p250", "dual", "tec9", "cz75", "fiveseven", "deagle", "r8"] as const;
 
 function isRifle(item: ItemId): boolean {
@@ -34,6 +34,16 @@ function isPaidPistol(item: ItemId): boolean {
 
 function isGrenade(item: ItemId): boolean {
   return (GRENADES as readonly string[]).includes(item);
+}
+
+/** A retained rifle/AWP dominates a requested lower primary; a retained paid
+ * pistol satisfies the force-secondary role. This is deliberately a narrow
+ * anti-downgrade rule, not a global weapon-value ranking. */
+function retainedPrimarySatisfies(item: ItemId, primary: ItemId | null | undefined): boolean {
+  if (!primary) return false;
+  if (isSmg(item)) return isSmg(primary) || isRifle(primary) || primary === "awp";
+  if (isRifle(item)) return isRifle(primary) || primary === "awp";
+  return item === "awp" && primary === "awp";
 }
 
 /** Post-purchase loadout = current inventory + planned purchases. */
@@ -165,18 +175,16 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
   const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
 
   const hasArmor = inventory.armor > 0; // local derived value, not stored
-  const hasRifle = inventory.primary !== null && inventory.primary !== undefined && isRifle(inventory.primary);
-  const hasSmg = inventory.primary !== null && inventory.primary !== undefined && isSmg(inventory.primary);
 
   const ownedGrenades = new Map<ItemId, number>();
   for (const g of inventory.grenades) ownedGrenades.set(g, (ownedGrenades.get(g) ?? 0) + 1);
 
   const consume = (item: ItemId) => {
     if (isRifle(item)) {
-      if (!hasRifle) add(item);
+      if (!retainedPrimarySatisfies(item, inventory.primary)) add(item);
       targetCost += price(rules, item);
     } else if (isSmg(item)) {
-      if (!hasSmg) add(item);
+      if (!retainedPrimarySatisfies(item, inventory.primary)) add(item);
       targetCost += price(rules, item);
     } else if (item === "awp") {
       if (inventory.primary !== "awp") add("awp");
@@ -186,7 +194,7 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
       if (!hasSniper) add(item);
       targetCost += price(rules, item);
     } else if (isPaidPistol(item)) {
-      if (inventory.secondary !== item) add(item);
+      if (!isPaidPistol(inventory.secondary ?? "zeus")) add(item);
       targetCost += price(rules, item);
     } else if (item === "kevlar") {
       // "具有护甲" — not a forced 100-armor refill; any armor satisfies it

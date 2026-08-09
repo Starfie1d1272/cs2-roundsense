@@ -290,13 +290,23 @@ interface TrajectoryScenario {
   id: "WIN" | "LOSS_NO_PLANT" | "LOSS_WITH_PLANT";
   assumptions: readonly string[];
   nextMoney: { min: number; max: number };
-  nextLossIndex: Fact<number> | { status: "UNKNOWN"; reason: string };
-  reachableModes: readonly PolicyMode[];
+  nextLossIndex: Fact<number>;
+  followingRound: {
+    action: "PRESERVE";
+    outcome: "LOSS_NO_PLANT";
+    money: Fact<{ min: number; max: number }>;
+    lossIndex: Fact<number>;
+    reachability: Fact<"UNKNOWN">;
+  };
 }
 ```
 
 机械 projection 可以复用现有规则；policy 只能比较同一组 scenario，不能把
 某一个“plain loss”当成必然未来，也不能重新引入单一 preservation budget。
+`followingRound` 明示 t+1 不购买、随后 plain-loss 的 t+2 assumption；若 win
+loss-index 未校准则其 t+2 money 为 UNKNOWN。future inventory、drop 与 armor
+retention 不可观测，因此 future buy reachability 一律 UNKNOWN，不用 money
+threshold 伪造 mode 列表。
 
 ## 8. Multimodal recommendation
 
@@ -314,7 +324,7 @@ interface RecommendationOption {
 }
 
 interface PolicyV3Output {
-  status: "READY" | "INSUFFICIENT_STATE";
+  status: "READY" | "INSUFFICIENT_STATE" | "UNSUPPORTED_POLICY_EVIDENCE";
   options: readonly RecommendationOption[];
   defaultOptionId?: string;
   unresolved: readonly string[];
@@ -329,6 +339,8 @@ interface PolicyV3Output {
   preference 和 unknown facts 约束；
 - 非 post-pistol state 若证据没有 dominant mode，`defaultOptionId` 可以缺失；
 - 必要 FACT 缺失时返回 `INSUFFICIENT_STATE`，不得为了完整性生成 recommendation；
+- PISTOL purchase policy 不在冻结 evidence scope，返回
+  `UNSUPPORTED_POLICY_EVIDENCE`，不得静默变成 PRESERVE；
 - professional frequency 只解释 support，不定义最优动作或胜率。
 
 ## 9. Opponent-context fallback

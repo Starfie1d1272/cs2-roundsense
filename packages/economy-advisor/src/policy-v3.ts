@@ -129,12 +129,15 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
   const initialBudget = budget;
   const desired = [...inventory.grenades];
   const canAdd = (item: ItemId) => desired.length < MAX_GRENADE_CARRY && count(desired, item) < (grenadeCarryCap(item) ?? 0);
-  const ensure = (item: ItemId) => {
-    if (desired.includes(item)) return;
+  const buyOne = (item: ItemId) => {
     if (canAdd(item) && price(DEFAULT_RULES, item) <= budget) {
       desired.push(item);
       budget -= price(DEFAULT_RULES, item);
     }
+  };
+  const ensure = (item: ItemId) => {
+    if (desired.includes(item)) return;
+    buyOne(item);
   };
 
   // Existing utility is respected before any new slot is allocated.
@@ -155,7 +158,7 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
   if (initialBudget >= 600) {
     if (side === "CT") {
       ensure("he"); // CT evidence supports HE over a second flash.
-      if (canAdd("flash") && price(DEFAULT_RULES, "flash") <= budget) ensure("flash");
+      buyOne("flash");
     } else {
       // The T fourth slot remains intentionally multimodal; the caller emits both alternatives.
       ensure("he");
@@ -175,15 +178,21 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
     add(items, "kevlar");
   } else if (mode === "FORCE") {
     const paidPistol = side === "T" ? "tec9" : "fiveseven";
-    // These are legal force-bundle alternatives, not a money-tier ladder.
-    // A retained primary/secondary can satisfy the same targets cheaply.
-    return [
-      [smgFor(side), "kevlar", "flash"],
+    // Bounded legal bundle fitting: preserve a retained dominant weapon, try
+    // a primary upgrade first, then spend the remaining discrete budget on
+    // armor and utility. It deliberately has no preservation bank.
+    const bases: ItemId[][] = [
+      [rifleFor(side), "kevlar"],
+      [rifleFor(side)],
       [smgFor(side), "kevlar"],
-      [smgFor(side), "flash"],
-      [paidPistol, "kevlar", "flash"],
+      [smgFor(side)],
       [paidPistol, "kevlar"],
+      [paidPistol],
     ];
+    return bases.map((base) => {
+      const primaryArmor = planPurchases(inventory, compact(base), DEFAULT_RULES, side);
+      return [...base, ...utilityBundle(side, inventory, Math.max(0, money - primaryArmor.totalCost))];
+    });
   } else {
     add(items, rifleFor(side));
     // CT defaults to vesthelm; Kevlar is not an opponent-derived decision.
@@ -194,6 +203,16 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
   const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
   items.push(...utility);
   return [items];
+}
+
+function forcePrimaryRank(side: Side, items: readonly ItemId[]): number {
+  if (items.includes(rifleFor(side))) return 3;
+  if (items.includes(smgFor(side))) return 2;
+  return 1;
+}
+
+function forceArmorRank(inventory: InventoryState, plan: PurchasePlan): number {
+  return resultingLoadout(inventory, plan.purchases).armor > 0 ? 1 : 0;
 }
 
 function compact(items: readonly ItemId[]): PurchaseItem[] {
@@ -231,10 +250,11 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
       const unavailable: Fact<{ min: number; max: number }> = { status: "UNKNOWN", source: "t+2 projection", asOfSeq: nextLoss.asOfSeq, reason: "t+1 win loss-index transition is uncalibrated" };
       return { action: "PRESERVE", outcome: "LOSS_NO_PLANT", money: unavailable, lossIndex: nextLoss, reachability };
     }
-    const second = projectNextRoundMoney({ money: nextMoney.min, spendNow: 0, side, lossStreak: nextLoss.value, kills: [], rules: DEFAULT_RULES });
+    const secondMin = projectNextRoundMoney({ money: nextMoney.min, spendNow: 0, side, lossStreak: nextLoss.value, kills: [], rules: DEFAULT_RULES });
+    const secondMax = projectNextRoundMoney({ money: nextMoney.max, spendNow: 0, side, lossStreak: nextLoss.value, kills: [], rules: DEFAULT_RULES });
     return {
       action: "PRESERVE", outcome: "LOSS_NO_PLANT",
-      money: { status: "TRACKED", value: { min: second.loss, max: second.loss }, source: "economy rule projection", asOfSeq: nextLoss.asOfSeq },
+      money: { status: "TRACKED", value: { min: secondMin.loss, max: secondMax.loss }, source: "economy rule projection", asOfSeq: nextLoss.asOfSeq },
       lossIndex: { status: "TRACKED", value: Math.min(4, nextLoss.value + 1), source: "CS2 loss-bonus rule", asOfSeq: nextLoss.asOfSeq },
       reachability,
     };
@@ -256,9 +276,20 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
   let plan: PurchasePlan | undefined;
   for (const candidate of targets(state.round.side.value, mode, inventory, state.player.money.value)) {
     const next = planPurchases(inventory, compact(candidate), DEFAULT_RULES, state.round.side.value);
+    const candidateRank = mode === "FORCE" ? forcePrimaryRank(state.round.side.value, candidate) : 0;
+    const selectedRank = mode === "FORCE" ? forcePrimaryRank(state.round.side.value, desired) : 0;
+    const candidateArmor = mode === "FORCE" ? forceArmorRank(inventory, next) : 0;
+    const selectedArmor = mode === "FORCE" && plan !== undefined ? forceArmorRank(inventory, plan) : 0;
     if (next.isComplete && (
       plan === undefined ||
-      (next.totalCost <= state.player.money.value && (plan.totalCost > state.player.money.value || next.totalCost > plan.totalCost))
+      (next.totalCost <= state.player.money.value && (
+        plan.totalCost > state.player.money.value ||
+        candidateRank > selectedRank ||
+        (candidateRank === selectedRank && (
+          candidateArmor > selectedArmor ||
+          (candidateArmor === selectedArmor && next.totalCost > plan.totalCost)
+        ))
+      ))
     )) {
       desired = candidate;
       plan = next;
