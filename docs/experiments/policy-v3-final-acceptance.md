@@ -236,6 +236,18 @@ UNKNOWN、opponent UNKNOWN recommendation-set、C4 remaining UNKNOWN，以及
 NORMAL/OT shared generic policy 也保持原有契约。T/CT pistol-loser 定向回归均
 保持；没有以改善 winner FULL 破坏 loser policy。
 
+### 9.4 Runtime deployability gate
+
+frozen behavioral replay 继续使用其既有、连续历史重建，故本节的行为数字与
+`3e1b301` follow-up 完全不变。另由 `apps/roundsense` 的 engine lifecycle test
+从真实入口验证：同一持久 `PolicyStateTracker` 接收 r1 `freezetime → live → over`
+（terminal receipt 已进入 r2 且可缺少当前购买所需 player 字段）再到 r2
+`freezetime` 时，`previousRounds[].winner` 可作为 COMPLETE 的 tracked FACT 到达
+`recommendPolicyV3()`；live/over 均仍返回 `null`，不会产生购买 advice。T winner
+可到达已有 FULL/generic full-ish option，T/CT loser 保持原 supported/dominant
+fallback。mid-round cold start、缺 terminal 与 seq gap 都保留 UNKNOWN fallback，
+因此不再把 corpus 直接注入的 history 当作唯一 deployability 证明。
+
 剩余系统性差异仍是 corpus behavioral reference 中的 `POLICY_MISS` 5,287 和
 `UNEXPLAINED` 581；本轮没有把它们拟合成职业专用规则。architecture 的唯一行为
 变化是消费既有 tracked previous-winner FACT，没有偏离 Policy V3 的
