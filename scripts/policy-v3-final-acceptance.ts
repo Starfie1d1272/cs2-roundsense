@@ -33,7 +33,7 @@ import { unknownTiming } from "../packages/c4-estimator/src/index.js";
 import type { ItemId, RoundType, Side } from "../packages/shared-types/src/index.js";
 
 const EXPECTED_CORPUS_SHA256 = "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6";
-const AUDITED_SHA = "5a2fa8e1e12b2644b5d6a71afb2997286fef445f";
+const AUDITED_SHA = "3e1b301ff2ab96ad9d99b3d3b66957a69b5f4835";
 const DEFAULT_CORPUS = "/tmp/roundsense-cologne-policy/player-rounds.json";
 const DEFAULT_MAPS = "/tmp/roundsense-cologne-policy/maps";
 const DEFAULT_OUTPUT = "experiments/policy-v3/results/policy-v3-final-acceptance.json";
@@ -120,6 +120,7 @@ interface Eligible {
   inventory: InventoryState;
   opponentLossIndex: number;
   context: "POST_PISTOL" | "NORMAL" | "OVERTIME";
+  previousWinner: Side | "UNKNOWN";
 }
 
 interface Candidate {
@@ -388,7 +389,18 @@ function stateFor(eligible: Eligible): PolicyV3State {
     },
     player: { money: fact(eligible.money, "player.state.money"), lossIndex: ownLoss, inventory: fact(eligible.inventory, "player.state + player.weapons") },
     teamLoss: side === "CT" ? { ct: ownLoss, t: opponentLoss } : { ct: opponentLoss, t: ownLoss },
-    history: { integrity: "COMPLETE", previousRounds: [] },
+    history: eligible.context === "POST_PISTOL"
+      ? {
+          integrity: "COMPLETE",
+          previousRounds: [{
+            roundNumber: eligible.row.roundNumber - 1,
+            winner: eligible.previousWinner === "UNKNOWN"
+              ? { status: "UNKNOWN", source: "continuous prior-round GSI winner", asOfSeq: 1, reason: "terminal winner unavailable" }
+              : fact(eligible.previousWinner, "continuous prior-round GSI winner"),
+            planted: { status: "UNKNOWN", source: "not used by post-pistol policy", asOfSeq: 1, reason: "not reconstructed for this audit" },
+          }],
+        }
+      : { integrity: "COMPLETE", previousRounds: [] },
     opponent,
     preference: { source: "DEFAULT", awpPriority: "NEUTRAL" },
   };
@@ -655,7 +667,15 @@ function increment(counter: Map<string, number>, name: string): void {
 async function buildEligible(rows: Row[], mapsDir: string) {
   const rowByKey = new Map(rows.map((row) => [key(row), row]));
   const teamLoss = new Map<string, number>();
+  const winnerByRound = new Map<string, Side>();
   for (const row of rows) teamLoss.set(`${row.map}:${row.roundNumber}:${row.side}`, row.lossIndex);
+  for (const row of rows) {
+    const winner: Side = row.winnerSide === "ct" ? "CT" : "T";
+    const roundKey = `${row.map}:${row.roundNumber}`;
+    const existing = winnerByRound.get(roundKey);
+    if (existing !== undefined && existing !== winner) throw new Error(`inconsistent winner label: ${roundKey}`);
+    winnerByRound.set(roundKey, winner);
+  }
   const exclusions = new Map<string, number>();
   const candidates: Array<{ row: Row; money: number; context: Eligible["context"]; retainedPrimary: string | null; reset?: boolean }> = [];
   let strictRegulation = 0;
@@ -699,6 +719,9 @@ async function buildEligible(rows: Row[], mapsDir: string) {
       inventory: inventoryFor(candidate.row, prestate, candidate.retainedPrimary),
       opponentLossIndex,
       context: candidate.context,
+      previousWinner: candidate.context === "POST_PISTOL"
+        ? winnerByRound.get(`${candidate.row.map}:${candidate.row.roundNumber - 1}`) ?? "UNKNOWN"
+        : "UNKNOWN",
     });
   }
   return {
@@ -716,6 +739,21 @@ async function buildEligible(rows: Row[], mapsDir: string) {
       replay_prestate: { requested_rows: needsReplay.length, extracted_rows: extraction.values.size, maps: extraction.maps, extraction_sha256: extraction.extractionHash },
     },
   };
+}
+
+function countLabels(labels: readonly string[]): Record<string, number> {
+  const counts = new Map<string, number>();
+  for (const label of labels) increment(counts, label);
+  return Object.fromEntries([...counts].sort());
+}
+
+function moneyBand(money: number): string {
+  return money < 2000 ? "0-1999" : money < 3000 ? "2000-2999" : money < 4000 ? "3000-3999" : money < 5000 ? "4000-4999" : "5000+";
+}
+
+function pistolOutcome(eligible: Eligible): "WIN" | "LOSS" | "UNKNOWN" {
+  if (eligible.previousWinner === "UNKNOWN") return "UNKNOWN";
+  return eligible.previousWinner === (eligible.row.side === "t" ? "T" : "CT") ? "WIN" : "LOSS";
 }
 
 function canonicalOptions(output: ReturnType<typeof recommendPolicyV3>): string {
@@ -799,9 +837,42 @@ async function main(): Promise<void> {
   let opponentFallbackChanges = 0;
   const opponentStatuses = new Map<string, number>();
   let lossProjectionMismatch = 0;
+  const lightDiagnostics = {
+    side: [] as string[],
+    context: [] as string[],
+    money_band: [] as string[],
+    retained_primary_family: [] as string[],
+    retained_armor: [] as string[],
+    resulting_primary_family: [] as string[],
+    resulting_armor: [] as string[],
+    spend_band: [] as string[],
+    current_to_resulting_bundle: [] as string[],
+  };
+  const postPistolDiagnostics = {
+    all: [] as string[],
+    actual_full: [] as string[],
+  };
 
   for (const entry of eligible) {
     const actual = actualFrom(entry.row);
+    if (actual.mode === "LIGHT") {
+      const retainedArmor = armorState(entry.inventory.armor, entry.inventory.hasHelmet);
+      const resultingArmor = actual.armorState;
+      lightDiagnostics.side.push(entry.row.side === "t" ? "T" : "CT");
+      lightDiagnostics.context.push(entry.context);
+      lightDiagnostics.money_band.push(moneyBand(entry.money));
+      lightDiagnostics.retained_primary_family.push(family(entry.inventory.primary));
+      lightDiagnostics.retained_armor.push(retainedArmor);
+      lightDiagnostics.resulting_primary_family.push(actual.primaryFamily);
+      lightDiagnostics.resulting_armor.push(resultingArmor);
+      lightDiagnostics.spend_band.push(actual.spend === 0 ? "0" : actual.spend <= 500 ? "1-500" : actual.spend <= 1000 ? "501-1000" : actual.spend <= 2000 ? "1001-2000" : "2000+");
+      lightDiagnostics.current_to_resulting_bundle.push(`${family(entry.inventory.primary)}+${retainedArmor}->${actual.primaryFamily}+${resultingArmor}`);
+    }
+    if (entry.context === "POST_PISTOL") {
+      const outcome = pistolOutcome(entry);
+      postPistolDiagnostics.all.push(outcome);
+      if (actual.mode === "FULL") postPistolDiagnostics.actual_full.push(outcome);
+    }
     const state = stateFor(entry);
     const current = v3Candidates(state);
     if (current.output.status !== "READY" || current.candidates.length === 0) throw new Error(`V3 unavailable for eligible row ${key(entry.row)}`);
@@ -885,6 +956,12 @@ async function main(): Promise<void> {
     id: "LIGHT_MODE_UNREACHABLE",
     evidence: `${actualLight} actual LIGHT rows have zero exact and compatible coverage because LIGHT is never offered`,
   });
+  const postPistol = v3Segments.get("POST_PISTOL");
+  const postPistolFull = postPistol?.modeByActual.get("FULL");
+  if ((postPistolFull?.n ?? 0) > 0 && (postPistolFull?.compatible ?? 0) === 0) blockers.push({
+    id: "POST_PISTOL_FULL_UNREACHABLE",
+    evidence: `${postPistolFull!.n} actual POST_PISTOL FULL rows have zero compatible coverage`,
+  });
 
   const reasonResult = Object.fromEntries([...reasons].sort().map(([name, count]) => [name, { count, rate_of_material: rate(count, material.count), rate_of_eligible: rate(count, eligible.length) }]));
   for (const reason of ["COVERED_ALTERNATIVE", "UNAVAILABLE_CONTEXT", "ROBUST_GENERAL_DEFAULT", "DATA_AMBIGUITY", "POLICY_MISS", "UNEXPLAINED"] as const) {
@@ -901,6 +978,7 @@ async function main(): Promise<void> {
       corpus_contract: "IEM Cologne Major 2026 event packages; cs2-demo-format/3.0; cs2df 3.1.0; demoparser2 0.41.3",
       runtime_policy_import: "packages/economy-advisor/src/policy-v3.ts",
       production_visible_policy_fields: ["own side", "own money", "own inventory", "own loss index", "round number/context", "score", "opponent loss index"],
+      tracked_history_facts_used: ["previous round winner only for POST_PISTOL; reconstructed from the immediately preceding audit round to model continuous normal-player GSI"],
       demo_label_only_fields: ["resulting spend/loadout", "replay end armor/kit/grenades", "professional action type"],
       forbidden_policy_fields_not_supplied: ["opponent exact money/weapons/survivors", "teammate hidden purchases", "identity/role", "map position/spawn", "future result/kills"],
     },
@@ -934,6 +1012,24 @@ async function main(): Promise<void> {
       representative_cases: Object.fromEntries([...cases].sort()),
     },
     severe_subgroups: subgroups.result(),
+    frozen_follow_up_diagnostics: {
+      actual_light_own_state: {
+        n: lightDiagnostics.side.length,
+        side: countLabels(lightDiagnostics.side),
+        context: countLabels(lightDiagnostics.context),
+        money_band: countLabels(lightDiagnostics.money_band),
+        retained_primary_family: countLabels(lightDiagnostics.retained_primary_family),
+        retained_armor: countLabels(lightDiagnostics.retained_armor),
+        resulting_primary_family: countLabels(lightDiagnostics.resulting_primary_family),
+        resulting_armor: countLabels(lightDiagnostics.resulting_armor),
+        spend_band: countLabels(lightDiagnostics.spend_band),
+        current_to_resulting_bundle: countLabels(lightDiagnostics.current_to_resulting_bundle),
+      },
+      post_pistol_previous_winner: {
+        all_post_pistol: countLabels(postPistolDiagnostics.all),
+        actual_full: countLabels(postPistolDiagnostics.actual_full),
+      },
+    },
     opponent_deployment: {
       runtime_input_semantics: "direct normal-player GSI only; frozen direct-only artifact",
       runtime_class_distribution_on_eligible_states: Object.fromEntries([...opponentStatuses].sort()),
@@ -943,7 +1039,7 @@ async function main(): Promise<void> {
     },
     acceptance_counts: { policy_miss: material.policyMiss, unexplained: material.unexplained },
     final_acceptance: {
-      status: blockers.length === 0 ? "PASS" : "FAIL",
+      status: blockers.length === 0 ? "READY_FOR_FINAL_SOL_RE_AUDIT" : "FOLLOW_UP_BLOCKERS_REMAIN",
       blockers,
       reopen_economy_research_required: false,
     },

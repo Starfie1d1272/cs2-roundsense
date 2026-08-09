@@ -1,15 +1,16 @@
 # Policy V3 最终产品行为验收
 
-结论：**FAIL**。
+基线结论：**FAIL**；本 follow-up 重跑结论：**READY FOR FINAL SOL RE-AUDIT**。
 
-本报告只审计 `feat/policy-v3-core @
-5a2fa8e1e12b2644b5d6a71afb2997286fef445f`。审计没有修改 production
-policy、threshold、购买规则或 opponent model。
+本报告保留 `feat/policy-v3-core @
+5a2fa8e1e12b2644b5d6a71afb2997286fef445f` 的 frozen baseline，并记录在同一
+corpus/harness 上对 production `3e1b301ff2ab96ad9d99b3d3b66957a69b5f4835` 的
+严格收敛修复。follow-up 没有修改 opponent artifact、C4、研究结论、eligibility、
+baseline 或 discrepancy taxonomy。
 
-机器可读结果：
-`experiments/policy-v3/results/policy-v3-final-acceptance.json`，artifact
-SHA-256：
-`13093c4b4afc6f2ad21b59cfef3ac753b7690f1eaf961339e78f1da2a52ffde8`。
+机器可读结果：`experiments/policy-v3/results/policy-v3-final-acceptance.json`，
+follow-up artifact SHA-256：
+`a65effbfc132a9da29bfa733781e2d2ca688ccf34e12493275522677fa9dd9b6`。
 
 ## 1. Corpus、输入边界与 eligibility
 
@@ -181,6 +182,65 @@ map-specific policy、role inference 或 opponent oracle。
 修复后只需按同一 frozen harness 重跑 targeted invariant、mode/subgroup 与全量
 behavioral replay，不需要重开 economy research。
 
+## 9. Follow-up re-audit（production `3e1b301`）
+
+该节是本轮 implementation follow-up 的结果；上文数字仍是 `5a2fa8e` baseline，
+用于 before/after 对照，而不是被改写的历史。
+
+### 9.1 三个 P0 修复
+
+1. CT `FORCE` 在主武器、护甲和有效 utility 已拟合后，若 own-state 仍可负担
+   $350 helmet upgrade，会重新按原始 inventory 规划并仅在完整 bundle 不超预算时
+   加入。`CT_FORCE_STRATEGIC_BANK`：**20 → 0**。
+2. `LIGHT` 现在是受控的 partial investment：完整 rifle buy 不可达时，提供独立的
+   `SMG + armor` bundle，保留现有 utility，不把剩余预算继续填成 FORCE utility。
+   它只在其 spend 严格小于对应 FORCE bundle 时出现，因此不是 FORCE 的改名。
+3. `POST_PISTOL` 只在 `history.integrity=COMPLETE` 且上一手枪局 winner FACT 明确
+   属于自己时使用 generic/full-ish bundle；pistol loser 保持冻结的 T
+   `PRESERVE + FORCE` 和 CT `FORCE-dominant + PRESERVE`。winner 不可得时只给
+   无 dominant 的 `PRESERVE + FORCE` supported set。
+
+本轮只消费 tracker 既有 `previousRounds[].winner`；没有新增 RoundContext、对手
+private state、role/position、map tactic 或未来结果字段。frozen harness 仅从紧邻
+前一回合重建这一 continuous normal-player GSI FACT。
+
+### 9.2 窄诊断
+
+- 2,330 个 actual LIGHT：T/CT 为 1,437/893；2,113 在 NORMAL、214 在
+  POST_PISTOL；1,345（57.7%）位于 $3,000–3,999，523 位于 $2,000–2,999。
+  2,133 条没有 retained primary、2,033 条没有 retained armor；结果 bundle 以
+  no-primary（1,701）和 SMG（421）为主。该标签不是单一金额区间或单一 retained
+  loadout，因此未引入 money threshold；production LIGHT 采用可解释的、严格小于
+  FORCE spend 的 partial bundle。
+- 3,524 个 POST_PISTOL state 中，pistol winner/loss 为 1,740/1,784；992 个
+  actual FULL 中 **987（99.5%）** 属于 winner、5 属于 loser，支持 winner/loser
+  语义分流。
+
+### 9.3 Before / after
+
+| 指标 | baseline `5a2fa8` | follow-up `3e1b301` |
+| --- | ---: | ---: |
+| CT_FORCE_STRATEGIC_BANK | 20 | **0** |
+| actual LIGHT exact / compatible | 0.00% / 0.00% | **0.04% / 54.16%** |
+| POST_PISTOL FULL exact / compatible | 0.00% / 0.00% | **95.97% / 95.97%** |
+| POST_PISTOL mode exact / compatible | 38.56% / 65.78% | **69.95% / 93.36%** |
+| overall mode exact / compatible | 70.43% / 84.35% | **75.13% / 93.75%** |
+| spend MAE, lead / best-set | $703.58 / $299.44 | **$579.08 / $249.95** |
+| severe-any | 50.37% | **45.94%** |
+| POLICY_MISS | 5,984 | **5,287** |
+| UNEXPLAINED | 911 | **581** |
+
+所有回归机械项均为 0：超预算、side legality、grenade slots、flash cap、retained
+rifle/AWP downgrade 与 FORCE strategic bank。PISTOL unsupported、required
+UNKNOWN、opponent UNKNOWN recommendation-set、C4 remaining UNKNOWN，以及
+NORMAL/OT shared generic policy 也保持原有契约。T/CT pistol-loser 定向回归均
+保持；没有以改善 winner FULL 破坏 loser policy。
+
+剩余系统性差异仍是 corpus behavioral reference 中的 `POLICY_MISS` 5,287 和
+`UNEXPLAINED` 581；本轮没有把它们拟合成职业专用规则。architecture 的唯一行为
+变化是消费既有 tracked previous-winner FACT，没有偏离 Policy V3 的
+FACT/INFERENCE/ADVICE 与 normal-player deployability 边界。
+
 ## Final decision
 
-**POLICY V3 FINAL ACCEPTANCE: FAIL**
+**READY FOR FINAL SOL RE-AUDIT: YES**
