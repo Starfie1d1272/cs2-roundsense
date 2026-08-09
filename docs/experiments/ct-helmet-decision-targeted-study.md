@@ -32,13 +32,15 @@ helmet threat 很低”。因此 **不批准独立 helmet-threat inference**，
 
 实现与结果：
 
-- `experiments/ct-helmet-decision/helmet_decision_study.py`；
-- `experiments/ct-helmet-decision/data/weapon-headshot-mechanics.v2026-08-06.json`；
-- `experiments/ct-helmet-decision/results/helmet-decision-study.json`。
+- frozen source、派生 mechanics 表与机器可读结果保留在
+  [`research/ct-helmet-decision @ d194d17`](https://github.com/Starfie1d1272/cs2-roundsense/tree/d194d17/experiments/ct-helmet-decision)；
+- mainline 只保留本结论报告，避免把一次性大型研究资产作为 production surface。
 
 重跑：
 
 ```bash
+git worktree add /tmp/roundsense-helmet-study d194d17
+cd /tmp/roundsense-helmet-study
 uv run --script experiments/ct-helmet-decision/helmet_decision_study.py --check
 ```
 

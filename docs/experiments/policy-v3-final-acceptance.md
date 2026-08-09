@@ -1,6 +1,7 @@
 # Policy V3 最终产品行为验收
 
-基线结论：**FAIL**；本 follow-up 重跑结论：**READY FOR FINAL SOL RE-AUDIT**。
+最终冻结结论：**PASS (`275566e`)**。本文保留早期 FAIL 与 follow-up 的完整历史，
+第 10 节给出当前 frozen acceptance closeout。
 
 本报告保留 `feat/policy-v3-core @
 5a2fa8e1e12b2644b5d6a71afb2997286fef445f` 的 frozen baseline，并记录在同一
@@ -9,8 +10,8 @@ corpus/harness 上对 production `3e1b301ff2ab96ad9d99b3d3b66957a69b5f4835` 的
 baseline 或 discrepancy taxonomy。
 
 机器可读结果：`experiments/policy-v3/results/policy-v3-final-acceptance.json`，
-follow-up artifact SHA-256：
-`a65effbfc132a9da29bfa733781e2d2ca688ccf34e12493275522677fa9dd9b6`。
+frozen artifact SHA-256：
+`6f796749648775ba3fbc190151960196b42c73f5a5447f92a9fe84d8f09be9af`。
 
 ## 1. Corpus、输入边界与 eligibility
 
@@ -253,6 +254,21 @@ fallback。mid-round cold start、缺 terminal 与 seq gap 都保留 UNKNOWN fal
 变化是消费既有 tracked previous-winner FACT，没有偏离 Policy V3 的
 FACT/INFERENCE/ADVICE 与 normal-player deployability 边界。
 
+## 10. Frozen closeout（production `275566e`）
+
+同一 corpus、eligibility、label、threshold 与 acceptance harness 的最终结果：
+
+- raw 43,620；eligible 23,552；map packages 202；corpus SHA-256
+  `33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6`；
+- recommendation budget、side legality、grenade slots、flash cap、retained rifle/AWP
+  downgrade、FORCE strategic bank、FORCE armor-zero、LIGHT envelope 与
+  future-affordability projection mismatch 全部为 0；
+- NORMAL 使用 final future-affordability architecture；POST_PISTOL loser 保持独立
+  `PRESERVE / FORCE` 策略，winner 1,740 / 1,740 为 strategic `FULL`；
+- post-pistol winner `LIGHT` output = 0；required UNKNOWN 不静默默认；opponent
+  UNKNOWN 对 recommendation set 的改变 = 0；
+- frozen artifact `final_acceptance.blockers=[]`，无需重开 economy research。
+
 ## Final decision
 
-**READY FOR FINAL SOL RE-AUDIT: YES**
+**FROZEN POLICY V3 ACCEPTANCE: PASS**

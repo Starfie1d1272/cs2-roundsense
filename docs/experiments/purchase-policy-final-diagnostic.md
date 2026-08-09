@@ -12,8 +12,9 @@ parent：`research/ct-helmet-decision @ d194d17`
 
 确定性实现与结果：
 
-- `experiments/economy-policy/purchase_policy_final_diagnostic.py`；
-- `experiments/economy-policy/results/cologne-2026/purchase-policy-final-diagnostic.json`。
+- frozen source、共用研究 helper 与机器可读结果保留在
+  [`research/purchase-policy-final-diagnostic @ aaf491b`](https://github.com/Starfie1d1272/cs2-roundsense/tree/aaf491b/experiments/economy-policy)；
+- mainline 只保留本结论报告，production 不加载这些一次性研究资产。
 
 ## 0. 最终裁决
 

@@ -1,12 +1,16 @@
 # RoundSense Policy V3 architecture lock
 
-状态：**authoritative / implementation-ready**
+状态：**authoritative / implemented / behavior-frozen**
 
 日期：2026-08-10
 
 范围：Policy V3 技术设计、own-economy spending guidance、opponent economy
-deployability、C4 uncertainty。
-本文件不实现 V3，不设计 Overlay/UI。
+deployability、C4 uncertainty。production economy behavior 冻结于
+`275566ea7b8751ce291d1283a96c06f168c1d58d`；完整验收见
+`docs/experiments/policy-v3-final-acceptance.md`。本文件不设计 Overlay/UI。
+
+第 1 节保留 implementation 前的裁决基线，第 13 节记录已经落地的 amendment
+scope；其中“当前 main”均指架构锁定时的 `main @ 37a9756`，不是当前 feature HEAD。
 
 ## 0. 最终 gate
 
@@ -672,11 +676,11 @@ strategy，不可连同函数整体复用。
 - V2 replay 中“62% 高于职业 p75、chosen primary high support 0%”的策略输出；
 - V2 branch 中意外纳入的 `__pycache__` 等生成物。
 
-## 13. Economy amendment implementation sequence 与 acceptance
+## 13. Economy amendment implementation mapping 与 acceptance
 
-### 13.1 下一 Terra implementation scope
+### 13.1 已落地 production scope
 
-按一个 economy amendment 语义单元实现，不重开研究：
+以下内容已按一个 economy amendment 语义单元落地，期间未重开研究：
 
 1. `packages/economy-advisor/src/policy-v3.ts`：加入 shared canonical
    boundaries、`SpendingGuidance`、`bundleSpend` contract；重写 NORMAL LIGHT
@@ -692,9 +696,9 @@ strategy，不可连同函数整体复用。
 4. `scripts/policy-v3-final-acceptance.ts`：更新 frozen harness 的字段消费与下述
    gate；重跑同一 Major corpus，不改 eligibility、label、阈值或 baseline 数据。
 
-`PolicyStateTracker`、`opponent-economy.ts`、C4 packages、GSI protocol、shared types、
-rules price artifact 均不属于本 amendment；除非 compile contract 证明不可避免，
-不得顺手修改。
+上述列表是 economy amendment 的直接改动面。`PolicyStateTracker`、
+`opponent-economy.ts`、C4 packages、GSI protocol、shared types 与 rules price artifact
+是先行 Policy V3 production 基础，不应因后续 economy cleanup 再被顺手扩张。
 
 ### 13.2 Mechanical / contract gates
 
@@ -753,4 +757,4 @@ Major 是 high-level behavioral reference，不是唯一最优策略 ground trut
 
 **POLICY V3 ECONOMY ARCHITECTURE AMENDMENT: LOCKED**
 
-**READY FOR TERRA IMPLEMENTATION: YES**
+**ECONOMY AMENDMENT IMPLEMENTED AND BEHAVIOR-FROZEN: YES (`275566e`)**
