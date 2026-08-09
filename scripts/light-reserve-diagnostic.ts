@@ -23,6 +23,7 @@ import type { ItemId, RoundType, Side } from "../packages/shared-types/src/index
 
 const EXPECTED_CORPUS_SHA256 = "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6";
 const BASELINE_SHA = "584ec5ce91c6d1bf8d138783a42d137fe7276a47";
+const RESEARCH_PARENT_SHA = "a1e6cd86653ddd71f3901386f67fd793976ed4c4";
 const DEFAULT_CORPUS = "/tmp/roundsense-cologne-policy/player-rounds.json";
 const DEFAULT_MAPS = "/tmp/roundsense-cologne-policy/maps";
 const DEFAULT_OUTPUT = "experiments/policy-v3/results/light-reserve-diagnostic.json";
@@ -57,6 +58,7 @@ interface Row {
   map: string;
   roundNumber: number;
   playerIndex: number;
+  teamKey: string;
   side: "ct" | "t";
   scoreCT: number;
   scoreT: number;
@@ -64,6 +66,7 @@ interface Row {
   winnerSide: "ct" | "t";
   startMoney: number;
   moneySpent: number;
+  equipmentValue: number;
   actionType: RoundType;
   primary: string | null;
   secondary: string | null;
@@ -116,6 +119,7 @@ interface DiagnosticRow {
   player_index: number;
   side: Side;
   context: Context;
+  actual_mode: ActualMode;
   current_money: number;
   actual_spend: number;
   residual_cash: number;
@@ -131,6 +135,28 @@ interface DiagnosticRow {
   resulting_armor: boolean;
   resulting_armor_state: ArmorState;
   resulting_secondary_class: "default" | "paid" | "none" | "other";
+}
+
+interface TeamObservation {
+  subject_key: string;
+  team_round_key: string;
+  side: Side;
+  context: Context;
+  actual_mode: ActualMode;
+  light_subtype: string | null;
+  subject_money: number;
+  teammate_money_median: number;
+  d_pre: number;
+  team_money_percentile: number;
+  subject_is_richest_or_tied: boolean;
+  subject_spend: number;
+  subject_residual: number;
+  teammate_residual_median: number;
+  d_post: number;
+  absolute_gap_reduction: number;
+  relative_gap_reduction: number | null;
+  teammate_low_spend_count: number;
+  drop_sensitive: boolean;
 }
 
 function parseArgs(): { corpus: string; maps: string; output: string } {
@@ -384,7 +410,7 @@ function percentile(values: readonly number[], q: number): number | null {
   const lower = Math.floor(position);
   const upper = Math.ceil(position);
   if (lower === upper) return sorted[lower]!;
-  return sorted[lower]! + (sorted[upper]! - sorted[lower]!) * (position - lower);
+  return round4(sorted[lower]! + (sorted[upper]! - sorted[lower]!) * (position - lower));
 }
 
 function shortestInterval(values: readonly number[], fraction: number): { low: number; high: number; width: number } | null {
@@ -534,6 +560,133 @@ function rewardAssociation(rows: readonly DiagnosticRow[]) {
   };
 }
 
+function contextForRow(row: Row): Context {
+  if (row.overtime) return "OVERTIME";
+  return row.roundNumber === 2 || row.roundNumber === 14 ? "POST_PISTOL" : "NORMAL";
+}
+
+function isDropSensitive(row: Row): boolean {
+  const derived = dropFlags(row);
+  return row.dropGave || row.dropReceived || derived.gave || derived.received;
+}
+
+function teamMoneyPercentile(subjectMoney: number, teamMoney: readonly number[]): number {
+  const lower = teamMoney.filter((value) => value < subjectMoney).length;
+  const equal = teamMoney.filter((value) => value === subjectMoney).length;
+  return round4((lower + (equal - 1) / 2) / Math.max(1, teamMoney.length - 1));
+}
+
+function buildTeamObservations(
+  subjects: readonly { row: Row; money: number; context: Context; lightSubtype: string | null }[],
+  rows: readonly Row[],
+  subset: "CLEAN" | "DROP_SENSITIVE",
+): { observations: TeamObservation[]; audit: Record<string, number> } {
+  const grouped = new Map<string, Row[]>();
+  for (const row of rows) {
+    const groupKey = `${row.map}:${row.roundNumber}:${row.teamKey}`;
+    grouped.set(groupKey, [...(grouped.get(groupKey) ?? []), row]);
+  }
+  const audit = new Map<string, number>();
+  const observations: TeamObservation[] = [];
+  for (const subject of subjects) {
+    const groupKey = `${subject.row.map}:${subject.row.roundNumber}:${subject.row.teamKey}`;
+    const team = grouped.get(groupKey);
+    if (!team || team.length !== 5) { increment(audit, "team_size_not_five"); continue; }
+    const teammates = team.filter((row) => row.playerIndex !== subject.row.playerIndex);
+    if (teammates.length !== 4) { increment(audit, "subject_not_unique_in_team"); continue; }
+    const dropSensitive = team.some(isDropSensitive);
+    if (subset === "CLEAN" && dropSensitive) { increment(audit, "team_drop_sensitive"); continue; }
+    if (subset === "DROP_SENSITIVE" && !dropSensitive) { increment(audit, "team_clean"); continue; }
+    const teammateMoney = teammates.map((row) => row.startMoney);
+    const teammateResidual = teammates.map((row) => row.startMoney - row.moneySpent);
+    if (teammateResidual.some((value) => value < 0)) { increment(audit, "negative_teammate_residual"); continue; }
+    const teammateMoneyMedian = percentile(teammateMoney, 0.5)!;
+    const teammateResidualMedian = percentile(teammateResidual, 0.5)!;
+    const subjectResidual = subject.money - subject.row.moneySpent;
+    if (subjectResidual < 0) { increment(audit, "negative_subject_residual"); continue; }
+    const dPre = subject.money - teammateMoneyMedian;
+    const dPost = subjectResidual - teammateResidualMedian;
+    const absoluteGapReduction = Math.abs(dPre) - Math.abs(dPost);
+    observations.push({
+      subject_key: key(subject.row),
+      team_round_key: groupKey,
+      side: subject.row.side === "t" ? "T" : "CT",
+      context: subject.context,
+      actual_mode: actualMode(subject.row.actionType),
+      light_subtype: subject.lightSubtype,
+      subject_money: subject.money,
+      teammate_money_median: teammateMoneyMedian,
+      d_pre: dPre,
+      team_money_percentile: teamMoneyPercentile(subject.money, team.map((row) => row.startMoney)),
+      subject_is_richest_or_tied: teammates.every((row) => row.startMoney <= subject.money),
+      subject_spend: subject.row.moneySpent,
+      subject_residual: subjectResidual,
+      teammate_residual_median: teammateResidualMedian,
+      d_post: dPost,
+      absolute_gap_reduction: absoluteGapReduction,
+      relative_gap_reduction: dPre === 0 ? null : round4(absoluteGapReduction / Math.abs(dPre)),
+      teammate_low_spend_count: teammates.filter((row) => row.actionType === "eco" || row.actionType === "semi").length,
+      drop_sensitive: dropSensitive,
+    });
+  }
+  return {
+    observations,
+    audit: {
+      candidate_subjects: subjects.length,
+      included_subjects: observations.length,
+      unique_team_rounds: new Set(observations.map((row) => row.team_round_key)).size,
+      ...Object.fromEntries([...audit].sort()),
+    },
+  };
+}
+
+function teamObservationSummary(observations: readonly TeamObservation[]) {
+  const positive = observations.filter((row) => row.d_pre > 0);
+  const closer = positive.filter((row) => row.absolute_gap_reduction > 0).length;
+  return {
+    n: observations.length,
+    unique_team_rounds: new Set(observations.map((row) => row.team_round_key)).size,
+    d_pre: compactMoneyDistribution(observations.map((row) => row.d_pre)),
+    team_money_percentile: compactMoneyDistribution(observations.map((row) => row.team_money_percentile)),
+    positive_outlier_n: positive.length,
+    positive_outlier_rate: rate(positive.length, observations.length),
+    richest_or_tied_n: observations.filter((row) => row.subject_is_richest_or_tied).length,
+    richest_or_tied_rate: rate(observations.filter((row) => row.subject_is_richest_or_tied).length, observations.length),
+    d_post: compactMoneyDistribution(observations.map((row) => row.d_post)),
+    absolute_d_pre: compactMoneyDistribution(observations.map((row) => Math.abs(row.d_pre))),
+    absolute_d_post: compactMoneyDistribution(observations.map((row) => Math.abs(row.d_post))),
+    paired_absolute_gap_reduction: compactMoneyDistribution(observations.map((row) => row.absolute_gap_reduction)),
+    positive_pre_only: {
+      n: positive.length,
+      d_pre: compactMoneyDistribution(positive.map((row) => row.d_pre)),
+      d_post: compactMoneyDistribution(positive.map((row) => row.d_post)),
+      absolute_d_post: compactMoneyDistribution(positive.map((row) => Math.abs(row.d_post))),
+      paired_absolute_gap_reduction: compactMoneyDistribution(positive.map((row) => row.absolute_gap_reduction)),
+      closer_n: closer,
+      closer_rate: rate(closer, positive.length),
+      relative_gap_reduction: compactMoneyDistribution(positive.map((row) => row.relative_gap_reduction!)),
+    },
+  };
+}
+
+function lowSpendTeamScenario(observations: readonly TeamObservation[]) {
+  const selected = observations.filter((row) => row.actual_mode === "LIGHT" && row.context === "NORMAL"
+    && row.teammate_low_spend_count >= 3 && row.d_pre > 0);
+  return {
+    definition: "NORMAL observational-semi subject; at least 3/4 teammates are observational eco or semi; subject money exceeds teammate median",
+    n: selected.length,
+    unique_team_rounds: new Set(selected.map((row) => row.team_round_key)).size,
+    pre_buy_excess: compactMoneyDistribution(selected.map((row) => row.d_pre)),
+    subject_actual_spend: compactMoneyDistribution(selected.map((row) => row.subject_spend)),
+    post_buy_difference: compactMoneyDistribution(selected.map((row) => row.d_post)),
+    paired_absolute_gap_reduction: compactMoneyDistribution(selected.map((row) => row.absolute_gap_reduction)),
+    spend_minus_pre_buy_excess: compactMoneyDistribution(selected.map((row) => row.subject_spend - row.d_pre)),
+    spend_as_ratio_of_pre_buy_excess: compactMoneyDistribution(selected.map((row) => round4(row.subject_spend / row.d_pre))),
+    gap_closer_n: selected.filter((row) => row.absolute_gap_reduction > 0).length,
+    gap_closer_rate: rate(selected.filter((row) => row.absolute_gap_reduction > 0).length, selected.length),
+  };
+}
+
 function diagnosticRow(entry: Eligible): DiagnosticRow {
   const side: Side = entry.row.side === "t" ? "T" : "CT";
   const residual = entry.money - entry.row.moneySpent;
@@ -546,6 +699,7 @@ function diagnosticRow(entry: Eligible): DiagnosticRow {
     player_index: entry.row.playerIndex,
     side,
     context: entry.context,
+    actual_mode: actualMode(entry.row.actionType),
     current_money: entry.money,
     actual_spend: entry.row.moneySpent,
     residual_cash: residual,
@@ -565,10 +719,12 @@ function diagnosticRow(entry: Eligible): DiagnosticRow {
 }
 
 function subtype(row: DiagnosticRow): string {
-  if (row.retained_primary) return "retained_primary_top_up";
-  if (row.resulting_primary_family === "none") return "no_primary_pistol_utility_or_armor";
-  if (row.resulting_primary_family === "smg" && row.resulting_armor) return "new_smg_plus_armor";
-  return "other_new_primary_bundle";
+  if (row.context === "POST_PISTOL") return "post_pistol_observational_semi";
+  if (row.context === "OVERTIME") return "overtime_other";
+  if (row.retained_primary) return "normal_retained_primary_top_up";
+  if (row.resulting_primary_family === "none") return "normal_no_primary_pistol_utility_or_armor";
+  if (row.resulting_primary_family === "smg" && row.resulting_armor) return "normal_new_smg_plus_armor";
+  return "normal_other_new_primary_bundle";
 }
 
 function stateFor(entry: Eligible): PolicyV3State {
@@ -703,14 +859,69 @@ function forceArmorAudit(eligible: readonly Eligible[]) {
   };
 }
 
+type LowerBoundName = "rifle_plus_kevlar" | "rifle_plus_vesthelm" | "rifle_plus_kevlar_basic_utility";
+
+function lowerBounds(side: Side): Record<LowerBoundName, number> {
+  const rifle = rifleFor(side);
+  return {
+    rifle_plus_kevlar: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar"),
+    rifle_plus_vesthelm: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar_helmet"),
+    rifle_plus_kevlar_basic_utility: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar")
+      + price(DEFAULT_RULES, "smoke") + price(DEFAULT_RULES, "flash"),
+  };
+}
+
+function lowerBoundAudit(rows: readonly DiagnosticRow[], detailedSlack = false) {
+  const deltas = [200, 300, 500, 700] as const;
+  const names: LowerBoundName[] = ["rifle_plus_kevlar", "rifle_plus_vesthelm", "rifle_plus_kevlar_basic_utility"];
+  return Object.fromEntries(names.map((name) => {
+    const values = rows.map((row) => {
+      const target = lowerBounds(row.side)[name];
+      const reserveRequired = Math.max(0, target - row.loss_reward);
+      const maxSpend = Math.max(0, row.current_money - reserveRequired);
+      return {
+        target,
+        reserveRequired,
+        maxSpend,
+        slack: maxSpend - row.actual_spend,
+        satisfied: row.next_cash_loss_no_plant >= target,
+        nextCash: row.next_cash_loss_no_plant,
+      };
+    });
+    const satisfied = values.filter((value) => value.satisfied);
+    const compliant = satisfied.filter((value) => value.slack >= 0);
+    const counterfactual = Object.fromEntries(deltas.map((delta) => {
+      const breaks = values.filter((value) => value.satisfied && value.nextCash - delta < value.target).length;
+      return [`plus_${delta}`, {
+        break_n: breaks,
+        break_rate_of_all: rate(breaks, values.length),
+        break_rate_of_currently_satisfied: rate(breaks, satisfied.length),
+      }];
+    }));
+    return [name, {
+      n: values.length,
+      side_aware_thresholds: { T: lowerBounds("T")[name], CT: lowerBounds("CT")[name] },
+      satisfied_n: satisfied.length,
+      satisfied_rate: rate(satisfied.length, values.length),
+      reserve_required: compactMoneyDistribution(values.map((value) => value.reserveRequired)),
+      max_spend_if_protecting_target: compactMoneyDistribution(values.map((value) => value.maxSpend)),
+      slack_all: compactMoneyDistribution(values.map((value) => value.slack)),
+      slack_when_satisfied: detailedSlack
+        ? moneyDistribution(satisfied.map((value) => value.slack))
+        : compactMoneyDistribution(satisfied.map((value) => value.slack)),
+      cap_compliant_when_satisfied_n: compliant.length,
+      cap_compliant_when_satisfied_rate: rate(compliant.length, satisfied.length),
+      counterfactual_breaks: counterfactual,
+    }];
+  }));
+}
+
 function purchaseCapabilities(rows: readonly DiagnosticRow[]) {
   const result: Record<string, unknown> = {};
   for (const side of ["T", "CT"] as const) {
     const rifle = rifleFor(side);
     const definitions = {
-      rifle_plus_kevlar: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar"),
-      rifle_plus_vesthelm: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar_helmet"),
-      rifle_plus_kevlar_basic_utility: price(DEFAULT_RULES, rifle) + price(DEFAULT_RULES, "kevlar") + price(DEFAULT_RULES, "smoke") + price(DEFAULT_RULES, "flash"),
+      ...lowerBounds(side),
       awp_plus_kevlar: price(DEFAULT_RULES, "awp") + price(DEFAULT_RULES, "kevlar"),
     };
     const sideRows = rows.filter((row) => row.side === side);
@@ -811,6 +1022,18 @@ async function main(): Promise<void> {
   const lightRows = lightEntries.map(diagnosticRow);
   if (lightRows.length !== EXPECTED_LIGHT_ROWS) throw new Error(`actual LIGHT count changed: ${lightRows.length}`);
 
+  const cleanTeam = buildTeamObservations(eligible.map((entry) => {
+    const diagnostic = diagnosticRow(entry);
+    return { row: entry.row, money: entry.money, context: entry.context, lightSubtype: diagnostic.actual_mode === "LIGHT" ? subtype(diagnostic) : null };
+  }), rows, "CLEAN");
+  const cleanLightTeam = cleanTeam.observations.filter((row) => row.actual_mode === "LIGHT");
+  const dropSensitiveTeam = buildTeamObservations(rows.filter((row) => row.actionType === "semi").map((row) => ({
+    row,
+    money: row.startMoney,
+    context: contextForRow(row),
+    lightSubtype: null,
+  })), rows, "DROP_SENSITIVE");
+
   const lossTiers = subgroup(lightRows, (row) => `index_${row.loss_index}_reward_${row.loss_reward}`);
   const tierMedians = Object.entries(lossTiers).map(([tier, summary]) => ({
     tier,
@@ -829,9 +1052,8 @@ async function main(): Promise<void> {
     };
   });
 
-  const actualModeByKey = new Map(eligible.map((entry) => [key(entry.row), actualMode(entry.row.actionType)]));
   const modeComparison = Object.fromEntries((["FORCE", "LIGHT", "PRESERVE"] as const).map((mode) => {
-    const modeRows = diagnosticRows.filter((row) => actualModeByKey.get(`${row.map}:${row.round}:${row.player_index}`) === mode);
+    const modeRows = diagnosticRows.filter((row) => row.actual_mode === mode);
     return [mode, {
       overall: compactSummary(modeRows),
       by_side: subgroup(modeRows, (row) => row.side),
@@ -840,9 +1062,10 @@ async function main(): Promise<void> {
 
   const tPlantRows = lightRows.filter((row) => row.side === "T");
   const resultWithoutHash = {
-    schema_version: 1,
+    schema_version: 2,
     baseline_sha: BASELINE_SHA,
-    scope: "offline LIGHT reserve / next-round-money diagnostic; no production policy input or modification",
+    research_parent_sha: RESEARCH_PARENT_SHA,
+    scope: "offline observational-semi provenance, team synchronization, and LIGHT lower-bound diagnostic; no production policy input or modification",
     inputs: {
       corpus_sha256: corpusHash,
       expected_corpus_sha256: EXPECTED_CORPUS_SHA256,
@@ -850,6 +1073,24 @@ async function main(): Promise<void> {
       canonical_rules: DEFAULT_RULES.ruleSetId,
       main_scenario: "LOSS_NO_PLANT; N = current money - actual spend + current loss reward",
       secondary_t_plant_scenario: "N_plant = N + $600; hypothetical comparison only",
+    },
+    observational_semi_label_provenance: {
+      source_contract: "cs2-demo-format/3.0 player-economies.json[].type; frozen packages report exporter cs2df 3.1.0",
+      source_code: "cs2-demo-format v3.1.0 python/src/cs2df/events.py::_economy_type",
+      source_commit: "0e3e6c712abfbefde40e47192fbe0f4112b5b522",
+      unit: "individual player-round; rounds.json team economy is a separate majority vote with pistol-conversion override",
+      ordered_rules: [
+        "round 1 or 13 => pistol",
+        "resulting equipmentValue >= $4000 => full",
+        "moneySpent < $1000 and resulting equipmentValue < $1000 => eco",
+        "startMoney > 0 and moneySpent / startMoney >= 0.80 => force",
+        "otherwise => semi",
+      ],
+      fields_used: ["roundNumber", "startMoney", "moneySpent", "resulting equipmentValue"],
+      loadout_dependency: "primary/armor are not direct branches, but their prices contribute to resulting equipmentValue",
+      interpretation: "observational semi label; not ground-truth LIGHT strategic intent",
+      roundsense_mapping: "Policy V3 behavioral audit maps individual player-economies semi => LIGHT",
+      old_audit_taxonomy_difference: "The old table's pro action was the exporter type (for example semi $300), while pro class was a separate resulting-loadout/comparison class (for example no-primary low-spend => eco). The labels answer different questions.",
     },
     eligibility: audit,
     requested_light_fields: {
@@ -900,33 +1141,65 @@ async function main(): Promise<void> {
       },
     },
     purchase_capability_interpretation: purchaseCapabilities(lightRows),
+    next_buy_lower_bound: {
+      contract: {
+        scenario: "LOSS_NO_PLANT",
+        formulas: {
+          reserve_required: "max(0, side-aware canonical bundle cost G - current loss reward B)",
+          max_spend_if_protecting_G: "max(0, current money M - reserve_required)",
+          slack: "max_spend_if_protecting_G - actual spend S",
+        },
+        thresholds: {
+          T: lowerBounds("T"),
+          CT: lowerBounds("CT"),
+        },
+        note: "No threshold is fitted; AWP is excluded from the ordinary LIGHT lower-bound target.",
+      },
+      actual_light: lowerBoundAudit(lightRows, true),
+      actual_light_by_side: Object.fromEntries((["T", "CT"] as const).map((side) => [side, lowerBoundAudit(lightRows.filter((row) => row.side === side))])),
+      controls: Object.fromEntries((["FORCE", "PRESERVE", "FULL"] as const).map((mode) => [mode, lowerBoundAudit(diagnosticRows.filter((row) => row.actual_mode === mode))])),
+      actual_light_subtypes: Object.fromEntries([...new Set(lightRows.map(subtype))].sort().map((name) => [name, lowerBoundAudit(lightRows.filter((row) => subtype(row) === name))])),
+    },
+    team_synchronization: {
+      visibility: "ORACLE RESEARCH CONTEXT only; teammate exact money, purchases, residual, and transfers are unavailable to normal-player production GSI",
+      percentile_definition: "within-team midrank scaled to [0,1]: bottom=0, median rank=0.5, top=1; ties receive average rank",
+      clean_team_subset: {
+        definition: "eligible subject plus all four same-team player-rounds present; exactly five players; no raw or derived drop/transfer-sensitive row in the team-round",
+        audit_all_eligible_subjects: cleanTeam.audit,
+        actual_light: teamObservationSummary(cleanLightTeam),
+        controls_by_actual_mode: Object.fromEntries((["FULL", "FORCE", "LIGHT", "PRESERVE"] as const).map((mode) => [mode, teamObservationSummary(cleanTeam.observations.filter((row) => row.actual_mode === mode))])),
+        actual_light_by_subtype: Object.fromEntries([...new Set(cleanLightTeam.map((row) => row.light_subtype!))].sort().map((name) => [name, teamObservationSummary(cleanLightTeam.filter((row) => row.light_subtype === name))])),
+        low_spend_teammate_scenario: lowSpendTeamScenario(cleanLightTeam),
+      },
+      drop_sensitive_descriptive: {
+        definition: "all raw observational-semi subjects in exact five-player team-rounds with at least one raw or derived drop/transfer-sensitive row; descriptive only",
+        audit: dropSensitiveTeam.audit,
+        actual_observational_semi: teamObservationSummary(dropSensitiveTeam.observations),
+        low_spend_teammate_scenario: lowSpendTeamScenario(dropSensitiveTeam.observations),
+      },
+    },
     mode_contrast: modeComparison,
     next_round_linkage: nextRoundAudit(lightEntries, rows, eligible, exclusionByKey),
     light_subtypes: {
       definition: {
-        retained_primary_top_up: "retained primary exists, regardless of resulting family",
-        no_primary_pistol_utility_or_armor: "no retained primary and no resulting primary; secondary/utility/armor may change",
-        new_smg_plus_armor: "no retained primary; resulting SMG with armor",
-        other_new_primary_bundle: "no retained primary; any other resulting primary bundle",
+        normal_retained_primary_top_up: "NORMAL with retained primary, regardless of resulting family",
+        normal_no_primary_pistol_utility_or_armor: "NORMAL with no retained primary and no resulting primary; secondary/utility/armor may change",
+        normal_new_smg_plus_armor: "NORMAL with no retained primary; resulting SMG with armor",
+        normal_other_new_primary_bundle: "NORMAL with no retained primary; any other resulting primary bundle",
+        post_pistol_observational_semi: "POST_PISTOL observational semi; kept separate regardless of bundle",
+        overtime_other: "OVERTIME observational semi; n is too small for interpretation",
       },
       counts: countDistribution(lightRows.map(subtype)),
       distributions: subgroup(lightRows, subtype),
-      no_primary_no_resulting_primary_secondary: countDistribution(lightRows.filter((row) => subtype(row) === "no_primary_pistol_utility_or_armor").map((row) => row.resulting_secondary_class)),
+      normal_no_primary_no_resulting_primary_secondary: countDistribution(lightRows.filter((row) => subtype(row) === "normal_no_primary_pistol_utility_or_armor").map((row) => row.resulting_secondary_class)),
     },
     force_armor_invariant_audit: forceArmorAudit(eligible),
     hypothesis_assessment: {
-      verdict: "NOT_SUPPORTED",
-      architecture_decision_ready: true,
-      decision: "Do not replace LIGHT with a single reserveTarget formula from this corpus. Keep future affordability as explicit trajectory context; separately revisit the fixed SMG-plus-armor bundle and enforce the FORCE armor invariant in a later implementation round.",
-      primary_reasons: [
-        "LOSS_NO_PLANT next cash is less concentrated than residual cash overall and on both sides.",
-        "Residual medians do not fall by approximately $500 when loss reward rises by $500; next-cash medians instead move materially with reward tier.",
-        "LIGHT has materially different POST_PISTOL, no-primary, new-SMG, other-primary, and retained-primary structures rather than one stable target.",
-      ],
-      qualifying_observations: [
-        "Retained-primary and retained-armor aggregates share a $4700 next-cash median with their non-retained counterparts.",
-        "Among conservatively linked LIGHT losses, 87.96% are actual FULL next round and 83.84% are strict FULL rifle-plus-armor states; this is observational and does not establish the reserve mechanism.",
-      ],
+      single_fixed_next_cash_target: "NOT_SUPPORTED",
+      next_buy_lower_bound_spending_envelope: "PARTIALLY_SUPPORTED",
+      team_synchronization: "NOT_SUPPORTED",
+      final_light_architecture_decision_ready: true,
+      architecture_decision: "own-state future-affordability lower bound and spending envelope, with context/subtype-specific constraint sources; not one fixed cash target and not teammate-money synchronization",
     },
   };
   const artifactHash = stableHash(resultWithoutHash);
