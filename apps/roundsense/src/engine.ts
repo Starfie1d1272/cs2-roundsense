@@ -32,6 +32,11 @@ export interface AdviceTick {
 }
 
 export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | null {
+  // The CLI owns one persistent tracker. Observe every normal-player receipt
+  // before deciding whether it is eligible to emit purchase advice, so live
+  // and terminal payloads can maintain lifecycle FACTs.
+  const tracker = opts.tracker ?? new PolicyStateTracker();
+  const policyState = tracker.observe(payload, opts.seq ?? 0, opts.preference);
   const player = payload.player;
   const map = payload.map;
   const state = player?.state;
@@ -44,8 +49,7 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   if (state?.money === undefined) return null;
   // map.round must be present — no silent round-1 guess.
   if (map?.round === undefined) return null;
-  const tracker = opts.tracker ?? new PolicyStateTracker();
-  const policy = recommendPolicyV3(tracker.observe(payload, opts.seq ?? 0, opts.preference));
+  const policy = recommendPolicyV3(policyState);
   return {
     side: player.team,
     roundNumber: map.round,
