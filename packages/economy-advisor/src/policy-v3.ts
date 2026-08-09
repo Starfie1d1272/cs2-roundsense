@@ -199,9 +199,14 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
     add(items, "kevlar_helmet");
   }
 
-  const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES, side).totalCost;
-  const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
-  items.push(...utility);
+  // LIGHT is deliberately a controlled partial investment: establish the
+  // affordable SMG + armor bundle, but do not turn every remaining dollar
+  // into the FORCE utility fit. Retained utility remains untouched.
+  if (mode !== "LIGHT") {
+    const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES, side).totalCost;
+    const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
+    items.push(...utility);
+  }
   return [items];
 }
 
@@ -307,9 +312,23 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
     }
   }
   if (!plan.isComplete || plan.totalCost > state.player.money.value) return null;
+  if (mode === "FORCE" && state.round.side.value === "CT") {
+    const loadout = resultingLoadout(inventory, plan.purchases);
+    if (loadout.armor > 0 && !loadout.hasHelmet) {
+      const completedDesired: ItemId[] = [...desired, "kevlar_helmet"];
+      const completedPlan = planPurchases(inventory, compact(completedDesired), DEFAULT_RULES, "CT");
+      if (completedPlan.isComplete && completedPlan.totalCost <= state.player.money.value) {
+        desired = completedDesired;
+        plan = completedPlan;
+      }
+    }
+  }
   const reasons: PolicyReason[] = [{ code: `MODE_${mode}`, detail: "deterministic, inventory-aware legal purchase bundle" }];
   if (mode === "FULL" && state.round.side.value === "CT") reasons.push({ code: "CT_DEFAULT_VESTHELM", detail: "fresh CT armor defaults to vesthelm; opponent inference does not remove it" });
   if (helmetAlternative) reasons.push({ code: "CT_KEVLAR_OWN_STATE", detail: "vesthelm incremental $350 blocks the otherwise affordable own-state full bundle" });
+  if (mode === "FORCE" && state.round.side.value === "CT" && plan.purchases.some((purchase) => purchase.item === "kevlar_helmet")) {
+    reasons.push({ code: "CT_FORCE_HELMET_COMPLETION", detail: "after primary and utility fitting, an affordable own-state $350 helmet upgrade completes the FORCE bundle" });
+  }
   if (state.opponent.status === "INFERRED") reasons.push({ code: "OPPONENT_CONTEXT", detail: "coarse opponent context affects explanation only" });
   const conditionalAlternatives: ConditionalAlternative[] = [];
   if (state.round.side.value === "CT" && mode === "FULL" && !inventory.hasDefuseKit) {
@@ -335,6 +354,32 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
   };
 }
 
+function genericModes(state: PolicyV3State): Array<[PolicyMode, RecommendationOption["adviceStrength"]]> {
+  const full = planOption(state, "FULL", "SUPPORTED");
+  const force = planOption(state, "FORCE", "SUPPORTED");
+  const light = planOption(state, "LIGHT", "SUPPORTED");
+  const controlledLight = light !== null && force !== null && light.spend > 0 && light.spend < force.spend;
+  if (full) {
+    return [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : [])];
+  }
+  if (force) {
+    return [
+      ["FORCE", "SUPPORTED"],
+      ...(controlledLight ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : []),
+      ["PRESERVE", "ALTERNATIVE"],
+    ];
+  }
+  if (light) return [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]];
+  return [["PRESERVE", "SUPPORTED"]];
+}
+
+function previousPistolOutcome(state: PolicyV3State, side: Side): "WIN" | "LOSS" | "UNKNOWN" {
+  if (state.history.integrity !== "COMPLETE") return "UNKNOWN";
+  const previous = state.history.previousRounds.at(-1);
+  if (!previous || previous.roundNumber !== state.round.number.value! - 1 || !known(previous.winner)) return "UNKNOWN";
+  return previous.winner.value === side ? "WIN" : "LOSS";
+}
+
 /** Deterministic Policy V3 core. It never reads an opponent economy value. */
 export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   const required = [state.round.side, state.player.money, state.player.inventory, state.player.lossIndex, state.round.context];
@@ -353,23 +398,23 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   }
   let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]>;
   if (context === "POST_PISTOL") {
-    modes = side === "T"
-      ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
-      : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]];
+    const pistolOutcome = previousPistolOutcome(state, side);
+    if (pistolOutcome === "WIN") {
+      modes = genericModes(state);
+    } else if (pistolOutcome === "LOSS") {
+      modes = side === "T"
+        ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
+        : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]];
+    } else {
+      // Missing history must not be silently treated as either a pistol win or
+      // loss. Keep the conservative supported set and suppress a default.
+      modes = [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]];
+    }
   } else {
     // Normal and OT use the same generic non-pistol policy.  We compare only
     // complete, inventory-aware legal bundles; without a calibrated utility
     // value model competing affordable options remain explicitly non-dominant.
-    const full = planOption(state, "FULL", "SUPPORTED");
-    const force = planOption(state, "FORCE", "SUPPORTED");
-    const light = planOption(state, "LIGHT", "SUPPORTED");
-    modes = full
-      ? [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : [])]
-      : force
-        ? [["FORCE", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
-        : light
-          ? [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
-          : [["PRESERVE", "SUPPORTED"]];
+    modes = genericModes(state);
   }
   const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED") : null;
   let saveForAwp = false;
@@ -392,7 +437,7 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   return {
     status: "READY",
     options,
-    defaultOptionId: context === "POST_PISTOL" && state.round.side.value === "T" ? undefined : options.find((option) => option.adviceStrength === "DOMINANT")?.id,
+    defaultOptionId: context === "POST_PISTOL" && previousPistolOutcome(state, side) !== "LOSS" ? undefined : options.find((option) => option.adviceStrength === "DOMINANT")?.id,
     unresolved: state.opponent.status === "UNKNOWN" ? ["opponent economy: UNKNOWN; base recommendations unchanged"] : [],
     opponent: state.opponent,
   };

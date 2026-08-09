@@ -66,12 +66,67 @@ describe("Policy V3 deterministic core", () => {
     expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.spend).toBeGreaterThanOrEqual(2550);
   });
 
+  it("completes an affordable CT FORCE bundle with the $350 helmet upgrade", () => {
+    const current = state();
+    current.round = { ...current.round, number: observed(5), side: observed("CT"), context: observed("NORMAL") };
+    current.player.money = observed(2550);
+    current.player.inventory = observed({ ...inventory, primary: "mp9", armor: 100, hasHelmet: false, grenades: [] });
+    const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
+    expect(force?.purchases).toContainEqual({ item: "kevlar_helmet", quantity: 1 });
+    expect(force?.resultingInventory.hasHelmet).toBe(true);
+    expect(force?.spend).toBeGreaterThanOrEqual(1650);
+  });
+
+  it("offers LIGHT as a distinct controlled partial investment when a full bundle is unavailable", () => {
+    const current = state();
+    current.round = { ...current.round, number: observed(5), side: observed("CT"), context: observed("NORMAL") };
+    current.player.money = observed(2600);
+    const out = recommendPolicyV3(current);
+    const force = out.options.find((option) => option.mode === "FORCE");
+    const light = out.options.find((option) => option.mode === "LIGHT");
+    expect(light?.adviceStrength).toBe("ALTERNATIVE");
+    expect(light?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
+    expect(light?.resultingInventory.grenades).toEqual([]);
+    expect(light?.spend).toBeLessThan(force?.spend ?? Infinity);
+  });
+
   it("uses a CT FORCE-dominant post-pistol recommendation while retaining fallback", () => {
     const current = state();
     current.round.side = observed("CT");
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("T" as const), planted: observed(false) }] };
     const out = recommendPolicyV3(current);
     expect(out.options.map((option) => [option.mode, option.adviceStrength])).toEqual([["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]]);
     expect(out.defaultOptionId).toBe(out.options[0]?.id);
+  });
+
+  it("lets a witnessed pistol winner reach the generic full-buy bundle", () => {
+    const current = state();
+    current.round.side = observed("T");
+    current.player.money = observed(4000);
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("T" as const), planted: observed(false) }] };
+    const out = recommendPolicyV3(current);
+    expect(out.options.map((option) => option.mode)).toContain("FULL");
+    expect(out.options.find((option) => option.mode === "FULL")?.purchases).toContainEqual({ item: "ak47", quantity: 1 });
+    expect(out.defaultOptionId).toBeUndefined();
+  });
+
+  it.each(["T", "CT"] as const)("keeps pistol-loser %s post-pistol policy unchanged", (side) => {
+    const current = state();
+    current.round.side = observed(side);
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed(side === "T" ? "CT" : "T"), planted: observed(false) }] };
+    const out = recommendPolicyV3(current);
+    expect(out.options.map((option) => option.mode)).toEqual(side === "T" ? ["PRESERVE", "FORCE"] : ["FORCE", "PRESERVE"]);
+    expect(out.defaultOptionId).toBe(side === "CT" ? out.options[0]?.id : undefined);
+  });
+
+  it("keeps a non-dominant post-pistol fallback when the previous winner is UNKNOWN", () => {
+    const current = state();
+    current.round.side = observed("CT");
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: { status: "UNKNOWN", source: "test", asOfSeq: 1, reason: "terminal winner missing" }, planted: observed(false) }] };
+    const out = recommendPolicyV3(current);
+    expect(out.options.map((option) => option.mode)).toEqual(["PRESERVE", "FORCE"]);
+    expect(out.options.every((option) => option.adviceStrength !== "DOMINANT")).toBe(true);
+    expect(out.defaultOptionId).toBeUndefined();
   });
 
   it.each([1900, 2000])("fits a legal CT post-pistol force at $%i", (money) => {
