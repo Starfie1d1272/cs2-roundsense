@@ -62,6 +62,10 @@ See `docs/runtime-checks.md` for the raw protocol and payload-level detail.
   exceptions. start_balance matches replay first-cash semantics (the pattern
   is real server behavior, not a field artifact), but the mechanism is not
   inferred. Live advisor: read `player_state.money`; never preset OT money.
+  Policy V3 therefore applies only the generic non-pistol, inventory-aware
+  planner in OT; it does not encode a Cologne opener/reset template. See the
+  final diagnostic at `experiments/policy-v3/results/opponent-economy-deployability.json`
+  for the frozen regulation-only opponent-economy evaluation boundary.
 
 ## Not researched further (stopping rule)
 

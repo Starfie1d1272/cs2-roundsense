@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "calibration_id": "policy-v3-opponent-direct-2026-08-final-fit",
+  "purpose": "deployable current normal-player-GSI-only opponent established-rifle inference",
+  "provenance": {
+    "research_commit": "aaf491b",
+    "corpus_sha256": "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6",
+    "weapons_sha256": "c08ff5380cab5267cb4c3175be9abcd19c5453616ef5ebd2db4e74305506b2cb",
+    "eligible_team_rounds": 7580,
+    "final_fitting_procedure": "fit one LogisticRegression on all frozen eligible regulation team-rounds with the frozen direct_gsi feature family after the frozen 5-fold group-held-out evaluation; no model, feature, threshold, or hyperparameter search",
+    "deployment_choice": "direct-only final artifact: tracked previous-round fields remain FACT history but are excluded because their runtime semantics are not identical to replay labels",
+    "regeneration_command": "uv run --script experiments/policy-v3/opponent_economy_deployability.py --calibration-output packages/economy-advisor/rules/opponent-economy-direct.v2026-08.json"
+  },
+  "classifier": {
+    "type": "LogisticRegression",
+    "solver": "lbfgs",
+    "C": 1.0,
+    "max_iter": 2000,
+    "random_state": 42
+  },
+  "feature_order": [
+    "opponent_side_ct",
+    "round_in_half_2",
+    "round_in_half_3",
+    "round_in_half_4",
+    "round_in_half_5",
+    "round_in_half_6",
+    "round_in_half_7",
+    "round_in_half_8",
+    "round_in_half_9",
+    "round_in_half_10",
+    "round_in_half_11",
+    "round_in_half_12",
+    "opponent_loss_index_0",
+    "opponent_loss_index_1",
+    "opponent_loss_index_2",
+    "opponent_loss_index_3",
+    "opponent_loss_index_4",
+    "score_diff_clamped_div_10"
+  ],
+  "intercept": 1.0243876809811456,
+  "coefficients": [
+    0.22265110608483013,
+    -2.6349778350775592,
+    -1.605476417500478,
+    0.0008234551705077007,
+    0.22881998352234784,
+    0.38546416555000385,
+    0.3102842417555794,
+    0.783997701954005,
+    0.3657326580443622,
+    0.4915355053948459,
+    0.9701988078747888,
+    1.6505934144619527,
+    3.7296530145808013,
+    -0.3246840980685563,
+    -1.7556723826686351,
+    0.10429909934867788,
+    -0.8065999520419084,
+    0.0655269644395983
+  ],
+  "thresholds": {
+    "likely_not_established_max": 0.2,
+    "likely_established_min": 0.8
+  },
+  "fixtures": [
+    {
+      "input": {
+        "opponent_side": "ct",
+        "round_number": 2,
+        "score_diff": -1,
+        "opponent_loss_index": 2
+      },
+      "probability": 0.04108481162174223,
+      "classification": "LIKELY_NOT_ESTABLISHED_RIFLE"
+    },
+    {
+      "input": {
+        "opponent_side": "t",
+        "round_number": 2,
+        "score_diff": 1,
+        "opponent_loss_index": 0
+      },
+      "probability": 0.8933680591742208,
+      "classification": "LIKELY_ESTABLISHED_RIFLE"
+    },
+    {
+      "input": {
+        "opponent_side": "ct",
+        "round_number": 3,
+        "score_diff": -2,
+        "opponent_loss_index": 3
+      },
+      "probability": 0.4335838323901792,
+      "classification": "UNKNOWN"
+    },
+    {
+      "input": {
+        "opponent_side": "t",
+        "round_number": 3,
+        "score_diff": 2,
+        "opponent_loss_index": 0
+      },
+      "probability": 0.9593660848227884,
+      "classification": "LIKELY_ESTABLISHED_RIFLE"
+    },
+    {
+      "input": {
+        "opponent_side": "ct",
+        "round_number": 4,
+        "score_diff": -3,
+        "opponent_loss_index": 4
+      },
+      "probability": 0.6038670572440954,
+      "classification": "UNKNOWN"
+    },
+    {
+      "input": {
+        "opponent_side": "t",
+        "round_number": 4,
+        "score_diff": 3,
+        "opponent_loss_index": 0
+      },
+      "probability": 0.9916285562734879,
+      "classification": "LIKELY_ESTABLISHED_RIFLE"
+    },
+    {
+      "input": {
+        "opponent_side": "ct",
+        "round_number": 5,
+        "score_diff": -4,
+        "opponent_loss_index": 4
+      },
+      "probability": 0.655442147196775,
+      "classification": "UNKNOWN"
+    },
+    {
+      "input": {
+        "opponent_side": "t",
+        "round_number": 5,
+        "score_diff": 4,
+        "opponent_loss_index": 0
+      },
+      "probability": 0.9933671876029532,
+      "classification": "LIKELY_ESTABLISHED_RIFLE"
+    }
+  ]
+}

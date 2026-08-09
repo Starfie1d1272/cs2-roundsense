@@ -321,11 +321,15 @@ def model_report(examples: list[dict], feature_fn: Callable[[dict], list[float]]
     }
 
 
-FEATURE_ORDER = [
+DIRECT_FEATURE_ORDER = [
     "opponent_side_ct",
     *[f"round_in_half_{value}" for value in range(2, 13)],
     *[f"opponent_loss_index_{value}" for value in range(5)],
     "score_diff_clamped_div_10",
+]
+
+FEATURE_ORDER = [
+    *DIRECT_FEATURE_ORDER,
     "previous_opponent_win",
     "previous_plant",
     *[f"previous_win_streak_{value}" for value in range(4)],
@@ -345,40 +349,38 @@ def final_calibration(examples: list[dict], corpus_hash: str, weapons_hash: str)
     from sklearn.linear_model import LogisticRegression
 
     model = LogisticRegression(max_iter=2000, random_state=42, solver="lbfgs", C=1.0)
-    model.fit([tracked_features(example) for example in examples], [int(example["target_established_rifle"]) for example in examples])
-    if len(FEATURE_ORDER) != len(model.coef_[0]):
-        raise SystemExit(f"feature order mismatch: {len(FEATURE_ORDER)} != {len(model.coef_[0])}")
+    model.fit([direct_features(example) for example in examples], [int(example["target_established_rifle"]) for example in examples])
+    if len(DIRECT_FEATURE_ORDER) != len(model.coef_[0]):
+        raise SystemExit(f"feature order mismatch: {len(DIRECT_FEATURE_ORDER)} != {len(model.coef_[0])}")
 
     fixtures = []
     for example in sorted(examples, key=lambda row: (row["map"], row["round"], row["side"], row["team_key"] if "team_key" in row else ""))[:8]:
-        probability = float(model.predict_proba([tracked_features(example)])[0, 1])
+        probability = float(model.predict_proba([direct_features(example)])[0, 1])
         fixtures.append({
             "input": {
                 "opponent_side": example["side"],
                 "round_number": example["round"],
                 "score_diff": example["score_diff"],
                 "opponent_loss_index": example["loss_index"],
-                "previous_opponent_win": bool(example["previous_win"]),
-                "previous_plant": bool(example["previous_plant"]),
-                "previous_win_streak": example["previous_win_streak"],
             },
             "probability": probability,
             "classification": "LIKELY_NOT_ESTABLISHED_RIFLE" if probability <= LOW_THRESHOLD else "LIKELY_ESTABLISHED_RIFLE" if probability >= HIGH_THRESHOLD else "UNKNOWN",
         })
     return {
         "schema_version": 1,
-        "calibration_id": "policy-v3-opponent-direct-plus-tracked-2026-08-final-fit",
-        "purpose": "deployable normal-player-GSI-only opponent established-rifle inference",
+        "calibration_id": "policy-v3-opponent-direct-2026-08-final-fit",
+        "purpose": "deployable current normal-player-GSI-only opponent established-rifle inference",
         "provenance": {
             "research_commit": "aaf491b",
             "corpus_sha256": corpus_hash,
             "weapons_sha256": weapons_hash,
             "eligible_team_rounds": len(examples),
-            "final_fitting_procedure": "fit one LogisticRegression on all frozen eligible regulation team-rounds after the frozen 5-fold group-held-out evaluation; no model, feature, threshold, or hyperparameter search",
-            "regeneration_command": "uv run --script experiments/policy-v3/opponent_economy_deployability.py --calibration-output packages/economy-advisor/rules/opponent-economy.v2026-08.json",
+            "final_fitting_procedure": "fit one LogisticRegression on all frozen eligible regulation team-rounds with the frozen direct_gsi feature family after the frozen 5-fold group-held-out evaluation; no model, feature, threshold, or hyperparameter search",
+            "deployment_choice": "direct-only final artifact: tracked previous-round fields remain FACT history but are excluded because their runtime semantics are not identical to replay labels",
+            "regeneration_command": "uv run --script experiments/policy-v3/opponent_economy_deployability.py --calibration-output packages/economy-advisor/rules/opponent-economy-direct.v2026-08.json",
         },
         "classifier": {"type": "LogisticRegression", "solver": "lbfgs", "C": 1.0, "max_iter": 2000, "random_state": 42},
-        "feature_order": FEATURE_ORDER,
+        "feature_order": DIRECT_FEATURE_ORDER,
         "intercept": float(model.intercept_[0]),
         "coefficients": [float(value) for value in model.coef_[0]],
         "thresholds": {"likely_not_established_max": LOW_THRESHOLD, "likely_established_min": HIGH_THRESHOLD},

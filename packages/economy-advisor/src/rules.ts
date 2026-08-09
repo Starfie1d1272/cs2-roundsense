@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ItemId, WeaponClass } from "@roundsense/shared-types";
+import type { ItemId, Side, WeaponClass } from "@roundsense/shared-types";
 import rulesJson from "../rules/cs2-competitive-2026-08.json";
 import weaponsJson from "../rules/weapons.v2026-08-06.json" with { type: "json" };
 
@@ -131,6 +131,38 @@ export const ITEM_TO_WEAPON: Readonly<Partial<Record<ItemId, string>>> = {
   dual: "weapon_elite", tec9: "weapon_tec9", cz75: "weapon_cz75a", fiveseven: "weapon_fiveseven",
   deagle: "weapon_deagle", r8: "weapon_revolver", zeus: "weapon_taser",
 };
+
+/**
+ * Canonical buy-side restrictions used by every purchase planner. The
+ * generated weapon table intentionally contains static weapon data only, so
+ * team availability lives next to its ItemId mapping rather than in policy
+ * templates. Dropped weapons are not restricted here: this applies to new
+ * purchases only.
+ */
+const BUY_SIDE: Readonly<Partial<Record<ItemId, Side>>> = {
+  glock: "T", ak47: "T", galil: "T", sg553: "T", mac10: "T", tec9: "T", g3sg1: "T", sawedoff: "T", molotov: "T",
+  usp: "CT", p2000: "CT", m4a4: "CT", m4a1s: "CT", famas: "CT", aug: "CT", mp9: "CT", fiveseven: "CT", scar20: "CT", mag7: "CT", incendiary: "CT", defuse_kit: "CT",
+};
+
+/** Canonical per-player grenade carry caps for purchase planning. */
+const GRENADE_CAP: Readonly<Partial<Record<ItemId, number>>> = {
+  smoke: 1,
+  flash: 2,
+  he: 1,
+  molotov: 1,
+  incendiary: 1,
+  decoy: 1,
+};
+
+export const MAX_GRENADE_CARRY = 4;
+
+export function isItemLegalForSide(item: ItemId, side: Side): boolean {
+  return BUY_SIDE[item] === undefined || BUY_SIDE[item] === side;
+}
+
+export function grenadeCarryCap(item: ItemId): number | undefined {
+  return GRENADE_CAP[item];
+}
 
 /** Canonical weapon id (weapon-table key) → ItemId reverse mapping. */
 const WEAPON_TO_ITEM: Readonly<Record<string, ItemId>> = (() => {

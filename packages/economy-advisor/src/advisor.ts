@@ -1,5 +1,5 @@
 import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
-import { DEFAULT_RULES, type EconomyRules, price, weaponClassOf } from "./rules.js";
+import { DEFAULT_RULES, grenadeCarryCap, isItemLegalForSide, type EconomyRules, price, weaponClassOf } from "./rules.js";
 import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
 import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
@@ -121,6 +121,10 @@ export interface PurchasePlan {
   totalCost: number;
   /** Full target value with an empty inventory (combat value, ranking). */
   targetCost: number;
+  /** False means the requested target cannot be represented as a legal buy. */
+  isComplete: boolean;
+  /** Explicitly surfaced invalid target items; callers must not present it as fulfilled. */
+  rejectedItems: readonly ItemId[];
 }
 
 /**
@@ -134,7 +138,28 @@ export interface PurchasePlan {
  * - kevlar/kevlar_helmet: armor/helmet state with incremental upgrade cost
  * - grenades: multiset subtraction (quantity matters, no set dedupe)
  */
-export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules, side?: Side): PurchasePlan {
+export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules, side: Side): PurchasePlan {
+  const rejectedItems: ItemId[] = [];
+  const grenadeCounts = new Map<ItemId, number>();
+  const targetGrenadeCounts = new Map<ItemId, number>();
+  for (const grenade of inventory.grenades) grenadeCounts.set(grenade, (grenadeCounts.get(grenade) ?? 0) + 1);
+  const inventoryGrenadesValid = inventory.grenades.length <= 4 && [...grenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  for (const target of targetItems) {
+    if (target.quantity <= 0 || !Number.isInteger(target.quantity) || !isItemLegalForSide(target.item, side)) {
+      rejectedItems.push(target.item);
+      continue;
+    }
+    const cap = grenadeCarryCap(target.item);
+    if (cap !== undefined) {
+      const requested = (targetGrenadeCounts.get(target.item) ?? 0) + target.quantity;
+      targetGrenadeCounts.set(target.item, requested);
+      if (requested > cap) rejectedItems.push(target.item);
+    }
+  }
+  const requestedGrenades = targetItems.reduce((sum, target) => sum + (grenadeCarryCap(target.item) === undefined ? 0 : target.quantity), 0);
+  if (!inventoryGrenadesValid || requestedGrenades > 4 || rejectedItems.length > 0) {
+    return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [...new Set(rejectedItems)] };
+  }
   const purchases = new Map<ItemId, number>();
   let targetCost = 0;
   const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
@@ -171,8 +196,8 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
       if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
       targetCost += price(rules, "kevlar_helmet");
     } else if (item === "defuse_kit") {
-      if (side === "CT" && !inventory.hasDefuseKit) add(item);
-      if (side === "CT") targetCost += price(rules, item);
+      if (!inventory.hasDefuseKit) add(item);
+      targetCost += price(rules, item);
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
       if (owned > 0) ownedGrenades.set(item, owned - 1);
@@ -191,10 +216,17 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     totalCost += armorIncrementalUnit(rules, inventory, item) * qty;
   }
 
+  const resulting = resultingLoadout(inventory, [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })));
+  const resultingGrenadeCounts = new Map<ItemId, number>();
+  for (const grenade of resulting.grenades) resultingGrenadeCounts.set(grenade, (resultingGrenadeCounts.get(grenade) ?? 0) + 1);
+  const resultingValid = resulting.grenades.length <= 4 && [...resultingGrenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  if (!resultingValid) return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [] };
   return {
     purchases: [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
     totalCost,
     targetCost,
+    isComplete: true,
+    rejectedItems: [],
   };
 }
 

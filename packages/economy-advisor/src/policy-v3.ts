@@ -1,7 +1,7 @@
 import type { ItemId, Side } from "@roundsense/shared-types";
 import { planPurchases, resultingLoadout, rifleFor, smgFor, type PurchasePlan } from "./advisor.js";
 import { projectNextRoundMoney } from "./projection.js";
-import { DEFAULT_RULES, price } from "./rules.js";
+import { DEFAULT_RULES, grenadeCarryCap, MAX_GRENADE_CARRY, price } from "./rules.js";
 import { inferOpponentEconomy as inferFromCalibration, type OpponentFeatureInput } from "./opponent-economy.js";
 import type { InventoryState, PurchaseItem } from "./types.js";
 
@@ -65,7 +65,14 @@ export interface TrajectoryScenario {
   assumptions: readonly string[];
   nextMoney: { min: number; max: number };
   nextLossIndex: Fact<number>;
-  reachableModes: readonly PolicyMode[];
+  /** Explicit t+1 action and t+2 loss scenario; never a hidden save bank. */
+  followingRound: {
+    action: "PRESERVE";
+    outcome: "LOSS_NO_PLANT";
+    money: Fact<{ min: number; max: number }>;
+    lossIndex: Fact<number>;
+    reachability: Fact<"UNKNOWN">;
+  };
 }
 
 export interface PolicyReason {
@@ -93,7 +100,7 @@ export interface RecommendationOption {
 }
 
 export interface PolicyV3Output {
-  status: "READY" | "INSUFFICIENT_STATE";
+  status: "READY" | "INSUFFICIENT_STATE" | "UNSUPPORTED_POLICY_EVIDENCE";
   options: readonly RecommendationOption[];
   defaultOptionId?: string;
   unresolved: readonly string[];
@@ -101,8 +108,6 @@ export interface PolicyV3Output {
 }
 
 const DEFAULT_PREFERENCE: UserPreference = { source: "DEFAULT", awpPriority: "NEUTRAL" };
-const MAX_GRENADE_SLOTS = 4;
-
 function known<T>(fact: Fact<T>): fact is Fact<T> & { value: T } {
   return fact.status !== "UNKNOWN" && fact.value !== undefined;
 }
@@ -123,7 +128,7 @@ function count(items: readonly ItemId[], item: ItemId): number {
 export function utilityBundle(side: Side, inventory: InventoryState, budget: number): ItemId[] {
   const initialBudget = budget;
   const desired = [...inventory.grenades];
-  const canAdd = (item: ItemId) => desired.length < MAX_GRENADE_SLOTS && (item !== "flash" || count(desired, "flash") < 2);
+  const canAdd = (item: ItemId) => desired.length < MAX_GRENADE_CARRY && count(desired, item) < (grenadeCarryCap(item) ?? 0);
   const ensure = (item: ItemId) => {
     if (desired.includes(item)) return;
     if (canAdd(item) && price(DEFAULT_RULES, item) <= budget) {
@@ -159,9 +164,9 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
   return desired;
 }
 
-function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money: number): ItemId[] {
+function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money: number): ItemId[][] {
   const items: ItemId[] = [];
-  if (mode === "PRESERVE") return items;
+  if (mode === "PRESERVE") return [items];
   if (mode === "AWP_PATH") {
     add(items, "awp");
     add(items, "kevlar");
@@ -169,19 +174,26 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
     add(items, smgFor(side));
     add(items, "kevlar");
   } else if (mode === "FORCE") {
-    add(items, smgFor(side));
-    add(items, "kevlar");
-    add(items, "flash");
+    const paidPistol = side === "T" ? "tec9" : "fiveseven";
+    // These are legal force-bundle alternatives, not a money-tier ladder.
+    // A retained primary/secondary can satisfy the same targets cheaply.
+    return [
+      [smgFor(side), "kevlar", "flash"],
+      [smgFor(side), "kevlar"],
+      [smgFor(side), "flash"],
+      [paidPistol, "kevlar", "flash"],
+      [paidPistol, "kevlar"],
+    ];
   } else {
     add(items, rifleFor(side));
     // CT defaults to vesthelm; Kevlar is not an opponent-derived decision.
     add(items, "kevlar_helmet");
   }
 
-  const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES).totalCost;
+  const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES, side).totalCost;
   const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
   items.push(...utility);
-  return items;
+  return [items];
 }
 
 function compact(items: readonly ItemId[]): PurchaseItem[] {
@@ -192,10 +204,11 @@ function compact(items: readonly ItemId[]): PurchaseItem[] {
 
 function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
   if (!known(state.player.money) || !known(state.player.lossIndex) || !known(state.round.side)) return [];
+  const side = state.round.side.value;
   const projected = projectNextRoundMoney({
     money: state.player.money.value,
     spendNow: spend,
-    side: state.round.side.value,
+    side,
     lossStreak: state.player.lossIndex.value,
     kills: [],
     rules: DEFAULT_RULES,
@@ -209,20 +222,29 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
   const winIndex: Fact<number> = state.player.lossIndex.value === 1
     ? { status: "TRACKED", value: 0, source: "Windows runtime-observed win transition 1→0", asOfSeq: state.player.lossIndex.asOfSeq }
     : { status: "UNKNOWN", source: "win loss-index transition", asOfSeq: state.player.lossIndex.asOfSeq, reason: "full win-decrement semantics not calibrated" };
-  const reach = (money: number): PolicyMode[] => {
-    const modes: PolicyMode[] = ["PRESERVE"];
-    if (money >= 1200) modes.push("LIGHT");
-    if (money >= 2000) modes.push("FORCE");
-    if (money >= 3700) modes.push("FULL");
-    if (money >= 5750) modes.push("AWP_PATH");
-    return modes;
+  const followingRound = (nextMoney: { min: number; max: number }, nextLoss: Fact<number>): TrajectoryScenario["followingRound"] => {
+    const reachability: Fact<"UNKNOWN"> = {
+      status: "UNKNOWN", source: "future inventory", asOfSeq: state.player.inventory.asOfSeq,
+      reason: "t+1 inventory, drops, and armor retention are not observable facts",
+    };
+    if (!known(nextLoss)) {
+      const unavailable: Fact<{ min: number; max: number }> = { status: "UNKNOWN", source: "t+2 projection", asOfSeq: nextLoss.asOfSeq, reason: "t+1 win loss-index transition is uncalibrated" };
+      return { action: "PRESERVE", outcome: "LOSS_NO_PLANT", money: unavailable, lossIndex: nextLoss, reachability };
+    }
+    const second = projectNextRoundMoney({ money: nextMoney.min, spendNow: 0, side, lossStreak: nextLoss.value, kills: [], rules: DEFAULT_RULES });
+    return {
+      action: "PRESERVE", outcome: "LOSS_NO_PLANT",
+      money: { status: "TRACKED", value: { min: second.loss, max: second.loss }, source: "economy rule projection", asOfSeq: nextLoss.asOfSeq },
+      lossIndex: { status: "TRACKED", value: Math.min(4, nextLoss.value + 1), source: "CS2 loss-bonus rule", asOfSeq: nextLoss.asOfSeq },
+      reachability,
+    };
   };
   const scenarios: TrajectoryScenario[] = [
-    { id: "WIN", assumptions: [...assumptions, "WIN range spans elimination/timeout and bomb win rewards"], nextMoney: { min: projected.win, max: projected.winBomb }, nextLossIndex: winIndex, reachableModes: reach(projected.win) },
-    { id: "LOSS_NO_PLANT", assumptions, nextMoney: { min: projected.loss, max: projected.loss }, nextLossIndex: lossIndex, reachableModes: reach(projected.loss) },
+    { id: "WIN", assumptions: [...assumptions, "WIN range spans elimination/timeout and bomb win rewards", "t+2 assumes a no-purchase loss; future buy reachability stays UNKNOWN without future inventory"], nextMoney: { min: projected.win, max: projected.winBomb }, nextLossIndex: winIndex, followingRound: followingRound({ min: projected.win, max: projected.winBomb }, winIndex) },
+    { id: "LOSS_NO_PLANT", assumptions: [...assumptions, "t+2 assumes a no-purchase loss; future buy reachability stays UNKNOWN without future inventory"], nextMoney: { min: projected.loss, max: projected.loss }, nextLossIndex: lossIndex, followingRound: followingRound({ min: projected.loss, max: projected.loss }, lossIndex) },
   ];
-  if (state.round.side.value === "T") {
-    scenarios.push({ id: "LOSS_WITH_PLANT", assumptions: [...assumptions, "T plant reward only in this hypothetical branch"], nextMoney: { min: projected.lossWithPlant, max: projected.lossWithPlant }, nextLossIndex: lossIndex, reachableModes: reach(projected.lossWithPlant) });
+  if (side === "T") {
+    scenarios.push({ id: "LOSS_WITH_PLANT", assumptions: [...assumptions, "T plant reward only in this hypothetical branch", "t+2 assumes a no-purchase loss; future buy reachability stays UNKNOWN without future inventory"], nextMoney: { min: projected.lossWithPlant, max: projected.lossWithPlant }, nextLossIndex: lossIndex, followingRound: followingRound({ min: projected.lossWithPlant, max: projected.lossWithPlant }, lossIndex) });
   }
   return scenarios;
 }
@@ -230,19 +252,30 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
 function planOption(state: PolicyV3State, mode: PolicyMode, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
   if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
   const inventory = state.player.inventory.value;
-  let desired = targets(state.round.side.value, mode, inventory, state.player.money.value);
-  let plan: PurchasePlan = planPurchases(inventory, compact(desired), DEFAULT_RULES, state.round.side.value);
+  let desired = targets(state.round.side.value, mode, inventory, state.player.money.value)[0] ?? [];
+  let plan: PurchasePlan | undefined;
+  for (const candidate of targets(state.round.side.value, mode, inventory, state.player.money.value)) {
+    const next = planPurchases(inventory, compact(candidate), DEFAULT_RULES, state.round.side.value);
+    if (next.isComplete && (
+      plan === undefined ||
+      (next.totalCost <= state.player.money.value && (plan.totalCost > state.player.money.value || next.totalCost > plan.totalCost))
+    )) {
+      desired = candidate;
+      plan = next;
+    }
+  }
+  if (plan === undefined) return null;
   let helmetAlternative = false;
   if (plan.totalCost > state.player.money.value && mode === "FULL" && state.round.side.value === "CT") {
     const kevlarDesired = desired.map((item) => item === "kevlar_helmet" ? "kevlar" : item);
     const kevlarPlan = planPurchases(inventory, compact(kevlarDesired), DEFAULT_RULES, state.round.side.value);
-    if (kevlarPlan.totalCost <= state.player.money.value) {
+    if (kevlarPlan.isComplete && kevlarPlan.totalCost <= state.player.money.value) {
       desired = kevlarDesired;
       plan = kevlarPlan;
       helmetAlternative = true;
     }
   }
-  if (plan.totalCost > state.player.money.value) return null;
+  if (!plan.isComplete || plan.totalCost > state.player.money.value) return null;
   const reasons: PolicyReason[] = [{ code: `MODE_${mode}`, detail: "deterministic, inventory-aware legal purchase bundle" }];
   if (mode === "FULL" && state.round.side.value === "CT") reasons.push({ code: "CT_DEFAULT_VESTHELM", detail: "fresh CT armor defaults to vesthelm; opponent inference does not remove it" });
   if (helmetAlternative) reasons.push({ code: "CT_KEVLAR_OWN_STATE", detail: "vesthelm incremental $350 blocks the otherwise affordable own-state full bundle" });
@@ -250,11 +283,12 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
   const conditionalAlternatives: ConditionalAlternative[] = [];
   if (state.round.side.value === "CT" && mode === "FULL" && !inventory.hasDefuseKit) {
     const kitPlan = planPurchases(inventory, compact([...desired, "defuse_kit"]), DEFAULT_RULES, state.round.side.value);
-    if (kitPlan.totalCost <= state.player.money.value) conditionalAlternatives.push({ condition: "若队友暂无钳子", purchases: kitPlan.purchases, reason: "钳子不占 grenade slot；队友覆盖不可见" });
+    if (kitPlan.isComplete && kitPlan.totalCost <= state.player.money.value) conditionalAlternatives.push({ condition: "若队友暂无钳子", purchases: kitPlan.purchases, reason: "钳子不占 grenade slot；队友覆盖不可见" });
   }
   if (state.round.side.value === "T" && mode === "FULL") {
     const alternate = planPurchases(inventory, compact([...desired.filter((item) => item !== "he"), "flash"]), DEFAULT_RULES, state.round.side.value);
-    if (alternate.totalCost <= state.player.money.value && count(resultingLoadout(inventory, alternate.purchases).grenades, "flash") <= 2) conditionalAlternatives.push({ condition: "T fourth utility slot", purchases: alternate.purchases, reason: "HE 与 second flash 均保留为合法 alternative" });
+    const alternateLoadout = resultingLoadout(inventory, alternate.purchases);
+    if (alternate.isComplete && alternate.totalCost <= state.player.money.value && alternateLoadout.grenades.length <= MAX_GRENADE_CARRY && count(alternateLoadout.grenades, "flash") <= 2) conditionalAlternatives.push({ condition: "T fourth utility slot", purchases: alternate.purchases, reason: "HE 与 second flash 均保留为合法 alternative" });
   }
   return {
     id: `${mode.toLowerCase()}-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
@@ -275,23 +309,55 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   const required = [state.round.side, state.player.money, state.player.inventory, state.player.lossIndex, state.round.context];
   const unresolved = required.filter((fact) => fact.status === "UNKNOWN" || fact.value === undefined).map((fact) => `${fact.source}: ${fact.reason ?? "UNKNOWN"}`);
   if (unresolved.length > 0) return { status: "INSUFFICIENT_STATE", options: [], unresolved, opponent: state.opponent };
-  const context = state.round.context.value;
+  const context = state.round.context.value!;
+  const side = state.round.side.value!;
+  const inventory = state.player.inventory.value!;
+  const money = state.player.money.value!;
+  const lossIndex = state.player.lossIndex.value!;
   const preference = state.preference ?? DEFAULT_PREFERENCE;
-  let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]> = context === "POST_PISTOL"
-    ? state.round.side.value === "T"
-      ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
-      : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]]
-    : [["FULL", "SUPPORTED"], ["FORCE", "ALTERNATIVE"], ["LIGHT", "ALTERNATIVE"], ["PRESERVE", "ALTERNATIVE"]];
-  if (context === "NORMAL") {
-    const affordable = modes.filter(([mode]) => planOption(state, mode, "SUPPORTED") !== null).map(([mode]) => mode);
-    modes = affordable.includes("FULL")
-      ? [["FULL", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
-      : affordable.includes("FORCE")
-        ? [["FORCE", "SUPPORTED"], ...(affordable.includes("LIGHT") ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : []), ["PRESERVE", "ALTERNATIVE"]]
-        : affordable.includes("LIGHT") ? [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]] : [["PRESERVE", "SUPPORTED"]];
+  if (context === "PISTOL") {
+    return {
+      status: "UNSUPPORTED_POLICY_EVIDENCE", options: [], unresolved: ["pistol-round purchase policy is outside the frozen Policy V3 evidence scope"], opponent: state.opponent,
+    };
   }
-  if (preference.source === "USER_DECLARED" && preference.awpPriority !== "NEUTRAL") modes.unshift(["AWP_PATH", preference.awpPriority === "PREFER" ? "SUPPORTED" : "DOMINANT"]);
-  const options = modes.map(([mode, strength]) => planOption(state, mode, strength)).filter((option): option is RecommendationOption => option !== null);
+  let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]>;
+  if (context === "POST_PISTOL") {
+    modes = side === "T"
+      ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
+      : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]];
+  } else {
+    // Normal and OT use the same generic non-pistol policy.  We compare only
+    // complete, inventory-aware legal bundles; without a calibrated utility
+    // value model competing affordable options remain explicitly non-dominant.
+    const full = planOption(state, "FULL", "SUPPORTED");
+    const force = planOption(state, "FORCE", "SUPPORTED");
+    const light = planOption(state, "LIGHT", "SUPPORTED");
+    modes = full
+      ? [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : [])]
+      : force
+        ? [["FORCE", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
+        : light
+          ? [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
+          : [["PRESERVE", "SUPPORTED"]];
+  }
+  const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED") : null;
+  let saveForAwp = false;
+  if (preference.source === "USER_DECLARED" && preference.awpPriority === "PREFER" && awp) {
+    modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
+  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && !awp) {
+    const awpWithArmor = planPurchases({ ...inventory, primary: null, armor: 0, hasHelmet: false, hasDefuseKit: inventory.hasDefuseKit, grenades: inventory.grenades }, compact(["awp", "kevlar"]), DEFAULT_RULES, side);
+    const noSpend = projectNextRoundMoney({ money, spendNow: 0, side, lossStreak: lossIndex, kills: [], rules: DEFAULT_RULES });
+    // The preserved current inventory is not asserted as a future fact. This
+    // uses the conservative empty-inventory AWP+armor cash requirement.
+    saveForAwp = awpWithArmor.isComplete && noSpend.loss >= awpWithArmor.totalCost;
+    if (saveForAwp && !modes.some(([mode]) => mode === "PRESERVE")) modes.push(["PRESERVE", "ALTERNATIVE"]);
+  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
+    modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
+  }
+  const options = modes.map(([mode, strength]) => planOption(state, mode, strength)).filter((option): option is RecommendationOption => option !== null).map((option) => {
+    if (!saveForAwp || option.mode !== "PRESERVE") return option;
+    return { ...option, reasons: [...option.reasons, { code: "SAVE_FOR_AWP_HORIZON", detail: "no-purchase t+1 loss scenario reaches conservative AWP + armor cash requirement" }] };
+  });
   return {
     status: "READY",
     options,

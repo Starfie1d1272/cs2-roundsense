@@ -15,7 +15,7 @@ describe("PolicyStateTracker integrity", () => {
     tracker.observe(payload(5, "live"), 2);
     const state = tracker.observe(payload(5, "live"), 3);
     expect(state.history.integrity).toBe("COLD_START");
-    expect(state.opponent.probability).toBeUndefined();
+    expect(state.opponent.probability).toBeTypeOf("number");
   });
 
   it("becomes COMPLETE only after a witnessed round lifecycle transition", () => {

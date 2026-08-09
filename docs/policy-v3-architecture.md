@@ -145,6 +145,11 @@ identity、current-round result。固定 reporting gate：`p<=0.20` 为 likely n
 history 增益很小（AUC +0.0023、覆盖 +1.71pp）；主要能力来自公开的 round
 stage、side、score 与 loss counter，而不是伪造经济账本。
 
+最终 runtime artifact 选择 **direct-only**：`opponent-economy-direct.v2026-08.json`
+用同一冻结 direct feature family、阈值和 final-fit procedure 重新封装。tracked
+history 仍作为 FACT 保留，但上一轮 `planted` 的 GSI 可见语义和 replay end
+reason 不同，不能为了极小指标增益把它当作 classifier 输入。
+
 场景限制：
 
 - post-pistol：n=808，覆盖 100%，总体准确率 90.97%；likely established
@@ -152,7 +157,7 @@ stage、side、score 与 loss counter，而不是伪造经济账本。
 - later rounds：覆盖 63.75%，可判准确率 96.62%，但**没有**可靠的 likely-not
   输出；不满足 likely-established gate 的 later state 必须 UNKNOWN；
 - opponent CT：UNKNOWN 25.07%；opponent T：UNKNOWN 39.71%；
-- overtime、loss counter 缺失、history gap、非标准 half/round lifecycle、
+- overtime、loss counter 缺失、非标准 half/round lifecycle、
   calibration domain 外状态一律 UNKNOWN。
 
 ### 3.4 GO 的限制

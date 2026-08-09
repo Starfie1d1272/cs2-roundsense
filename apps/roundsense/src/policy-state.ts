@@ -119,16 +119,12 @@ export class PolicyStateTracker {
         ? tracked(this.lastCompleteInventory.value!, "last complete normal-player inventory observation", this.lastCompleteInventory.asOfSeq)
         : unknown<NonNullable<ReturnType<typeof inventoryFrom>>>("player.state + player.weapons", seq, "partial inventory payload without a safe tracked observation");
 
-    const previous = this.previousRounds.at(-1);
-    const previousWinStreak = this.previousWinStreak(opponentSide, seq);
     const opponent = inferOpponentEconomy({
       asOfSeq: seq,
       opponentSide,
       roundNumber: observed(currentRound, "map.round", seq),
       score,
       opponentLossIndex: opponentLoss,
-      context,
-      history: { integrity: this.integrity, previousWinner: previous?.winner, previousPlant: previous?.planted, previousWinStreak },
     });
 
     this.lastSeq = seq;
@@ -143,18 +139,6 @@ export class PolicyStateTracker {
     };
   }
 
-  private previousWinStreak(opponent: Fact<Side>, seq: number): Fact<number> {
-    if (this.integrity !== "COMPLETE" || opponent.status === "UNKNOWN" || opponent.value === undefined || this.previousRounds.length === 0) {
-      return unknown("previous opponent win streak", seq, "complete round history unavailable");
-    }
-    let wins = 0;
-    for (const round of [...this.previousRounds].reverse()) {
-      if (round.winner.status === "UNKNOWN" || round.winner.value === undefined) return unknown("previous opponent win streak", seq, "winner missing in tracked history");
-      if (round.winner.value !== opponent.value) break;
-      wins++;
-    }
-    return tracked(Math.min(wins, 3), "continuous normal-player GSI round history", seq);
-  }
 }
 
 export type { OpponentEconomyClass };

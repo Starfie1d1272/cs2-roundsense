@@ -228,6 +228,7 @@ describe("inventory-aware planning (Batch 2)", () => {
         { item: "kevlar_helmet", quantity: 1 },
       ],
       DEFAULT_RULES,
+      "T",
     );
     expect(plan.purchases.map((p) => p.item)).toEqual(expect.arrayContaining(["ak47", "kevlar_helmet"]));
     expect(plan.totalCost).toBe(3700);
@@ -286,11 +287,11 @@ describe("inventory-aware planning (Batch 2)", () => {
       { item: "smoke" as const, quantity: 1 },
       { item: "flash" as const, quantity: 1 },
     ];
-    const haveTwoFlashes = planPurchases({ ...rifleArmorInv, grenades: ["flash", "flash"] }, target, DEFAULT_RULES);
+    const haveTwoFlashes = planPurchases({ ...rifleArmorInv, grenades: ["flash", "flash"] }, target, DEFAULT_RULES, "CT");
     expect(haveTwoFlashes.purchases).toEqual([{ item: "smoke", quantity: 1 }]);
-    const haveSmoke = planPurchases({ ...rifleArmorInv, grenades: ["smoke"] }, target, DEFAULT_RULES);
+    const haveSmoke = planPurchases({ ...rifleArmorInv, grenades: ["smoke"] }, target, DEFAULT_RULES, "CT");
     expect(haveSmoke.purchases).toEqual([{ item: "flash", quantity: 1 }]);
-    const haveBoth = planPurchases({ ...rifleArmorInv, grenades: ["smoke", "flash"] }, target, DEFAULT_RULES);
+    const haveBoth = planPurchases({ ...rifleArmorInv, grenades: ["smoke", "flash"] }, target, DEFAULT_RULES, "CT");
     expect(haveBoth.purchases).toEqual([]);
   });
 
@@ -348,33 +349,33 @@ describe("armor condition handling (Review Fix)", () => {
   const target = [{ item: "kevlar_helmet" as const, quantity: 1 }];
 
   it("1. armor=0 helmet=false, target helmet → full $1000", () => {
-    const plan = planPurchases(inv(0, false), target, DEFAULT_RULES);
+    const plan = planPurchases(inv(0, false), target, DEFAULT_RULES, "CT");
     expect(plan.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
     expect(plan.totalCost).toBe(1000);
   });
 
   it("2. armor=100 helmet=false, target helmet → $350 upgrade (runtime-observed case)", () => {
-    const plan = planPurchases(inv(100, false), target, DEFAULT_RULES);
+    const plan = planPurchases(inv(100, false), target, DEFAULT_RULES, "CT");
     expect(plan.purchases).toEqual([{ item: "kevlar_helmet", quantity: 1 }]);
     expect(plan.totalCost).toBe(350);
   });
 
   it("3. armor=99 helmet=false, target helmet → full $1000 (damaged armor is NOT the $350 case)", () => {
-    expect(planPurchases(inv(99, false), target, DEFAULT_RULES).totalCost).toBe(1000);
+    expect(planPurchases(inv(99, false), target, DEFAULT_RULES, "CT").totalCost).toBe(1000);
   });
 
   it("4. armor=50 helmet=false, target helmet → full $1000", () => {
-    expect(planPurchases(inv(50, false), target, DEFAULT_RULES).totalCost).toBe(1000);
+    expect(planPurchases(inv(50, false), target, DEFAULT_RULES, "CT").totalCost).toBe(1000);
   });
 
   it("5. armor=50 helmet=true, target helmet → $0 (already protected)", () => {
-    const plan = planPurchases(inv(50, true), target, DEFAULT_RULES);
+    const plan = planPurchases(inv(50, true), target, DEFAULT_RULES, "CT");
     expect(plan.purchases).toEqual([]);
     expect(plan.totalCost).toBe(0);
   });
 
   it("6. armor=50 helmet=false, target kevlar only → $0 (any armor satisfies kevlar)", () => {
-    const plan = planPurchases(inv(50, false), [{ item: "kevlar" as const, quantity: 1 }], DEFAULT_RULES);
+    const plan = planPurchases(inv(50, false), [{ item: "kevlar" as const, quantity: 1 }], DEFAULT_RULES, "CT");
     expect(plan.purchases).toEqual([]);
     expect(plan.totalCost).toBe(0);
   });
@@ -391,6 +392,24 @@ describe("armor condition handling (Review Fix)", () => {
     const plan = [out.recommended, ...out.alternatives].find((s) => s?.id === "rifle-helmet")!;
     expect(plan.totalCost).toBe(350);
     expect(plan.affordable).toBe(true);
+  });
+});
+
+describe("canonical purchase legality", () => {
+  const empty: InventoryState = { primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+
+  it("rejects side-exclusive buys instead of silently dropping them", () => {
+    expect(planPurchases(empty, [{ item: "fiveseven", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ isComplete: false, rejectedItems: ["fiveseven"] });
+    expect(planPurchases(empty, [{ item: "tec9", quantity: 1 }], DEFAULT_RULES, "CT")).toMatchObject({ isComplete: false, rejectedItems: ["tec9"] });
+    expect(planPurchases(empty, [{ item: "molotov", quantity: 1 }], DEFAULT_RULES, "CT")).toMatchObject({ isComplete: false, rejectedItems: ["molotov"] });
+    expect(planPurchases(empty, [{ item: "incendiary", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ isComplete: false, rejectedItems: ["incendiary"] });
+    expect(planPurchases(empty, [{ item: "defuse_kit", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ isComplete: false, rejectedItems: ["defuse_kit"] });
+  });
+
+  it("never returns an over-cap grenade result", () => {
+    expect(planPurchases(empty, [{ item: "flash", quantity: 3 }], DEFAULT_RULES, "T").isComplete).toBe(false);
+    expect(planPurchases({ ...empty, grenades: ["he", "smoke", "flash", "flash"] }, [{ item: "molotov", quantity: 1 }], DEFAULT_RULES, "T").isComplete).toBe(false);
+    expect(planPurchases({ ...empty, grenades: ["he", "smoke", "molotov"] }, [{ item: "flash", quantity: 2 }], DEFAULT_RULES, "T").isComplete).toBe(false);
   });
 });
 

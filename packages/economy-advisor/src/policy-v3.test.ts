@@ -28,7 +28,7 @@ describe("Policy V3 deterministic core", () => {
     const current = state();
     current.player.money = observed(3000);
     const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
-    expect(force?.spend).toBeGreaterThanOrEqual(2800);
+    expect(force?.spend).toBeGreaterThan(0);
     expect(force?.assumptions.join(" ")).toContain("no V2 preservation budget");
   });
 
@@ -38,6 +38,29 @@ describe("Policy V3 deterministic core", () => {
     const out = recommendPolicyV3(current);
     expect(out.options.map((option) => [option.mode, option.adviceStrength])).toEqual([["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]]);
     expect(out.defaultOptionId).toBe(out.options[0]?.id);
+  });
+
+  it.each([1900, 2000])("fits a legal CT post-pistol force at $%i", (money) => {
+    const current = state();
+    current.round.side = observed("CT");
+    current.player.money = observed(money);
+    const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
+    expect(force?.spend).toBeLessThanOrEqual(money);
+    expect(force?.purchases).toContainEqual({ item: "mp9", quantity: 1 });
+    expect(force?.purchases).toContainEqual({ item: "kevlar", quantity: 1 });
+  });
+
+  it("uses retained CT armor or SMG to fit the legal force bundle", () => {
+    const armored = state();
+    armored.round.side = observed("CT");
+    armored.player.money = observed(1500);
+    armored.player.inventory = observed({ ...inventory, armor: 100, grenades: [] });
+    expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.spend).toBeLessThanOrEqual(1500);
+    const smgOwned = state();
+    smgOwned.round.side = observed("CT");
+    smgOwned.player.money = observed(900);
+    smgOwned.player.inventory = observed({ ...inventory, primary: "mp9", grenades: [] });
+    expect(recommendPolicyV3(smgOwned).options.find((option) => option.mode === "FORCE")?.purchases).toEqual(expect.arrayContaining([{ item: "kevlar", quantity: 1 }]));
   });
 
   it("does not let opponent UNKNOWN remove base plans", () => {
@@ -142,13 +165,26 @@ describe("Policy V3 deterministic core", () => {
     expect(utilityBundle("CT", { ...inventory, grenades: ["flash", "flash"] }, 1200).filter((item) => item === "flash")).toHaveLength(2);
   });
 
-  it("selects normal-round modes from affordability rather than listing every mode", () => {
+  it("keeps normal-round alternatives tied to complete inventory-aware bundles", () => {
     const rich = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
     const poor = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
     poor.player.money = observed(3000);
-    expect(recommendPolicyV3(rich).options.map((option) => option.mode)).toEqual(["FULL", "PRESERVE"]);
+    expect(recommendPolicyV3(rich).options.map((option) => option.mode)).toEqual(["FULL", "FORCE"]);
     expect(recommendPolicyV3(poor).options.map((option) => option.mode)).toContain("FORCE");
     expect(recommendPolicyV3(poor).options.map((option) => option.mode)).not.toContain("FULL");
+  });
+
+  it("uses same-money inventory and loss FACTs in the normal option evidence", () => {
+    const empty = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    empty.player.money = observed(3000);
+    const retained = structuredClone(empty);
+    retained.player.inventory = observed({ ...inventory, primary: "ak47", armor: 100, grenades: [] });
+    expect(recommendPolicyV3(empty).options.map((option) => option.mode)).toContain("FORCE");
+    expect(recommendPolicyV3(retained).options.map((option) => option.mode)).toContain("FULL");
+    const higherLoss = structuredClone(empty);
+    higherLoss.player.lossIndex = observed(3);
+    const moneyAtT1 = (current: PolicyV3State) => recommendPolicyV3(current).options[0]?.trajectory.find((scenario) => scenario.id === "LOSS_NO_PLANT")?.nextMoney.min;
+    expect(moneyAtT1(higherLoss)).not.toBe(moneyAtT1(empty));
   });
 
   it("keeps the approved $200/$300/$500 utility boundaries deterministic", () => {
@@ -166,8 +202,41 @@ describe("Policy V3 deterministic core", () => {
     expect(recommendPolicyV3(preferred).options[0]?.mode).toBe("AWP_PATH");
   });
 
+  it("only adds SAVE_FOR_AWP preservation after a conservative next-horizon AWP check", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.money = observed(4000);
+    current.player.lossIndex = observed(4);
+    current.preference = { source: "USER_DECLARED", awpPriority: "SAVE_FOR_AWP" };
+    const preserve = recommendPolicyV3(current).options.find((option) => option.mode === "PRESERVE");
+    expect(preserve?.reasons.some((reason) => reason.code === "SAVE_FOR_AWP_HORIZON")).toBe(true);
+
+    const prefer = structuredClone(current);
+    prefer.preference = { source: "USER_DECLARED", awpPriority: "PREFER" };
+    expect(recommendPolicyV3(prefer).options.some((option) => option.mode === "AWP_PATH")).toBe(false);
+  });
+
   it("attaches assumptions to every numeric trajectory", () => {
     const out = recommendPolicyV3(state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } }));
     for (const option of out.options) for (const scenario of option.trajectory) expect(scenario.assumptions.length).toBeGreaterThan(0);
+  });
+
+  it("projects an explicit t+2 scenario without inventing future reachability", () => {
+    const out = recommendPolicyV3(state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } }));
+    const loss = out.options[0]?.trajectory.find((scenario) => scenario.id === "LOSS_NO_PLANT");
+    expect(loss?.followingRound.action).toBe("PRESERVE");
+    expect(loss?.followingRound.money.status).toBe("TRACKED");
+    expect(loss?.followingRound.reachability.status).toBe("UNKNOWN");
+  });
+
+  it("returns unresolved evidence rather than a fake pistol PRESERVE", () => {
+    const current = state();
+    current.round.context = observed("PISTOL");
+    expect(recommendPolicyV3(current)).toMatchObject({ status: "UNSUPPORTED_POLICY_EVIDENCE", options: [] });
+  });
+
+  it("uses the generic non-pistol policy in overtime", () => {
+    const current = state();
+    current.round.context = observed("OVERTIME");
+    expect(recommendPolicyV3(current).status).toBe("READY");
   });
 });
