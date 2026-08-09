@@ -1,5 +1,5 @@
 import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
-import { DEFAULT_RULES, type EconomyRules, price } from "./rules.js";
+import { DEFAULT_RULES, grenadeCarryCap, isItemLegalForSide, type EconomyRules, price, weaponClassOf } from "./rules.js";
 import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
 import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
@@ -13,20 +13,37 @@ export function smgFor(side: Side): ItemId {
 }
 
 /** Same rifle family definition as goal semantics (not re-invented here). */
-const RIFLE_FAMILY = ["ak47", "m4a4", "m4a1s", "galil", "famas"];
-const SMG_FAMILY = ["mac10", "mp9", "mp7", "mp5sd", "ump45", "p90", "bizon"];
-const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary", "decoy"] as const;
+export const PAID_PISTOLS = ["p250", "dual", "tec9", "cz75", "fiveseven", "deagle", "r8"] as const;
 
 function isRifle(item: ItemId): boolean {
-  return RIFLE_FAMILY.includes(item);
+  return weaponClassOf(item) === "rifle";
 }
 
 function isSmg(item: ItemId): boolean {
-  return SMG_FAMILY.includes(item);
+  return weaponClassOf(item) === "smg";
+}
+
+function isSniper(item: ItemId): boolean {
+  return weaponClassOf(item) === "sniper";
+}
+
+function isPaidPistol(item: ItemId): boolean {
+  return (PAID_PISTOLS as readonly string[]).includes(item);
 }
 
 function isGrenade(item: ItemId): boolean {
   return (GRENADES as readonly string[]).includes(item);
+}
+
+/** A retained rifle/AWP dominates a requested lower primary; a retained paid
+ * pistol satisfies the force-secondary role. This is deliberately a narrow
+ * anti-downgrade rule, not a global weapon-value ranking. */
+function retainedPrimarySatisfies(item: ItemId, primary: ItemId | null | undefined): boolean {
+  if (!primary) return false;
+  if (isSmg(item)) return isSmg(primary) || isRifle(primary) || primary === "awp";
+  if (isRifle(item)) return isRifle(primary) || primary === "awp";
+  return item === "awp" && primary === "awp";
 }
 
 /** Post-purchase loadout = current inventory + planned purchases. */
@@ -35,6 +52,7 @@ export interface PostLoadout {
   secondary?: ItemId;
   armor: number;
   hasHelmet: boolean;
+  hasDefuseKit: boolean;
   grenades: ItemId[];
 }
 
@@ -48,14 +66,17 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
     secondary: inventory.secondary,
     armor: inventory.armor,
     hasHelmet: inventory.hasHelmet,
+    hasDefuseKit: inventory.hasDefuseKit,
     grenades: [...inventory.grenades],
   };
   for (const p of purchases) {
-    if (isRifle(p.item) || isSmg(p.item) || p.item === "awp") loadout.primary = p.item;
-    else if (p.item === "deagle") loadout.secondary = "deagle";
+    if (isRifle(p.item) || isSmg(p.item) || isSniper(p.item)) loadout.primary = p.item;
+    else if (isPaidPistol(p.item)) loadout.secondary = p.item;
     else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
       loadout.armor = 100;
       if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
+    } else if (p.item === "defuse_kit") {
+      loadout.hasDefuseKit = true;
     } else if (isGrenade(p.item)) {
       for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
     }
@@ -110,6 +131,10 @@ export interface PurchasePlan {
   totalCost: number;
   /** Full target value with an empty inventory (combat value, ranking). */
   targetCost: number;
+  /** False means the requested target cannot be represented as a legal buy. */
+  isComplete: boolean;
+  /** Explicitly surfaced invalid target items; callers must not present it as fulfilled. */
+  rejectedItems: readonly ItemId[];
 }
 
 /**
@@ -123,31 +148,54 @@ export interface PurchasePlan {
  * - kevlar/kevlar_helmet: armor/helmet state with incremental upgrade cost
  * - grenades: multiset subtraction (quantity matters, no set dedupe)
  */
-export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules): PurchasePlan {
+export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules, side: Side): PurchasePlan {
+  const rejectedItems: ItemId[] = [];
+  const grenadeCounts = new Map<ItemId, number>();
+  const targetGrenadeCounts = new Map<ItemId, number>();
+  for (const grenade of inventory.grenades) grenadeCounts.set(grenade, (grenadeCounts.get(grenade) ?? 0) + 1);
+  const inventoryGrenadesValid = inventory.grenades.length <= 4 && [...grenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  for (const target of targetItems) {
+    if (target.quantity <= 0 || !Number.isInteger(target.quantity) || !isItemLegalForSide(target.item, side)) {
+      rejectedItems.push(target.item);
+      continue;
+    }
+    const cap = grenadeCarryCap(target.item);
+    if (cap !== undefined) {
+      const requested = (targetGrenadeCounts.get(target.item) ?? 0) + target.quantity;
+      targetGrenadeCounts.set(target.item, requested);
+      if (requested > cap) rejectedItems.push(target.item);
+    }
+  }
+  const requestedGrenades = targetItems.reduce((sum, target) => sum + (grenadeCarryCap(target.item) === undefined ? 0 : target.quantity), 0);
+  if (!inventoryGrenadesValid || requestedGrenades > 4 || rejectedItems.length > 0) {
+    return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [...new Set(rejectedItems)] };
+  }
   const purchases = new Map<ItemId, number>();
   let targetCost = 0;
   const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
 
   const hasArmor = inventory.armor > 0; // local derived value, not stored
-  const hasRifle = inventory.primary !== null && inventory.primary !== undefined && isRifle(inventory.primary);
-  const hasSmg = inventory.primary !== null && inventory.primary !== undefined && isSmg(inventory.primary);
 
   const ownedGrenades = new Map<ItemId, number>();
   for (const g of inventory.grenades) ownedGrenades.set(g, (ownedGrenades.get(g) ?? 0) + 1);
 
   const consume = (item: ItemId) => {
     if (isRifle(item)) {
-      if (!hasRifle) add(item);
+      if (!retainedPrimarySatisfies(item, inventory.primary)) add(item);
       targetCost += price(rules, item);
     } else if (isSmg(item)) {
-      if (!hasSmg) add(item);
+      if (!retainedPrimarySatisfies(item, inventory.primary)) add(item);
       targetCost += price(rules, item);
     } else if (item === "awp") {
       if (inventory.primary !== "awp") add("awp");
       targetCost += price(rules, "awp");
-    } else if (item === "deagle") {
-      if (inventory.secondary !== "deagle") add("deagle");
-      targetCost += price(rules, "deagle");
+    } else if (isSniper(item)) {
+      const hasSniper = inventory.primary !== null && inventory.primary !== undefined && isSniper(inventory.primary);
+      if (!hasSniper) add(item);
+      targetCost += price(rules, item);
+    } else if (isPaidPistol(item)) {
+      if (!isPaidPistol(inventory.secondary ?? "zeus")) add(item);
+      targetCost += price(rules, item);
     } else if (item === "kevlar") {
       // "具有护甲" — not a forced 100-armor refill; any armor satisfies it
       if (!hasArmor) add("kevlar");
@@ -155,6 +203,9 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     } else if (item === "kevlar_helmet") {
       if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
       targetCost += price(rules, "kevlar_helmet");
+    } else if (item === "defuse_kit") {
+      if (!inventory.hasDefuseKit) add(item);
+      targetCost += price(rules, item);
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
       if (owned > 0) ownedGrenades.set(item, owned - 1);
@@ -173,10 +224,17 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     totalCost += armorIncrementalUnit(rules, inventory, item) * qty;
   }
 
+  const resulting = resultingLoadout(inventory, [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })));
+  const resultingGrenadeCounts = new Map<ItemId, number>();
+  for (const grenade of resulting.grenades) resultingGrenadeCounts.set(grenade, (resultingGrenadeCounts.get(grenade) ?? 0) + 1);
+  const resultingValid = resulting.grenades.length <= 4 && [...resultingGrenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  if (!resultingValid) return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [] };
   return {
     purchases: [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
     totalCost,
     targetCost,
+    isComplete: true,
+    rejectedItems: [],
   };
 }
 
@@ -240,7 +298,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
 
   const schemes: Scheme[] = templates.map((template) => {
     const targetItems = resolveItems(rules, input.side, template.items);
-    const plan = planPurchases(input.inventory, targetItems, rules);
+    const plan = planPurchases(input.inventory, targetItems, rules, input.side);
     const { purchases, totalCost, targetCost } = plan;
     const affordable = totalCost <= input.money;
     const projectionInput: ProjectionInput = {

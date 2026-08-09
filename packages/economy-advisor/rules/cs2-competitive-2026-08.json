@@ -74,7 +74,7 @@
       "L1-nonzero-decomp": "3653/3653 replay-clean (summaryFieldLimitation: buy-window transactions absent from moneySpent snapshot); 887 noReplay",
       "L4": "93,506 cash transitions (all replay rounds): 95.2% exact event attribution (89.0% exact + 6.2% compound-exact), 4.6% buy-window (direction known), 0.1% sampling-ambiguous (90), 0.02% unexplained (20: kills.json attribution gaps, unknown -50 mechanism)",
       "L3": "time_ran_out T survivor: 354 samples, 0 loss-payout violations",
-      "OT": "62 OT halves (Cologne): strict alternating pattern — odd openers (r25/r31/r37/r43) carry-over, even openers (r28/r34/r40/r46) reset to 10000; 0 exceptions; 12500 not observed; server/match profile"
+      "OT": "Cologne final purchase-policy diagnostic: 620/620 reset-player rows reconstructed as 10000; first-half startMoney carry-over was a stale pre-restart capture artifact. Production never presets OT money and always reads live current GSI money."
     }
   },
   "notes": {

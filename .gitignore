@@ -11,6 +11,10 @@ recordings/
 experiments/**/output/
 coverage/
 
+# Python experiment caches
+__pycache__/
+*.py[cod]
+
 # macOS
 .DS_Store
 
