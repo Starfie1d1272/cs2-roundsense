@@ -1,7 +1,7 @@
 import type { ItemId, Side } from "@roundsense/shared-types";
 import { planPurchases, resultingLoadout, rifleFor, smgFor, type PurchasePlan } from "./advisor.js";
 import { projectNextRoundMoney } from "./projection.js";
-import { DEFAULT_RULES, grenadeCarryCap, MAX_GRENADE_CARRY, price } from "./rules.js";
+import { DEFAULT_RULES, grenadeCarryCap, lossBonus, MAX_GRENADE_CARRY, price } from "./rules.js";
 import { inferOpponentEconomy as inferFromCalibration, type OpponentFeatureInput } from "./opponent-economy.js";
 import type { InventoryState, PurchaseItem } from "./types.js";
 
@@ -27,6 +27,33 @@ export interface Inference<T> {
 export type PolicyMode = "PRESERVE" | "LIGHT" | "FORCE" | "FULL" | "AWP_PATH";
 export type RoundContext = "PISTOL" | "POST_PISTOL" | "NORMAL" | "OVERTIME";
 export type OpponentEconomyClass = "LIKELY_ESTABLISHED_RIFLE" | "LIKELY_NOT_ESTABLISHED_RIFLE" | "UNKNOWN";
+export type ProtectedNextBuyCapability = "RIFLE_ARMOR" | "RIFLE_ARMOR_BASIC_UTILITY";
+
+export interface FutureAffordabilityBoundary {
+  layer: "SCENARIO";
+  scenario: "LOSS_NO_PLANT";
+  capability: ProtectedNextBuyCapability;
+  targetCash: number;
+  requiredReserveNow: number;
+  reachableWithNoSpend: boolean;
+  maxSpendNow: number;
+  assumptions: readonly string[];
+}
+
+export type FutureAffordabilitySet =
+  | { status: "PROJECTED"; context: "NORMAL"; boundaries: readonly FutureAffordabilityBoundary[] }
+  | { status: "UNKNOWN"; boundaries: readonly []; reason: string }
+  | {
+      status: "NOT_APPLICABLE";
+      boundaries: readonly [];
+      reason: "POST_PISTOL_STRATEGY" | "PISTOL_UNSUPPORTED" | "OVERTIME_UNSUPPORTED";
+    };
+
+export type SpendingGuidance =
+  | { layer: "ADVICE"; kind: "MINIMIZE"; protectedCapability?: ProtectedNextBuyCapability }
+  | { layer: "ADVICE"; kind: "BOUNDED"; protectedCapability: ProtectedNextBuyCapability }
+  | { layer: "ADVICE"; kind: "CURRENT_ROUND_PRIORITY" }
+  | { layer: "ADVICE"; kind: "COMPLETE_CURRENT_BUY" };
 
 export interface UserPreference {
   source: "DEFAULT" | "USER_DECLARED";
@@ -89,8 +116,9 @@ export interface ConditionalAlternative {
 export interface RecommendationOption {
   id: string;
   mode: PolicyMode;
+  spendingGuidance: SpendingGuidance;
   purchases: readonly PurchaseItem[];
-  spend: number;
+  bundleSpend: number;
   resultingInventory: ReturnType<typeof resultingLoadout>;
   trajectory: readonly TrajectoryScenario[];
   reasons: readonly PolicyReason[];
@@ -101,6 +129,7 @@ export interface RecommendationOption {
 
 export interface PolicyV3Output {
   status: "READY" | "INSUFFICIENT_STATE" | "UNSUPPORTED_POLICY_EVIDENCE";
+  futureAffordability: FutureAffordabilitySet;
   options: readonly RecommendationOption[];
   defaultOptionId?: string;
   unresolved: readonly string[];
@@ -173,9 +202,6 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
   if (mode === "AWP_PATH") {
     add(items, "awp");
     add(items, "kevlar");
-  } else if (mode === "LIGHT") {
-    add(items, smgFor(side));
-    add(items, "kevlar");
   } else if (mode === "FORCE") {
     const paidPistol = side === "T" ? "tec9" : "fiveseven";
     // Bounded legal bundle fitting: preserve a retained dominant weapon, try
@@ -199,14 +225,9 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
     add(items, "kevlar_helmet");
   }
 
-  // LIGHT is deliberately a controlled partial investment: establish the
-  // affordable SMG + armor bundle, but do not turn every remaining dollar
-  // into the FORCE utility fit. Retained utility remains untouched.
-  if (mode !== "LIGHT") {
-    const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES, side).totalCost;
-    const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
-    items.push(...utility);
-  }
+  const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES, side).totalCost;
+  const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
+  items.push(...utility);
   return [items];
 }
 
@@ -274,13 +295,154 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
   return scenarios;
 }
 
-function planOption(state: PolicyV3State, mode: PolicyMode, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
+function futureAffordability(state: PolicyV3State): FutureAffordabilitySet {
+  if (!known(state.round.context)) {
+    return { status: "UNKNOWN", boundaries: [], reason: "round context is UNKNOWN" };
+  }
+  const context = state.round.context.value;
+  if (context === "POST_PISTOL") return { status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" };
+  if (context === "PISTOL") return { status: "NOT_APPLICABLE", boundaries: [], reason: "PISTOL_UNSUPPORTED" };
+  if (context === "OVERTIME") return { status: "NOT_APPLICABLE", boundaries: [], reason: "OVERTIME_UNSUPPORTED" };
+  if (!known(state.player.money) || !known(state.player.lossIndex) || !known(state.round.side)) {
+    return { status: "UNKNOWN", boundaries: [], reason: "own money, loss index, or side is UNKNOWN" };
+  }
+
+  const { value: money } = state.player.money;
+  const { value: lossIndex } = state.player.lossIndex;
+  const { value: side } = state.round.side;
+  const lossReward = lossBonus(DEFAULT_RULES, lossIndex);
+  const assumptions = [
+    "LOSS_NO_PLANT scenario",
+    "0 additional personal kill rewards",
+    "no retained weapon, drop, armor retention, or teammate transfer is asserted",
+    "canonical fresh-buy cash boundary; not a future inventory fact",
+  ];
+  const capabilityTarget = (capability: ProtectedNextBuyCapability): number => {
+    const items: ItemId[] = [rifleFor(side), "kevlar"];
+    if (capability === "RIFLE_ARMOR_BASIC_UTILITY") items.push("smoke", "flash");
+    return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
+  };
+  const boundary = (capability: ProtectedNextBuyCapability): FutureAffordabilityBoundary => {
+    const targetCash = capabilityTarget(capability);
+    const requiredReserveNow = Math.max(0, targetCash - lossReward);
+    const reachableWithNoSpend = money >= requiredReserveNow;
+    return {
+      layer: "SCENARIO",
+      scenario: "LOSS_NO_PLANT",
+      capability,
+      targetCash,
+      requiredReserveNow,
+      reachableWithNoSpend,
+      maxSpendNow: reachableWithNoSpend ? money - requiredReserveNow : 0,
+      assumptions,
+    };
+  };
+  return {
+    status: "PROJECTED",
+    context: "NORMAL",
+    boundaries: [boundary("RIFLE_ARMOR"), boundary("RIFLE_ARMOR_BASIC_UTILITY")],
+  };
+}
+
+function preserveGuidance(boundaries: FutureAffordabilitySet): SpendingGuidance {
+  if (boundaries.status !== "PROJECTED") return { layer: "ADVICE", kind: "MINIMIZE" };
+  const strongest = boundaries.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR_BASIC_UTILITY" && boundary.reachableWithNoSpend)
+    ?? boundaries.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR" && boundary.reachableWithNoSpend);
+  return strongest
+    ? { layer: "ADVICE", kind: "MINIMIZE", protectedCapability: strongest.capability }
+    : { layer: "ADVICE", kind: "MINIMIZE" };
+}
+
+function guidanceFor(mode: Exclude<PolicyMode, "LIGHT">, boundaries: FutureAffordabilitySet): SpendingGuidance {
+  if (mode === "PRESERVE") return preserveGuidance(boundaries);
+  if (mode === "FULL") return { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" };
+  return { layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" };
+}
+
+function lightTargets(side: Side, inventory: InventoryState): ItemId[][] {
+  if (inventory.primary === null || inventory.primary === undefined) {
+    const paidPistol = side === "T" ? "tec9" : "fiveseven";
+    return [
+      [paidPistol, "kevlar"], ["kevlar", "smoke"], [paidPistol, "smoke"],
+      ["kevlar"], [paidPistol], ["smoke", "flash"], ["smoke"], ["flash"],
+    ];
+  }
+  const targets: ItemId[][] = [];
+  if (inventory.armor === 0) targets.push(["kevlar", "smoke"], ["kevlar"]);
+  if (side === "CT" && inventory.armor > 0 && !inventory.hasHelmet) targets.push(["kevlar_helmet"]);
+  targets.push(["smoke", "flash"], ["smoke"], ["flash"]);
+  if (side === "CT" && !inventory.hasDefuseKit) targets.push(["defuse_kit"]);
+  return targets;
+}
+
+function planLightOption(
+  state: PolicyV3State,
+  boundary: FutureAffordabilityBoundary,
+  strength: RecommendationOption["adviceStrength"],
+): RecommendationOption | null {
+  if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side) || !boundary.reachableWithNoSpend) return null;
+  const inventory = state.player.inventory.value;
+  const side = state.round.side.value;
+  for (const desired of lightTargets(side, inventory)) {
+    const plan = planPurchases(inventory, compact(desired), DEFAULT_RULES, side);
+    if (!plan.isComplete || plan.totalCost <= 0 || plan.totalCost > boundary.maxSpendNow) continue;
+    const resultingInventory = resultingLoadout(inventory, plan.purchases);
+    return {
+      id: `light-${boundary.capability.toLowerCase()}-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-")}`,
+      mode: "LIGHT",
+      spendingGuidance: { layer: "ADVICE", kind: "BOUNDED", protectedCapability: boundary.capability },
+      purchases: plan.purchases,
+      bundleSpend: plan.totalCost,
+      resultingInventory,
+      trajectory: trajectory(state, plan.totalCost),
+      reasons: [
+        { code: "MODE_LIGHT", detail: "limited, inventory-aware spend within a canonical future-affordability boundary" },
+        { code: "LIGHT_PROTECTS_NEXT_BUY", detail: `LOSS_NO_PLANT preserves ${boundary.capability} canonical fresh-buy cash capability` },
+      ],
+      assumptions: ["normal-player GSI only", "bundleSpend may remain below the protected boundary; the ceiling is not a spend target"],
+      conditionalAlternatives: [],
+      adviceStrength: strength,
+    };
+  }
+  return null;
+}
+
+/** POST_PISTOL keeps its previously accepted, isolated partial-buy option.
+ * It intentionally has no NORMAL future-affordability claim or boundary. */
+function planPostPistolLightOption(state: PolicyV3State, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
+  if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
+  const inventory = state.player.inventory.value;
+  const side = state.round.side.value;
+  const plan = planPurchases(inventory, compact([smgFor(side), "kevlar"]), DEFAULT_RULES, side);
+  if (!plan.isComplete || plan.totalCost > state.player.money.value) return null;
+  return {
+    id: `post-pistol-light-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
+    mode: "LIGHT",
+    spendingGuidance: { layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" },
+    purchases: plan.purchases,
+    bundleSpend: plan.totalCost,
+    resultingInventory: resultingLoadout(inventory, plan.purchases),
+    trajectory: trajectory(state, plan.totalCost),
+    reasons: [{ code: "POST_PISTOL_LIGHT", detail: "isolated post-pistol partial-buy policy; no NORMAL future-affordability boundary is claimed" }],
+    assumptions: ["normal-player GSI only", "post-pistol policy is independent from NORMAL future-affordability guidance"],
+    conditionalAlternatives: [],
+    adviceStrength: strength,
+  };
+}
+
+function planOption(
+  state: PolicyV3State,
+  mode: Exclude<PolicyMode, "LIGHT">,
+  strength: RecommendationOption["adviceStrength"],
+  boundaries: FutureAffordabilitySet,
+): RecommendationOption | null {
   if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
   const inventory = state.player.inventory.value;
   let desired = targets(state.round.side.value, mode, inventory, state.player.money.value)[0] ?? [];
   let plan: PurchasePlan | undefined;
   for (const candidate of targets(state.round.side.value, mode, inventory, state.player.money.value)) {
     const next = planPurchases(inventory, compact(candidate), DEFAULT_RULES, state.round.side.value);
+    if (mode === "FORCE" && resultingLoadout(inventory, next.purchases).armor === 0) continue;
     const candidateRank = mode === "FORCE" ? forcePrimaryRank(state.round.side.value, candidate) : 0;
     const selectedRank = mode === "FORCE" ? forcePrimaryRank(state.round.side.value, desired) : 0;
     const candidateArmor = mode === "FORCE" ? forceArmorRank(inventory, next) : 0;
@@ -312,6 +474,7 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
     }
   }
   if (!plan.isComplete || plan.totalCost > state.player.money.value) return null;
+  if (mode === "FORCE" && resultingLoadout(inventory, plan.purchases).armor === 0) return null;
   if (mode === "FORCE" && state.round.side.value === "CT") {
     const loadout = resultingLoadout(inventory, plan.purchases);
     if (loadout.armor > 0 && !loadout.hasHelmet) {
@@ -343,8 +506,9 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
   return {
     id: `${mode.toLowerCase()}-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
     mode,
+    spendingGuidance: guidanceFor(mode, boundaries),
     purchases: plan.purchases,
-    spend: plan.totalCost,
+    bundleSpend: plan.totalCost,
     resultingInventory: resultingLoadout(inventory, plan.purchases),
     trajectory: trajectory(state, plan.totalCost),
     reasons,
@@ -354,22 +518,27 @@ function planOption(state: PolicyV3State, mode: PolicyMode, strength: Recommenda
   };
 }
 
-function genericModes(state: PolicyV3State): Array<[PolicyMode, RecommendationOption["adviceStrength"]]> {
-  const full = planOption(state, "FULL", "SUPPORTED");
-  const force = planOption(state, "FORCE", "SUPPORTED");
-  const light = planOption(state, "LIGHT", "SUPPORTED");
-  const controlledLight = light !== null && force !== null && light.spend > 0 && light.spend < force.spend;
+function genericModes(
+  state: PolicyV3State,
+  boundaries: FutureAffordabilitySet,
+  includePostPistolLight = false,
+): Array<[PolicyMode, RecommendationOption["adviceStrength"]]> {
+  const full = planOption(state, "FULL", "SUPPORTED", boundaries);
+  const force = planOption(state, "FORCE", "SUPPORTED", boundaries);
+  const postPistolLight = includePostPistolLight ? planPostPistolLightOption(state, "ALTERNATIVE") : null;
   if (full) {
     return [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : [])];
   }
   if (force) {
     return [
       ["FORCE", "SUPPORTED"],
-      ...(controlledLight ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : []),
+      ...(postPistolLight && postPistolLight.bundleSpend > 0 && postPistolLight.bundleSpend < force.bundleSpend
+        ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]]
+        : []),
       ["PRESERVE", "ALTERNATIVE"],
     ];
   }
-  if (light) return [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]];
+  if (postPistolLight) return [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]];
   return [["PRESERVE", "SUPPORTED"]];
 }
 
@@ -382,9 +551,10 @@ function previousPistolOutcome(state: PolicyV3State, side: Side): "WIN" | "LOSS"
 
 /** Deterministic Policy V3 core. It never reads an opponent economy value. */
 export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
+  const affordability = futureAffordability(state);
   const required = [state.round.side, state.player.money, state.player.inventory, state.player.lossIndex, state.round.context];
   const unresolved = required.filter((fact) => fact.status === "UNKNOWN" || fact.value === undefined).map((fact) => `${fact.source}: ${fact.reason ?? "UNKNOWN"}`);
-  if (unresolved.length > 0) return { status: "INSUFFICIENT_STATE", options: [], unresolved, opponent: state.opponent };
+  if (unresolved.length > 0) return { status: "INSUFFICIENT_STATE", futureAffordability: affordability, options: [], unresolved, opponent: state.opponent };
   const context = state.round.context.value!;
   const side = state.round.side.value!;
   const inventory = state.player.inventory.value!;
@@ -393,14 +563,14 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   const preference = state.preference ?? DEFAULT_PREFERENCE;
   if (context === "PISTOL") {
     return {
-      status: "UNSUPPORTED_POLICY_EVIDENCE", options: [], unresolved: ["pistol-round purchase policy is outside the frozen Policy V3 evidence scope"], opponent: state.opponent,
+      status: "UNSUPPORTED_POLICY_EVIDENCE", futureAffordability: affordability, options: [], unresolved: ["pistol-round purchase policy is outside the frozen Policy V3 evidence scope"], opponent: state.opponent,
     };
   }
   let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]>;
   if (context === "POST_PISTOL") {
     const pistolOutcome = previousPistolOutcome(state, side);
     if (pistolOutcome === "WIN") {
-      modes = genericModes(state);
+      modes = genericModes(state, affordability, true);
     } else if (pistolOutcome === "LOSS") {
       modes = side === "T"
         ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
@@ -411,12 +581,9 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
       modes = [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]];
     }
   } else {
-    // Normal and OT use the same generic non-pistol policy.  We compare only
-    // complete, inventory-aware legal bundles; without a calibrated utility
-    // value model competing affordable options remain explicitly non-dominant.
-    modes = genericModes(state);
+    modes = genericModes(state, affordability);
   }
-  const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED") : null;
+  const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED", affordability) : null;
   let saveForAwp = false;
   if (preference.source === "USER_DECLARED" && preference.awpPriority === "PREFER" && awp) {
     modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
@@ -430,12 +597,30 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
     modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
   }
-  const options = modes.map(([mode, strength]) => planOption(state, mode, strength)).filter((option): option is RecommendationOption => option !== null).map((option) => {
+  let options = modes.map(([mode, strength]) => mode === "LIGHT"
+    ? planPostPistolLightOption(state, strength)
+    : planOption(state, mode, strength, affordability)).filter((option): option is RecommendationOption => option !== null);
+  if (context === "NORMAL" && affordability.status === "PROJECTED" && !options.some((option) => option.mode === "FULL")) {
+    const lightStrength: RecommendationOption["adviceStrength"] = options.some((option) => option.mode === "FORCE") ? "ALTERNATIVE" : "SUPPORTED";
+    const lightOptions = affordability.boundaries
+      .filter((boundary) => boundary.reachableWithNoSpend)
+      .sort((a, b) => b.targetCash - a.targetCash)
+      .map((boundary) => planLightOption(state, boundary, lightStrength))
+      .filter((option): option is RecommendationOption => option !== null)
+      .filter((option, index, all) => all.findIndex((candidate) => JSON.stringify(candidate.purchases) === JSON.stringify(option.purchases)) === index);
+    if (lightOptions.length > 0) {
+      const preserveIndex = options.findIndex((option) => option.mode === "PRESERVE");
+      if (preserveIndex >= 0) options = [...options.slice(0, preserveIndex), ...lightOptions, ...options.slice(preserveIndex)];
+      else options = [...options, ...lightOptions];
+    }
+  }
+  options = options.map((option) => {
     if (!saveForAwp || option.mode !== "PRESERVE") return option;
     return { ...option, reasons: [...option.reasons, { code: "SAVE_FOR_AWP_HORIZON", detail: "no-purchase t+1 loss scenario reaches conservative AWP + armor cash requirement" }] };
   });
   return {
     status: "READY",
+    futureAffordability: affordability,
     options,
     defaultOptionId: context === "POST_PISTOL" && previousPistolOutcome(state, side) !== "LOSS" ? undefined : options.find((option) => option.adviceStrength === "DOMINANT")?.id,
     unresolved: state.opponent.status === "UNKNOWN" ? ["opponent economy: UNKNOWN; base recommendations unchanged"] : [],

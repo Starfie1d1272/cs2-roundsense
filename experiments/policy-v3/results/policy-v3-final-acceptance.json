@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "audited_sha": "3e1b301ff2ab96ad9d99b3d3b66957a69b5f4835",
+  "schema_version": 2,
+  "baseline_policy_sha": "584ec5ce91c6d1bf8d138783a42d137fe7276a47",
   "decision_scope": "behavioral conformance on the frozen Cologne corpus; professional behavior is not optimal-policy ground truth",
   "inputs": {
     "corpus_sha256": "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6",
@@ -73,20 +73,23 @@
     "actual_spend": "strict individual player moneySpent; drop-sensitive regulation rows excluded"
   },
   "mechanical_invariants": {
-    "checked_recommendation_candidates": 60160,
+    "checked_recommendation_candidates": 61985,
     "violations": {
       "over_budget": 0,
       "side_illegal": 0,
       "grenade_slots_over_4": 0,
       "flash_over_2": 0,
       "retained_rifle_or_awp_downgrade": 0,
-      "force_obvious_strategic_bank": 0
+      "force_obvious_strategic_bank": 0,
+      "force_armor_zero": 0,
+      "bounded_light_exceeds_envelope": 0,
+      "future_affordability_projection_mismatch": 0
     },
     "representative_violation_cases": {},
     "targeted": {
       "pistol_explicitly_unsupported": true,
       "required_unknown_is_not_defaulted": true,
-      "normal_and_overtime_share_generic_policy": true,
+      "overtime_has_no_normal_future_affordability": true,
       "c4_remaining_uncalibrated_unknown": true,
       "opponent_unknown_changes_base_recommendation_set": 0,
       "loss_projection_mismatch": 0
@@ -97,82 +100,82 @@
       "n": 23552,
       "agreement": {
         "mode": {
-          "exact_n": 17694,
-          "exact_rate": 0.7513,
-          "compatible_n": 22079,
-          "compatible_rate": 0.9375
+          "exact_n": 17697,
+          "exact_rate": 0.7514,
+          "compatible_n": 22114,
+          "compatible_rate": 0.9389
         },
         "primary_family": {
-          "exact_n": 16068,
-          "exact_rate": 0.6822,
-          "compatible_n": 20957,
-          "compatible_rate": 0.8898
+          "exact_n": 16372,
+          "exact_rate": 0.6951,
+          "compatible_n": 20603,
+          "compatible_rate": 0.8748
         },
         "armor_state": {
-          "exact_n": 15616,
-          "exact_rate": 0.663,
-          "compatible_n": 19671,
-          "compatible_rate": 0.8352
+          "exact_n": 15876,
+          "exact_rate": 0.6741,
+          "compatible_n": 19876,
+          "compatible_rate": 0.8439
         },
         "armor_presence": {
-          "exact_n": 19858,
-          "exact_rate": 0.8432,
-          "compatible_n": 22966,
-          "compatible_rate": 0.9751
+          "exact_n": 20664,
+          "exact_rate": 0.8774,
+          "compatible_n": 23299,
+          "compatible_rate": 0.9893
         },
         "helmet": {
-          "exact_n": 18250,
-          "exact_rate": 0.7749,
-          "compatible_n": 20108,
-          "compatible_rate": 0.8538
+          "exact_n": 18253,
+          "exact_rate": 0.775,
+          "compatible_n": 20119,
+          "compatible_rate": 0.8542
         },
         "utility_multiset": {
-          "exact_n": 9472,
-          "exact_rate": 0.4022,
-          "compatible_n": 14071,
-          "compatible_rate": 0.5974
+          "exact_n": 9281,
+          "exact_rate": 0.3941,
+          "compatible_n": 14194,
+          "compatible_rate": 0.6027
         },
         "kit": {
-          "exact_n": 21346,
-          "exact_rate": 0.9063,
-          "compatible_n": 23229,
-          "compatible_rate": 0.9863
+          "exact_n": 21349,
+          "exact_rate": 0.9065,
+          "compatible_n": 23233,
+          "compatible_rate": 0.9865
         }
       },
       "utility_feature_agreement": {
         "smoke": {
-          "exact_rate": 0.7459,
-          "compatible_rate": 0.8715
+          "exact_rate": 0.7546,
+          "compatible_rate": 0.9018
         },
         "fire": {
-          "exact_rate": 0.7914,
-          "compatible_rate": 0.8614
+          "exact_rate": 0.7545,
+          "compatible_rate": 0.8789
         },
         "flash1": {
-          "exact_rate": 0.7292,
-          "compatible_rate": 0.8604
+          "exact_rate": 0.7165,
+          "compatible_rate": 0.875
         },
         "flash2": {
-          "exact_rate": 0.8069,
-          "compatible_rate": 0.9157
+          "exact_rate": 0.8024,
+          "compatible_rate": 0.9158
         },
         "he": {
-          "exact_rate": 0.7293,
-          "compatible_rate": 0.857
+          "exact_rate": 0.7004,
+          "compatible_rate": 0.8679
         }
       },
       "spend": {
-        "lead_mae": 579.0825,
+        "lead_mae": 575.6517,
         "lead_median_ae": 100,
         "lead_p90_ae": 2000,
-        "lead_mean_signed": 281.2054,
-        "best_set_mae": 249.9512,
+        "lead_mean_signed": 275.3163,
+        "best_set_mae": 249.0341,
         "best_set_median_ae": 0
       },
       "loss_next_money": {
         "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-        "lead_mae": 579.0825,
-        "lead_mean_signed_policy_minus_actual": -281.2054
+        "lead_mae": 575.6517,
+        "lead_mean_signed_policy_minus_actual": -275.3163
       },
       "mode_matrix": {
         "FORCE->FORCE": 2544,
@@ -180,15 +183,16 @@
         "FORCE->PRESERVE": 357,
         "FULL->FORCE": 107,
         "FULL->FULL": 14614,
-        "FULL->LIGHT": 118,
-        "FULL->PRESERVE": 1,
+        "FULL->LIGHT": 111,
+        "FULL->PRESERVE": 8,
         "LIGHT->FORCE": 1407,
         "LIGHT->FULL": 887,
         "LIGHT->LIGHT": 1,
         "LIGHT->PRESERVE": 35,
-        "PRESERVE->FORCE": 2052,
+        "PRESERVE->FORCE": 2047,
         "PRESERVE->FULL": 179,
-        "PRESERVE->PRESERVE": 535
+        "PRESERVE->LIGHT": 2,
+        "PRESERVE->PRESERVE": 538
       },
       "mode_by_actual": {
         "FORCE": {
@@ -209,29 +213,29 @@
           "n": 2330,
           "exact_n": 1,
           "exact_rate": 0.0004,
-          "compatible_n": 1262,
-          "compatible_rate": 0.5416
+          "compatible_n": 1297,
+          "compatible_rate": 0.5567
         },
         "PRESERVE": {
           "n": 2766,
-          "exact_n": 535,
-          "exact_rate": 0.1934,
+          "exact_n": 538,
+          "exact_rate": 0.1945,
           "compatible_n": 2587,
           "compatible_rate": 0.9353
         }
       },
       "offered_mode_coverage": {
         "FORCE": {
-          "states": 23432,
-          "rate": 0.9949
+          "states": 23427,
+          "rate": 0.9947
         },
         "FULL": {
           "states": 16395,
           "rate": 0.6961
         },
         "LIGHT": {
-          "states": 4838,
-          "rate": 0.2054
+          "states": 5090,
+          "rate": 0.2161
         },
         "PRESERVE": {
           "states": 7157,
@@ -240,36 +244,36 @@
       },
       "severe": {
         "any": {
-          "count": 10820,
-          "rate": 0.4594
+          "count": 10582,
+          "rate": 0.4493
         },
         "armor": {
-          "count": 3694,
-          "rate": 0.1568
+          "count": 2888,
+          "rate": 0.1226
         },
         "force_actual_eco": {
-          "count": 2052,
-          "rate": 0.0871
+          "count": 2047,
+          "rate": 0.0869
         },
         "full_actual_eco": {
           "count": 179,
           "rate": 0.0076
         },
         "helmet": {
-          "count": 5302,
-          "rate": 0.2251
+          "count": 5299,
+          "rate": 0.225
         },
         "preserve_actual_full": {
-          "count": 1,
-          "rate": 0
+          "count": 8,
+          "rate": 0.0003
         },
         "primary_family": {
-          "count": 7484,
-          "rate": 0.3178
+          "count": 7180,
+          "rate": 0.3049
         },
         "spend_ge_1000": {
-          "count": 5700,
-          "rate": 0.242
+          "count": 5660,
+          "rate": 0.2403
         }
       }
     },
@@ -278,95 +282,98 @@
         "n": 18904,
         "agreement": {
           "mode": {
-            "exact_n": 14118,
-            "exact_rate": 0.7468,
-            "compatible_n": 17669,
-            "compatible_rate": 0.9347
+            "exact_n": 14121,
+            "exact_rate": 0.747,
+            "compatible_n": 17706,
+            "compatible_rate": 0.9366
           },
           "primary_family": {
-            "exact_n": 12841,
-            "exact_rate": 0.6793,
-            "compatible_n": 16876,
-            "compatible_rate": 0.8927
+            "exact_n": 13113,
+            "exact_rate": 0.6937,
+            "compatible_n": 16604,
+            "compatible_rate": 0.8783
           },
           "armor_state": {
-            "exact_n": 12682,
-            "exact_rate": 0.6709,
-            "compatible_n": 16447,
-            "compatible_rate": 0.87
+            "exact_n": 12937,
+            "exact_rate": 0.6844,
+            "compatible_n": 16639,
+            "compatible_rate": 0.8802
           },
           "armor_presence": {
-            "exact_n": 15885,
-            "exact_rate": 0.8403,
-            "compatible_n": 18438,
-            "compatible_rate": 0.9753
+            "exact_n": 16584,
+            "exact_rate": 0.8773,
+            "compatible_n": 18653,
+            "compatible_rate": 0.9867
           },
           "helmet": {
-            "exact_n": 15048,
-            "exact_rate": 0.796,
-            "compatible_n": 16869,
-            "compatible_rate": 0.8924
+            "exact_n": 15051,
+            "exact_rate": 0.7962,
+            "compatible_n": 16880,
+            "compatible_rate": 0.8929
           },
           "utility_multiset": {
-            "exact_n": 7640,
-            "exact_rate": 0.4041,
-            "compatible_n": 11648,
-            "compatible_rate": 0.6162
+            "exact_n": 7440,
+            "exact_rate": 0.3936,
+            "compatible_n": 11760,
+            "compatible_rate": 0.6221
           },
           "kit": {
-            "exact_n": 17079,
-            "exact_rate": 0.9035,
-            "compatible_n": 18642,
-            "compatible_rate": 0.9861
+            "exact_n": 17082,
+            "exact_rate": 0.9036,
+            "compatible_n": 18646,
+            "compatible_rate": 0.9864
           }
         },
         "utility_feature_agreement": {
           "smoke": {
-            "exact_rate": 0.7653,
-            "compatible_rate": 0.8791
+            "exact_rate": 0.7758,
+            "compatible_rate": 0.914
           },
           "fire": {
-            "exact_rate": 0.7966,
-            "compatible_rate": 0.8668
+            "exact_rate": 0.7502,
+            "compatible_rate": 0.8838
           },
           "flash1": {
-            "exact_rate": 0.7421,
-            "compatible_rate": 0.8676
+            "exact_rate": 0.7267,
+            "compatible_rate": 0.885
           },
           "flash2": {
-            "exact_rate": 0.7987,
-            "compatible_rate": 0.916
+            "exact_rate": 0.7932,
+            "compatible_rate": 0.9162
           },
           "he": {
-            "exact_rate": 0.7314,
-            "compatible_rate": 0.8705
+            "exact_rate": 0.6953,
+            "compatible_rate": 0.8807
           }
         },
         "spend": {
-          "lead_mae": 607.181,
+          "lead_mae": 602.1821,
           "lead_median_ae": 100,
           "lead_p90_ae": 2000,
-          "lead_mean_signed": 384.3499,
-          "best_set_mae": 271.3553,
+          "lead_mean_signed": 378.4993,
+          "best_set_mae": 269.1071,
           "best_set_median_ae": 0
         },
         "loss_next_money": {
           "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-          "lead_mae": 607.181,
-          "lead_mean_signed_policy_minus_actual": -384.3499
+          "lead_mae": 602.1821,
+          "lead_mean_signed_policy_minus_actual": -378.4993
         },
         "mode_matrix": {
           "FORCE->FORCE": 1547,
           "FORCE->FULL": 422,
           "FULL->FORCE": 68,
           "FULL->FULL": 12570,
-          "FULL->LIGHT": 115,
+          "FULL->LIGHT": 110,
+          "FULL->PRESERVE": 5,
           "LIGHT->FORCE": 1296,
           "LIGHT->FULL": 815,
           "LIGHT->LIGHT": 1,
           "LIGHT->PRESERVE": 1,
-          "PRESERVE->FORCE": 1891,
-          "PRESERVE->FULL": 178
+          "PRESERVE->FORCE": 1886,
+          "PRESERVE->FULL": 178,
+          "PRESERVE->LIGHT": 2,
+          "PRESERVE->PRESERVE": 3
         },
         "mode_by_actual": {
           "FORCE": {
@@ -387,29 +394,29 @@
             "n": 2113,
             "exact_n": 1,
             "exact_rate": 0.0005,
-            "compatible_n": 1239,
-            "compatible_rate": 0.5864
+            "compatible_n": 1276,
+            "compatible_rate": 0.6039
           },
           "PRESERVE": {
             "n": 2069,
-            "exact_n": 0,
-            "exact_rate": 0,
+            "exact_n": 3,
+            "exact_rate": 0.0014,
             "compatible_n": 1891,
             "compatible_rate": 0.914
           }
         },
         "offered_mode_coverage": {
           "FORCE": {
-            "states": 18787,
-            "rate": 0.9938
+            "states": 18782,
+            "rate": 0.9935
           },
           "FULL": {
             "states": 13985,
             "rate": 0.7398
           },
           "LIGHT": {
-            "states": 4384,
-            "rate": 0.2319
+            "states": 4660,
+            "rate": 0.2465
           },
           "PRESERVE": {
             "states": 4919,
@@ -418,32 +425,36 @@
         },
         "severe": {
           "any": {
-            "count": 8597,
-            "rate": 0.4548
+            "count": 8360,
+            "rate": 0.4422
           },
           "armor": {
-            "count": 3019,
-            "rate": 0.1597
+            "count": 2320,
+            "rate": 0.1227
           },
           "force_actual_eco": {
-            "count": 1891,
-            "rate": 0.1
+            "count": 1886,
+            "rate": 0.0998
           },
           "full_actual_eco": {
             "count": 178,
             "rate": 0.0094
           },
           "helmet": {
-            "count": 3856,
-            "rate": 0.204
+            "count": 3853,
+            "rate": 0.2038
+          },
+          "preserve_actual_full": {
+            "count": 5,
+            "rate": 0.0003
           },
           "primary_family": {
-            "count": 6063,
-            "rate": 0.3207
+            "count": 5791,
+            "rate": 0.3063
           },
           "spend_ge_1000": {
-            "count": 4926,
-            "rate": 0.2606
+            "count": 4887,
+            "rate": 0.2585
           }
         }
       },
@@ -453,24 +464,24 @@
           "mode": {
             "exact_n": 1111,
             "exact_rate": 0.9884,
-            "compatible_n": 1120,
-            "compatible_rate": 0.9964
+            "compatible_n": 1118,
+            "compatible_rate": 0.9947
           },
           "primary_family": {
-            "exact_n": 977,
-            "exact_rate": 0.8692,
-            "compatible_n": 983,
-            "compatible_rate": 0.8746
+            "exact_n": 972,
+            "exact_rate": 0.8648,
+            "compatible_n": 976,
+            "compatible_rate": 0.8683
           },
           "armor_state": {
-            "exact_n": 844,
-            "exact_rate": 0.7509,
+            "exact_n": 851,
+            "exact_rate": 0.7571,
             "compatible_n": 875,
             "compatible_rate": 0.7785
           },
           "armor_presence": {
-            "exact_n": 1112,
-            "exact_rate": 0.9893,
+            "exact_n": 1124,
+            "exact_rate": 1,
             "compatible_n": 1124,
             "compatible_rate": 1
           },
@@ -481,10 +492,10 @@
             "compatible_rate": 0.7785
           },
           "utility_multiset": {
-            "exact_n": 740,
-            "exact_rate": 0.6584,
-            "compatible_n": 964,
-            "compatible_rate": 0.8577
+            "exact_n": 741,
+            "exact_rate": 0.6593,
+            "compatible_n": 965,
+            "compatible_rate": 0.8585
           },
           "kit": {
             "exact_n": 801,
@@ -495,45 +506,45 @@
         },
         "utility_feature_agreement": {
           "smoke": {
-            "exact_rate": 0.9199,
-            "compatible_rate": 0.9315
+            "exact_rate": 0.9235,
+            "compatible_rate": 0.9351
           },
           "fire": {
-            "exact_rate": 0.9609,
-            "compatible_rate": 0.9653
+            "exact_rate": 0.9573,
+            "compatible_rate": 0.9689
           },
           "flash1": {
-            "exact_rate": 0.9591,
-            "compatible_rate": 0.9706
+            "exact_rate": 0.9564,
+            "compatible_rate": 0.9724
           },
           "flash2": {
             "exact_rate": 0.7464,
             "compatible_rate": 0.968
           },
           "he": {
-            "exact_rate": 0.7384,
-            "compatible_rate": 0.9609
+            "exact_rate": 0.7367,
+            "compatible_rate": 0.9635
           }
         },
         "spend": {
-          "lead_mae": 371.1744,
+          "lead_mae": 371.3523,
           "lead_median_ae": 100,
           "lead_p90_ae": 1500,
-          "lead_mean_signed": -275.8897,
-          "best_set_mae": 237.4555,
+          "lead_mean_signed": -277.1352,
+          "best_set_mae": 239.4128,
           "best_set_median_ae": 0
         },
         "loss_next_money": {
           "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-          "lead_mae": 371.1744,
-          "lead_mean_signed_policy_minus_actual": 275.8897
+          "lead_mae": 371.3523,
+          "lead_mean_signed_policy_minus_actual": 277.1352
         },
         "mode_matrix": {
           "FORCE->FORCE": 19,
           "FORCE->FULL": 7,
           "FULL->FORCE": 1,
           "FULL->FULL": 1092,
-          "FULL->LIGHT": 2,
+          "FULL->PRESERVE": 2,
           "LIGHT->FORCE": 2,
           "LIGHT->FULL": 1
         },
@@ -556,8 +567,8 @@
             "n": 3,
             "exact_n": 0,
             "exact_rate": 0,
-            "compatible_n": 2,
-            "compatible_rate": 0.6667
+            "compatible_n": 0,
+            "compatible_rate": 0
           }
         },
         "offered_mode_coverage": {
@@ -569,10 +580,6 @@
             "states": 1100,
             "rate": 0.9786
           },
-          "LIGHT": {
-            "states": 24,
-            "rate": 0.0214
-          },
           "PRESERVE": {
             "states": 24,
             "rate": 0.0214
@@ -583,17 +590,17 @@
             "count": 384,
             "rate": 0.3416
           },
-          "armor": {
-            "count": 12,
-            "rate": 0.0107
-          },
           "helmet": {
             "count": 273,
             "rate": 0.2429
           },
+          "preserve_actual_full": {
+            "count": 2,
+            "rate": 0.0018
+          },
           "primary_family": {
-            "count": 147,
-            "rate": 0.1308
+            "count": 152,
+            "rate": 0.1352
           },
           "spend_ge_1000": {
             "count": 144,
@@ -611,22 +618,22 @@
             "compatible_rate": 0.9336
           },
           "primary_family": {
-            "exact_n": 2250,
-            "exact_rate": 0.6385,
-            "compatible_n": 3098,
-            "compatible_rate": 0.8791
+            "exact_n": 2287,
+            "exact_rate": 0.649,
+            "compatible_n": 3023,
+            "compatible_rate": 0.8578
           },
           "armor_state": {
-            "exact_n": 2090,
-            "exact_rate": 0.5931,
-            "compatible_n": 2349,
-            "compatible_rate": 0.6666
+            "exact_n": 2088,
+            "exact_rate": 0.5925,
+            "compatible_n": 2362,
+            "compatible_rate": 0.6703
           },
           "armor_presence": {
-            "exact_n": 2861,
-            "exact_rate": 0.8119,
-            "compatible_n": 3404,
-            "compatible_rate": 0.9659
+            "exact_n": 2956,
+            "exact_rate": 0.8388,
+            "compatible_n": 3522,
+            "compatible_rate": 0.9994
           },
           "helmet": {
             "exact_n": 2351,
@@ -635,10 +642,10 @@
             "compatible_rate": 0.6708
           },
           "utility_multiset": {
-            "exact_n": 1092,
-            "exact_rate": 0.3099,
-            "compatible_n": 1459,
-            "compatible_rate": 0.414
+            "exact_n": 1100,
+            "exact_rate": 0.3121,
+            "compatible_n": 1469,
+            "compatible_rate": 0.4169
           },
           "kit": {
             "exact_n": 3466,
@@ -649,38 +656,38 @@
         },
         "utility_feature_agreement": {
           "smoke": {
-            "exact_rate": 0.5863,
-            "compatible_rate": 0.8113
+            "exact_rate": 0.5871,
+            "compatible_rate": 0.8255
           },
           "fire": {
-            "exact_rate": 0.71,
-            "compatible_rate": 0.7991
+            "exact_rate": 0.7131,
+            "compatible_rate": 0.8243
           },
           "flash1": {
-            "exact_rate": 0.5865,
-            "compatible_rate": 0.7866
+            "exact_rate": 0.5851,
+            "compatible_rate": 0.7903
           },
           "flash2": {
-            "exact_rate": 0.87,
+            "exact_rate": 0.8692,
             "compatible_rate": 0.897
           },
           "he": {
-            "exact_rate": 0.7148,
-            "compatible_rate": 0.752
+            "exact_rate": 0.7159,
+            "compatible_rate": 0.7687
           }
         },
         "spend": {
-          "lead_mae": 494.6652,
+          "lead_mae": 498.496,
           "lead_median_ae": 100,
           "lead_p90_ae": 2100,
-          "lead_mean_signed": -94.4098,
-          "best_set_mae": 139.1175,
+          "lead_mean_signed": -101.9864,
+          "best_set_mae": 144.424,
           "best_set_median_ae": 50
         },
         "loss_next_money": {
           "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-          "lead_mae": 494.6652,
-          "lead_mean_signed_policy_minus_actual": 94.4098
+          "lead_mae": 498.496,
+          "lead_mean_signed_policy_minus_actual": 101.9864
         },
         "mode_matrix": {
           "FORCE->FORCE": 978,
@@ -747,12 +754,12 @@
         },
         "severe": {
           "any": {
-            "count": 1839,
-            "rate": 0.5219
+            "count": 1838,
+            "rate": 0.5216
           },
           "armor": {
-            "count": 663,
-            "rate": 0.1881
+            "count": 568,
+            "rate": 0.1612
           },
           "force_actual_eco": {
             "count": 161,
@@ -771,12 +778,12 @@
             "rate": 0.0003
           },
           "primary_family": {
-            "count": 1274,
-            "rate": 0.3615
+            "count": 1237,
+            "rate": 0.351
           },
           "spend_ge_1000": {
-            "count": 630,
-            "rate": 0.1788
+            "count": 629,
+            "rate": 0.1785
           }
         }
       }
@@ -1137,12 +1144,12 @@
       "POLICY_MISS",
       "UNEXPLAINED"
     ],
-    "material_count": 17512,
+    "material_count": 17423,
     "reasons": {
       "COVERED_ALTERNATIVE": {
-        "count": 4705,
-        "rate_of_material": 0.2687,
-        "rate_of_eligible": 0.1998
+        "count": 4825,
+        "rate_of_material": 0.2769,
+        "rate_of_eligible": 0.2049
       },
       "DATA_AMBIGUITY": {
         "count": 30,
@@ -1150,24 +1157,24 @@
         "rate_of_eligible": 0.0013
       },
       "POLICY_MISS": {
-        "count": 5287,
-        "rate_of_material": 0.3019,
-        "rate_of_eligible": 0.2245
+        "count": 4712,
+        "rate_of_material": 0.2704,
+        "rate_of_eligible": 0.2001
       },
       "ROBUST_GENERAL_DEFAULT": {
-        "count": 5821,
-        "rate_of_material": 0.3324,
-        "rate_of_eligible": 0.2472
+        "count": 6153,
+        "rate_of_material": 0.3532,
+        "rate_of_eligible": 0.2613
       },
       "UNAVAILABLE_CONTEXT": {
-        "count": 1088,
-        "rate_of_material": 0.0621,
+        "count": 1087,
+        "rate_of_material": 0.0624,
         "rate_of_eligible": 0.0462
       },
       "UNEXPLAINED": {
-        "count": 581,
-        "rate_of_material": 0.0332,
-        "rate_of_eligible": 0.0247
+        "count": 616,
+        "rate_of_material": 0.0354,
+        "rate_of_eligible": 0.0262
       }
     },
     "representative_cases": {
@@ -1877,36 +1884,36 @@
         },
         {
           "map": "p-r1-qf1-m1-de_dust2",
-          "round": 17,
-          "player_index": 7,
-          "side": "T",
+          "round": 15,
+          "player_index": 3,
+          "side": "CT",
           "context": "NORMAL",
-          "money": 5450,
-          "loss_index": 1,
+          "money": 2450,
+          "loss_index": 3,
           "retained_primary_family": "none",
           "actual": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
+            "mode": "LIGHT",
+            "primaryFamily": "none",
             "armorState": "vesthelm",
-            "utility": "flash+flash+molotov+smoke",
+            "utility": "smoke",
             "kit": false,
-            "spend": 4800
+            "spend": 300
           },
           "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
+            "mode": "FORCE",
+            "primaryFamily": "smg",
             "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
+            "utility": "flash+flash+incendiary+smoke",
             "kit": false,
-            "spend": 4900
+            "spend": 2450
           },
           "reason": "COVERED_ALTERNATIVE",
           "severe": {
             "force_actual_eco": false,
             "preserve_actual_full": false,
             "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
             "armor": false,
             "helmet": false,
             "retained_weapon": false
@@ -2377,9 +2384,9 @@
           },
           "lead": {
             "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "none",
-            "utility": "smoke",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "flash+he+incendiary+smoke",
             "kit": false,
             "spend": 3200
           },
@@ -2390,7 +2397,7 @@
             "full_actual_eco": false,
             "primary_family": true,
             "spend_ge_1000": false,
-            "armor": true,
+            "armor": false,
             "helmet": false,
             "retained_weapon": false
           }
@@ -3008,9 +3015,9 @@
           },
           "lead": {
             "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "none",
-            "utility": "",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "flash+incendiary+smoke",
             "kit": false,
             "spend": 2900
           },
@@ -3021,7 +3028,7 @@
             "full_actual_eco": false,
             "primary_family": true,
             "spend_ge_1000": true,
-            "armor": true,
+            "armor": false,
             "helmet": false,
             "retained_weapon": false
           }
@@ -3324,49 +3331,12 @@
         },
         {
           "map": "p-r1-qf1-m1-de_dust2",
-          "round": 15,
-          "player_index": 3,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 2450,
-          "loss_index": 3,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "LIGHT",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 300
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "smg",
-            "armorState": "vesthelm",
-            "utility": "flash+flash+incendiary+smoke",
-            "kit": false,
-            "spend": 2450
-          },
-          "reason": "POLICY_MISS",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m1-de_dust2",
-          "round": 20,
+          "round": 21,
           "player_index": 7,
           "side": "T",
           "context": "NORMAL",
-          "money": 1400,
-          "loss_index": 1,
+          "money": 2000,
+          "loss_index": 2,
           "retained_primary_family": "none",
           "actual": {
             "mode": "FORCE",
@@ -3374,15 +3344,15 @@
             "armorState": "vesthelm",
             "utility": "flash+smoke",
             "kit": false,
-            "spend": 1300
+            "spend": 2000
           },
           "lead": {
             "mode": "FORCE",
             "primaryFamily": "smg",
-            "armorState": "none",
+            "armorState": "kevlar",
             "utility": "smoke",
             "kit": false,
-            "spend": 1350
+            "spend": 2000
           },
           "reason": "POLICY_MISS",
           "severe": {
@@ -3391,7 +3361,44 @@
             "full_actual_eco": false,
             "primary_family": true,
             "spend_ge_1000": false,
-            "armor": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 21,
+          "player_index": 6,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 2050,
+          "loss_index": 2,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FORCE",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "flash+smoke",
+            "kit": false,
+            "spend": 2000
+          },
+          "lead": {
+            "mode": "FORCE",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 2000
+          },
+          "reason": "POLICY_MISS",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": false,
+            "armor": false,
             "helmet": true,
             "retained_weapon": false
           }
@@ -4903,9 +4910,9 @@
             "mode": "LIGHT",
             "primaryFamily": "rifle",
             "armorState": "vesthelm",
-            "utility": "molotov",
+            "utility": "flash+molotov+smoke",
             "kit": false,
-            "spend": 0
+            "spend": 500
           },
           "reason": "UNEXPLAINED",
           "severe": {
@@ -5125,9 +5132,9 @@
             "mode": "LIGHT",
             "primaryFamily": "rifle",
             "armorState": "vesthelm",
-            "utility": "flash+molotov",
+            "utility": "flash+molotov+smoke",
             "kit": true,
-            "spend": 0
+            "spend": 300
           },
           "reason": "UNEXPLAINED",
           "severe": {
@@ -5212,6 +5219,43 @@
             "spend_ge_1000": false,
             "armor": false,
             "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf2-m1-de_nuke",
+          "round": 5,
+          "player_index": 2,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 2850,
+          "loss_index": 2,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "LIGHT",
+            "primaryFamily": "smg",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 2050
+          },
+          "lead": {
+            "mode": "FORCE",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "flash+molotov+smoke",
+            "kit": false,
+            "spend": 2600
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -5310,9 +5354,9 @@
             "mode": "LIGHT",
             "primaryFamily": "rifle",
             "armorState": "vesthelm",
-            "utility": "molotov+smoke",
+            "utility": "flash+molotov+smoke",
             "kit": false,
-            "spend": 0
+            "spend": 200
           },
           "reason": "UNEXPLAINED",
           "severe": {
@@ -5584,43 +5628,6 @@
             "helmet": false,
             "retained_weapon": false
           }
-        },
-        {
-          "map": "p-r1-qf3-m3-de_mirage",
-          "round": 3,
-          "player_index": 7,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 2450,
-          "loss_index": 3,
-          "retained_primary_family": "smg",
-          "actual": {
-            "mode": "LIGHT",
-            "primaryFamily": "smg",
-            "armorState": "kevlar",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 500
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "smg",
-            "armorState": "vesthelm",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": false,
-            "spend": 1350
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": true,
-            "retained_weapon": false
-          }
         }
       ]
     }
@@ -5629,26 +5636,26 @@
     "side": {
       "CT": {
         "n": 10659,
-        "severe_n": 5755,
-        "severe_rate": 0.5399,
-        "policy_miss_n": 2245,
-        "policy_miss_rate": 0.2106
+        "severe_n": 5612,
+        "severe_rate": 0.5265,
+        "policy_miss_n": 1951,
+        "policy_miss_rate": 0.183
       },
       "T": {
         "n": 12893,
-        "severe_n": 5065,
-        "severe_rate": 0.3928,
-        "policy_miss_n": 3042,
-        "policy_miss_rate": 0.2359
+        "severe_n": 4970,
+        "severe_rate": 0.3855,
+        "policy_miss_n": 2761,
+        "policy_miss_rate": 0.2141
       }
     },
     "context": {
       "NORMAL": {
         "n": 18904,
-        "severe_n": 8597,
-        "severe_rate": 0.4548,
-        "policy_miss_n": 3977,
-        "policy_miss_rate": 0.2104
+        "severe_n": 8360,
+        "severe_rate": 0.4422,
+        "policy_miss_n": 3468,
+        "policy_miss_rate": 0.1835
       },
       "OVERTIME": {
         "n": 1124,
@@ -5659,19 +5666,19 @@
       },
       "POST_PISTOL": {
         "n": 3524,
-        "severe_n": 1839,
-        "severe_rate": 0.5219,
-        "policy_miss_n": 1293,
-        "policy_miss_rate": 0.3669
+        "severe_n": 1838,
+        "severe_rate": 0.5216,
+        "policy_miss_n": 1227,
+        "policy_miss_rate": 0.3482
       }
     },
     "side_context": {
       "CT:NORMAL": {
         "n": 8372,
-        "severe_n": 4430,
-        "severe_rate": 0.5291,
-        "policy_miss_n": 1557,
-        "policy_miss_rate": 0.186
+        "severe_n": 4288,
+        "severe_rate": 0.5122,
+        "policy_miss_n": 1304,
+        "policy_miss_rate": 0.1558
       },
       "CT:OVERTIME": {
         "n": 539,
@@ -5682,17 +5689,17 @@
       },
       "CT:POST_PISTOL": {
         "n": 1748,
-        "severe_n": 1017,
-        "severe_rate": 0.5818,
-        "policy_miss_n": 677,
-        "policy_miss_rate": 0.3873
+        "severe_n": 1016,
+        "severe_rate": 0.5812,
+        "policy_miss_n": 636,
+        "policy_miss_rate": 0.3638
       },
       "T:NORMAL": {
         "n": 10532,
-        "severe_n": 4167,
-        "severe_rate": 0.3957,
-        "policy_miss_n": 2420,
-        "policy_miss_rate": 0.2298
+        "severe_n": 4072,
+        "severe_rate": 0.3866,
+        "policy_miss_n": 2164,
+        "policy_miss_rate": 0.2055
       },
       "T:OVERTIME": {
         "n": 585,
@@ -5705,91 +5712,91 @@
         "n": 1776,
         "severe_n": 822,
         "severe_rate": 0.4628,
-        "policy_miss_n": 616,
-        "policy_miss_rate": 0.3468
+        "policy_miss_n": 591,
+        "policy_miss_rate": 0.3328
       }
     },
     "money_band": {
       "0-1999": {
         "n": 946,
-        "severe_n": 715,
-        "severe_rate": 0.7558,
-        "policy_miss_n": 436,
-        "policy_miss_rate": 0.4609
+        "severe_n": 539,
+        "severe_rate": 0.5698,
+        "policy_miss_n": 224,
+        "policy_miss_rate": 0.2368
       },
       "2000-2999": {
         "n": 4095,
-        "severe_n": 3339,
-        "severe_rate": 0.8154,
-        "policy_miss_n": 1840,
-        "policy_miss_rate": 0.4493
+        "severe_n": 3327,
+        "severe_rate": 0.8125,
+        "policy_miss_n": 1744,
+        "policy_miss_rate": 0.4259
       },
       "3000-3999": {
         "n": 5392,
-        "severe_n": 3474,
-        "severe_rate": 0.6443,
-        "policy_miss_n": 2480,
-        "policy_miss_rate": 0.4599
+        "severe_n": 3421,
+        "severe_rate": 0.6345,
+        "policy_miss_n": 2209,
+        "policy_miss_rate": 0.4097
       },
       "4000+": {
         "n": 13119,
-        "severe_n": 3292,
-        "severe_rate": 0.2509,
-        "policy_miss_n": 531,
-        "policy_miss_rate": 0.0405
+        "severe_n": 3295,
+        "severe_rate": 0.2512,
+        "policy_miss_n": 535,
+        "policy_miss_rate": 0.0408
       }
     },
     "loss_index": {
       "0": {
         "n": 8303,
-        "severe_n": 2072,
-        "severe_rate": 0.2495,
-        "policy_miss_n": 1028,
-        "policy_miss_rate": 0.1238
+        "severe_n": 2071,
+        "severe_rate": 0.2494,
+        "policy_miss_n": 940,
+        "policy_miss_rate": 0.1132
       },
       "1": {
         "n": 4320,
-        "severe_n": 2322,
-        "severe_rate": 0.5375,
-        "policy_miss_n": 1081,
-        "policy_miss_rate": 0.2502
+        "severe_n": 2113,
+        "severe_rate": 0.4891,
+        "policy_miss_n": 779,
+        "policy_miss_rate": 0.1803
       },
       "2": {
         "n": 4200,
-        "severe_n": 2849,
-        "severe_rate": 0.6783,
-        "policy_miss_n": 1360,
-        "policy_miss_rate": 0.3238
+        "severe_n": 2843,
+        "severe_rate": 0.6769,
+        "policy_miss_n": 1316,
+        "policy_miss_rate": 0.3133
       },
       "3": {
         "n": 3080,
-        "severe_n": 1609,
-        "severe_rate": 0.5224,
-        "policy_miss_n": 666,
-        "policy_miss_rate": 0.2162
+        "severe_n": 1594,
+        "severe_rate": 0.5175,
+        "policy_miss_n": 585,
+        "policy_miss_rate": 0.1899
       },
       "4": {
         "n": 3649,
-        "severe_n": 1968,
-        "severe_rate": 0.5393,
-        "policy_miss_n": 1152,
-        "policy_miss_rate": 0.3157
+        "severe_n": 1961,
+        "severe_rate": 0.5374,
+        "policy_miss_n": 1092,
+        "policy_miss_rate": 0.2993
       }
     },
     "retained_primary": {
       "empty": {
         "n": 19945,
-        "severe_n": 10062,
-        "severe_rate": 0.5045,
-        "policy_miss_n": 4932,
-        "policy_miss_rate": 0.2473
+        "severe_n": 9824,
+        "severe_rate": 0.4926,
+        "policy_miss_n": 4359,
+        "policy_miss_rate": 0.2186
       },
       "retained_primary": {
         "n": 3607,
         "severe_n": 758,
         "severe_rate": 0.2101,
-        "policy_miss_n": 355,
-        "policy_miss_rate": 0.0984
+        "policy_miss_n": 353,
+        "policy_miss_rate": 0.0979
       }
     }
   },
@@ -5914,13 +5921,13 @@
     }
   },
   "acceptance_counts": {
-    "policy_miss": 5287,
-    "unexplained": 581
+    "policy_miss": 4712,
+    "unexplained": 616
   },
   "final_acceptance": {
     "status": "READY_FOR_FINAL_SOL_RE_AUDIT",
     "blockers": [],
     "reopen_economy_research_required": false
   },
-  "artifact_sha256": "a65effbfc132a9da29bfa733781e2d2ca688ccf34e12493275522677fa9dd9b6"
+  "artifact_sha256": "81433baead2688851af67d26e2aeab87c975cebcaea6e9a33ed80fc6608da306"
 }

@@ -33,7 +33,7 @@ import { unknownTiming } from "../packages/c4-estimator/src/index.js";
 import type { ItemId, RoundType, Side } from "../packages/shared-types/src/index.js";
 
 const EXPECTED_CORPUS_SHA256 = "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6";
-const AUDITED_SHA = "3e1b301ff2ab96ad9d99b3d3b66957a69b5f4835";
+const BASELINE_POLICY_SHA = "584ec5ce91c6d1bf8d138783a42d137fe7276a47";
 const DEFAULT_CORPUS = "/tmp/roundsense-cologne-policy/player-rounds.json";
 const DEFAULT_MAPS = "/tmp/roundsense-cologne-policy/maps";
 const DEFAULT_OUTPUT = "experiments/policy-v3/results/policy-v3-final-acceptance.json";
@@ -318,7 +318,7 @@ function v3Candidates(state: PolicyV3State): { output: ReturnType<typeof recomme
   const inventory = state.player.inventory.value!;
   const candidates: Candidate[] = [];
   for (const option of output.options) {
-    candidates.push(candidateFrom(option.mode, inventory, option.purchases, option.spend));
+    candidates.push(candidateFrom(option.mode, inventory, option.purchases, option.bundleSpend));
     for (const alternative of option.conditionalAlternatives) {
       candidates.push(candidateFrom(option.mode, inventory, alternative.purchases, purchaseSpend(inventory, alternative.purchases)));
     }
@@ -758,7 +758,7 @@ function pistolOutcome(eligible: Eligible): "WIN" | "LOSS" | "UNKNOWN" {
 
 function canonicalOptions(output: ReturnType<typeof recommendPolicyV3>): string {
   return JSON.stringify(output.options.map((option) => ({
-    mode: option.mode, purchases: option.purchases, spend: option.spend, alternatives: option.conditionalAlternatives.map((alternative) => alternative.purchases),
+    mode: option.mode, purchases: option.purchases, bundleSpend: option.bundleSpend, alternatives: option.conditionalAlternatives.map((alternative) => alternative.purchases),
   })));
 }
 
@@ -881,6 +881,45 @@ async function main(): Promise<void> {
     increment(opponentStatuses, state.opponent.status === "INFERRED" ? state.opponent.value! : "UNKNOWN");
     if (current.output.defaultOptionId !== undefined) declaredDefaultStates++;
 
+    for (const option of current.output.options) {
+      const optionCandidate = candidateFrom(option.mode, entry.inventory, option.purchases, option.bundleSpend);
+      if (option.mode === "FORCE" && option.resultingInventory.armor === 0) {
+        recordInvariant(invariants, invariantCases, "force_armor_zero", entry, optionCandidate, actual);
+      }
+      if (option.spendingGuidance.kind === "BOUNDED") {
+        const protectedCapability = option.spendingGuidance.protectedCapability;
+        const boundary = current.output.futureAffordability.status === "PROJECTED"
+          ? current.output.futureAffordability.boundaries.find((item) => item.capability === protectedCapability)
+          : undefined;
+        if (!boundary || !boundary.reachableWithNoSpend || option.bundleSpend > boundary.maxSpendNow) {
+          recordInvariant(invariants, invariantCases, "bounded_light_exceeds_envelope", entry, optionCandidate, actual);
+        }
+      }
+    }
+    if (entry.context === "NORMAL") {
+      const side: Side = entry.row.side === "t" ? "T" : "CT";
+      const lossReward = lossBonus(DEFAULT_RULES, entry.row.lossIndex);
+      const expectedBoundary = (capability: "RIFLE_ARMOR" | "RIFLE_ARMOR_BASIC_UTILITY") => {
+        const targetCash = price(DEFAULT_RULES, rifleFor(side)) + price(DEFAULT_RULES, "kevlar")
+          + (capability === "RIFLE_ARMOR_BASIC_UTILITY" ? price(DEFAULT_RULES, "smoke") + price(DEFAULT_RULES, "flash") : 0);
+        const requiredReserveNow = Math.max(0, targetCash - lossReward);
+        const reachableWithNoSpend = entry.money >= requiredReserveNow;
+        return { targetCash, requiredReserveNow, reachableWithNoSpend, maxSpendNow: reachableWithNoSpend ? entry.money - requiredReserveNow : 0 };
+      };
+      const projected = current.output.futureAffordability;
+      const projectionMismatch = projected.status !== "PROJECTED" || (["RIFLE_ARMOR", "RIFLE_ARMOR_BASIC_UTILITY"] as const).some((capability) => {
+        const actualBoundary = projected.status === "PROJECTED" ? projected.boundaries.find((item) => item.capability === capability) : undefined;
+        const expectedBoundaryValues = expectedBoundary(capability);
+        return !actualBoundary
+          || actualBoundary.scenario !== "LOSS_NO_PLANT"
+          || actualBoundary.targetCash !== expectedBoundaryValues.targetCash
+          || actualBoundary.requiredReserveNow !== expectedBoundaryValues.requiredReserveNow
+          || actualBoundary.reachableWithNoSpend !== expectedBoundaryValues.reachableWithNoSpend
+          || actualBoundary.maxSpendNow !== expectedBoundaryValues.maxSpendNow;
+      });
+      if (projectionMismatch) recordInvariant(invariants, invariantCases, "future_affordability_projection_mismatch", entry, current.candidates[0]!, actual);
+    }
+
     for (const [candidateIndex, candidate] of current.candidates.entries()) {
       invariantCandidates++;
       checkCandidateInvariants(candidate, entry, actual, invariants, invariantCases, candidateIndex === 0);
@@ -929,19 +968,19 @@ async function main(): Promise<void> {
   const probeState = stateFor(probe);
   const pistol = recommendPolicyV3({ ...probeState, round: { ...probeState.round, context: fact("PISTOL", "probe") } });
   const unknownMoney = recommendPolicyV3({ ...probeState, player: { ...probeState.player, money: { status: "UNKNOWN", source: "probe", asOfSeq: 1, reason: "missing" } } });
-  const normalOptions = canonicalOptions(recommendPolicyV3(probeState));
-  const overtimeOptions = canonicalOptions(recommendPolicyV3({ ...probeState, round: { ...probeState.round, context: fact("OVERTIME", "probe") } }));
+  const overtime = recommendPolicyV3({ ...probeState, round: { ...probeState.round, context: fact("OVERTIME", "probe") } });
   const targeted = {
     pistol_explicitly_unsupported: pistol.status === "UNSUPPORTED_POLICY_EVIDENCE" && pistol.options.length === 0,
     required_unknown_is_not_defaulted: unknownMoney.status === "INSUFFICIENT_STATE" && unknownMoney.options.length === 0,
-    normal_and_overtime_share_generic_policy: normalOptions === overtimeOptions,
+    overtime_has_no_normal_future_affordability: overtime.futureAffordability.status === "NOT_APPLICABLE" && overtime.futureAffordability.reason === "OVERTIME_UNSUPPORTED",
     c4_remaining_uncalibrated_unknown: unknownTiming(1_000_000n, 2_000_000n).status === "UNKNOWN",
     opponent_unknown_changes_base_recommendation_set: opponentFallbackChanges,
     loss_projection_mismatch: lossProjectionMismatch,
   };
   const invariantNames = [
     "over_budget", "side_illegal", "grenade_slots_over_4", "flash_over_2",
-    "retained_rifle_or_awp_downgrade", "force_obvious_strategic_bank",
+    "retained_rifle_or_awp_downgrade", "force_obvious_strategic_bank", "force_armor_zero",
+    "bounded_light_exceeds_envelope", "future_affordability_projection_mismatch",
   ];
   const invariantResults = Object.fromEntries(invariantNames.map((name) => [name, invariants.get(name) ?? 0]));
   const blockers: Array<{ id: string; evidence: string }> = [];
@@ -950,6 +989,14 @@ async function main(): Promise<void> {
     id: "CT_FORCE_STRATEGIC_BANK",
     evidence: `${forceBankViolations} lead FORCE states leave at least $1000 while an own-state CT helmet upgrade remains affordable`,
   });
+  for (const [id, evidence] of [
+    ["FORCE_ARMOR_INVARIANT", `${invariants.get("force_armor_zero") ?? 0} generic FORCE options have resulting armor zero`],
+    ["LIGHT_ENVELOPE", `${invariants.get("bounded_light_exceeds_envelope") ?? 0} bounded LIGHT options exceed or misreference their protected boundary`],
+    ["FUTURE_AFFORDABILITY_PROJECTION", `${invariants.get("future_affordability_projection_mismatch") ?? 0} NORMAL states disagree with canonical LOSS_NO_PLANT boundaries`],
+  ] as const) {
+    if (evidence.startsWith("0 ")) continue;
+    blockers.push({ id, evidence });
+  }
   const actualLight = v3.modeByActual.get("LIGHT")?.n ?? 0;
   const offeredLight = v3.offeredModes.get("LIGHT") ?? 0;
   if (actualLight > 0 && offeredLight === 0) blockers.push({
@@ -969,8 +1016,8 @@ async function main(): Promise<void> {
   }
 
   const resultWithoutHash = {
-    schema_version: 1,
-    audited_sha: AUDITED_SHA,
+    schema_version: 2,
+    baseline_policy_sha: BASELINE_POLICY_SHA,
     decision_scope: "behavioral conformance on the frozen Cologne corpus; professional behavior is not optimal-policy ground truth",
     inputs: {
       corpus_sha256: corpusHash,

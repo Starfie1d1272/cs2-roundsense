@@ -58,7 +58,7 @@ const receiver = createGsiReceiver({
       lastAdviceAtNs = receipt.receivedAtMonotonicNs;
       console.log(`[${new Date(receipt.receivedAtWallClock).toLocaleTimeString()}] ${advice.side} r${advice.roundNumber} money=$${advice.money} policy=${advice.policy.status}`);
       for (const option of advice.policy.options) {
-        console.log(`    ${option.adviceStrength} ${option.mode}: ${purchaseText(option.purchases, 0, false) || "无需购买"} | $${option.spend}`);
+        console.log(`    ${option.adviceStrength} ${option.mode}: ${purchaseText(option.purchases, 0, false) || "无需购买"} | $${option.bundleSpend}`);
       }
       if (advice.policy.unresolved.length) console.log(`    UNKNOWN: ${advice.policy.unresolved.join("; ")}`);
     }

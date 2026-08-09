@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { recommendPolicyV3, utilityBundle, type PolicyV3State } from "./policy-v3.js";
+import { DEFAULT_RULES, lossBonus, price } from "./rules.js";
+import { rifleFor } from "./advisor.js";
 
 const observed = <T>(value: T, source = "test") => ({ status: "OBSERVED" as const, value, source, asOfSeq: 1 });
 const inventory = { primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] as const };
@@ -28,7 +30,7 @@ describe("Policy V3 deterministic core", () => {
     const current = state();
     current.player.money = observed(3000);
     const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
-    expect(force?.spend).toBeGreaterThan(0);
+    expect(force?.bundleSpend).toBeGreaterThan(0);
     expect(force?.assumptions.join(" ")).toContain("no V2 preservation budget");
   });
 
@@ -38,7 +40,7 @@ describe("Policy V3 deterministic core", () => {
       current.round.side = observed(side);
       current.player.money = observed(money);
       const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
-      expect(force?.spend).toBeLessThanOrEqual(money);
+      expect(force?.bundleSpend).toBeLessThanOrEqual(money);
       expect(force?.resultingInventory.grenades.length).toBeLessThanOrEqual(4);
       expect(force?.resultingInventory.grenades.filter((item) => item === "flash").length).toBeLessThanOrEqual(2);
     }
@@ -49,7 +51,7 @@ describe("Policy V3 deterministic core", () => {
       const current = state();
       current.round.side = observed(side);
       current.player.money = observed(3000);
-      expect(recommendPolicyV3(current).options.find((option) => option.mode === "FORCE")?.spend).toBeGreaterThanOrEqual(2900);
+      expect(recommendPolicyV3(current).options.find((option) => option.mode === "FORCE")?.bundleSpend).toBeGreaterThanOrEqual(2900);
     }
   });
 
@@ -58,12 +60,12 @@ describe("Policy V3 deterministic core", () => {
     current.round.side = observed("CT");
     current.player.money = observed(2600);
     const emptyForce = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
-    expect(emptyForce).toMatchObject({ spend: 2600 });
+    expect(emptyForce).toMatchObject({ bundleSpend: 2600 });
     expect(emptyForce?.resultingInventory.grenades.filter((item) => item === "flash")).toHaveLength(2);
 
     const armored = structuredClone(current);
     armored.player.inventory = observed({ ...inventory, armor: 100, grenades: [] });
-    expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.spend).toBeGreaterThanOrEqual(2550);
+    expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.bundleSpend).toBeGreaterThanOrEqual(2550);
   });
 
   it("completes an affordable CT FORCE bundle with the $350 helmet upgrade", () => {
@@ -74,20 +76,64 @@ describe("Policy V3 deterministic core", () => {
     const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
     expect(force?.purchases).toContainEqual({ item: "kevlar_helmet", quantity: 1 });
     expect(force?.resultingInventory.hasHelmet).toBe(true);
-    expect(force?.spend).toBeGreaterThanOrEqual(1650);
+    expect(force?.bundleSpend).toBeGreaterThanOrEqual(1650);
   });
 
-  it("offers LIGHT as a distinct controlled partial investment when a full bundle is unavailable", () => {
+  it("offers NORMAL LIGHT as a boundary-bounded secondary bundle rather than fixed SMG plus armor", () => {
     const current = state();
     current.round = { ...current.round, number: observed(5), side: observed("CT"), context: observed("NORMAL") };
     current.player.money = observed(2600);
     const out = recommendPolicyV3(current);
-    const force = out.options.find((option) => option.mode === "FORCE");
     const light = out.options.find((option) => option.mode === "LIGHT");
     expect(light?.adviceStrength).toBe("ALTERNATIVE");
-    expect(light?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
-    expect(light?.resultingInventory.grenades).toEqual([]);
-    expect(light?.spend).toBeLessThan(force?.spend ?? Infinity);
+    expect(light?.spendingGuidance).toMatchObject({ layer: "ADVICE", kind: "BOUNDED" });
+    expect(light?.purchases.some((purchase) => purchase.item === "mp9" || purchase.item === "mac10")).toBe(false);
+    const protectedCapability = light?.spendingGuidance.kind === "BOUNDED" ? light.spendingGuidance.protectedCapability : undefined;
+    const boundary = out.futureAffordability.status === "PROJECTED"
+      ? out.futureAffordability.boundaries.find((item) => item.capability === protectedCapability)
+      : undefined;
+    expect(boundary?.reachableWithNoSpend).toBe(true);
+    expect(light?.bundleSpend).toBeLessThanOrEqual(boundary?.maxSpendNow ?? -1);
+  });
+
+  it.each(["T", "CT"] as const)("derives both NORMAL future-affordability boundaries from canonical %s prices and loss reward", (side) => {
+    const current = state({ round: { ...state().round, number: observed(5), side: observed(side), context: observed("NORMAL") } });
+    current.player.money = observed(3000);
+    current.player.lossIndex = observed(2);
+    const output = recommendPolicyV3(current);
+    expect(output.futureAffordability.status).toBe("PROJECTED");
+    if (output.futureAffordability.status !== "PROJECTED") return;
+    const rifleArmor = output.futureAffordability.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR");
+    const basicUtility = output.futureAffordability.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR_BASIC_UTILITY");
+    const rifleArmorTarget = price(DEFAULT_RULES, rifleFor(side)) + price(DEFAULT_RULES, "kevlar");
+    expect(rifleArmor).toMatchObject({
+      layer: "SCENARIO", scenario: "LOSS_NO_PLANT", targetCash: rifleArmorTarget,
+      requiredReserveNow: Math.max(0, rifleArmorTarget - lossBonus(DEFAULT_RULES, 2)),
+    });
+    expect(basicUtility).toMatchObject({ targetCash: rifleArmorTarget + price(DEFAULT_RULES, "smoke") + price(DEFAULT_RULES, "flash") });
+  });
+
+  it("keeps a legal NORMAL LIGHT bundle below its ceiling instead of filling the boundary", () => {
+    const current = state({ round: { ...state().round, number: observed(5), side: observed("CT"), context: observed("NORMAL") } });
+    current.player.money = observed(3400);
+    const light = recommendPolicyV3(current).options.find((option) => option.mode === "LIGHT" && option.resultingInventory.armor > 0);
+    const output = recommendPolicyV3(current);
+    const protectedCapability = light?.spendingGuidance.kind === "BOUNDED" ? light.spendingGuidance.protectedCapability : undefined;
+    const boundary = output.futureAffordability.status === "PROJECTED"
+      ? output.futureAffordability.boundaries.find((item) => item.capability === protectedCapability)
+      : undefined;
+    expect(light?.bundleSpend).toBeGreaterThan(0);
+    expect(light?.bundleSpend).toBeLessThan(boundary?.maxSpendNow ?? 0);
+  });
+
+  it("tops up a retained primary in NORMAL LIGHT without purchasing a lower-tier primary", () => {
+    const current = state({ round: { ...state().round, number: observed(5), side: observed("CT"), context: observed("NORMAL") } });
+    current.player.money = observed(2600);
+    current.player.inventory = observed({ ...inventory, primary: "mp9", armor: 0, grenades: [] });
+    const light = recommendPolicyV3(current).options.find((option) => option.mode === "LIGHT" && option.resultingInventory.armor > 0);
+    expect(light?.purchases.some((purchase) => purchase.item === "mp9" || purchase.item === "fiveseven" || purchase.item === "m4a4")).toBe(false);
+    expect(light?.resultingInventory.primary).toBe("mp9");
+    expect(light?.resultingInventory.armor).toBeGreaterThan(0);
   });
 
   it("uses a CT FORCE-dominant post-pistol recommendation while retaining fallback", () => {
@@ -129,12 +175,27 @@ describe("Policy V3 deterministic core", () => {
     expect(out.defaultOptionId).toBeUndefined();
   });
 
+  it.each(["T", "CT"] as const)("never emits armor-zero generic FORCE for %s", (side) => {
+    for (const money of [0, 200, 500, 650, 900, 1500, 2500, 4000]) {
+      const current = state({ round: { ...state().round, number: observed(5), side: observed(side), context: observed("NORMAL") } });
+      current.player.money = observed(money);
+      const force = recommendPolicyV3(current).options.filter((option) => option.mode === "FORCE");
+      expect(force.every((option) => option.resultingInventory.armor > 0)).toBe(true);
+    }
+  });
+
+  it("omits generic FORCE when no armored bundle is affordable", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.money = observed(500);
+    expect(recommendPolicyV3(current).options.some((option) => option.mode === "FORCE")).toBe(false);
+  });
+
   it.each([1900, 2000])("fits a legal CT post-pistol force at $%i", (money) => {
     const current = state();
     current.round.side = observed("CT");
     current.player.money = observed(money);
     const force = recommendPolicyV3(current).options.find((option) => option.mode === "FORCE");
-    expect(force?.spend).toBeLessThanOrEqual(money);
+    expect(force?.bundleSpend).toBeLessThanOrEqual(money);
     expect(force?.purchases).toContainEqual({ item: "mp9", quantity: 1 });
     expect(force?.purchases).toContainEqual({ item: "kevlar", quantity: 1 });
   });
@@ -144,7 +205,7 @@ describe("Policy V3 deterministic core", () => {
     armored.round.side = observed("CT");
     armored.player.money = observed(1500);
     armored.player.inventory = observed({ ...inventory, armor: 100, grenades: [] });
-    expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.spend).toBeLessThanOrEqual(1500);
+    expect(recommendPolicyV3(armored).options.find((option) => option.mode === "FORCE")?.bundleSpend).toBeLessThanOrEqual(1500);
     const smgOwned = state();
     smgOwned.round.side = observed("CT");
     smgOwned.player.money = observed(900);
@@ -195,7 +256,7 @@ describe("Policy V3 deterministic core", () => {
     current.player.inventory = observed({ ...inventory, armor: 100, hasHelmet: false, grenades: [] });
     const full = recommendPolicyV3(current).options.find((option) => option.mode === "FULL");
     expect(full?.purchases.find((purchase) => purchase.item === "kevlar_helmet")?.quantity).toBe(1);
-    expect(full?.spend).toBeLessThan(6000);
+    expect(full?.bundleSpend).toBeLessThan(6000);
   });
 
   it("keeps utility legal: maximum four grenade slots and two flashes", () => {
@@ -359,12 +420,39 @@ describe("Policy V3 deterministic core", () => {
   it("returns unresolved evidence rather than a fake pistol PRESERVE", () => {
     const current = state();
     current.round.context = observed("PISTOL");
-    expect(recommendPolicyV3(current)).toMatchObject({ status: "UNSUPPORTED_POLICY_EVIDENCE", options: [] });
+    expect(recommendPolicyV3(current)).toMatchObject({ status: "UNSUPPORTED_POLICY_EVIDENCE", futureAffordability: { status: "NOT_APPLICABLE", reason: "PISTOL_UNSUPPORTED" }, options: [] });
   });
 
-  it("uses the generic non-pistol policy in overtime", () => {
+  it("keeps overtime outside NORMAL future-affordability semantics", () => {
     const current = state();
     current.round.context = observed("OVERTIME");
-    expect(recommendPolicyV3(current).status).toBe("READY");
+    expect(recommendPolicyV3(current)).toMatchObject({ status: "READY", futureAffordability: { status: "NOT_APPLICABLE", reason: "OVERTIME_UNSUPPORTED" } });
+  });
+
+  it("keeps POST_PISTOL outside NORMAL future-affordability semantics", () => {
+    const output = recommendPolicyV3(state());
+    expect(output.futureAffordability).toEqual({ status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
+    expect(output.options.some((option) => option.mode === "LIGHT")).toBe(false);
+  });
+
+  it("keeps the isolated post-pistol LIGHT alternative free of NORMAL boundaries", () => {
+    const current = state();
+    current.round.side = observed("CT");
+    current.player.money = observed(2600);
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("CT"), planted: observed(false) }] };
+    const output = recommendPolicyV3(current);
+    const light = output.options.find((option) => option.mode === "LIGHT");
+    expect(output.futureAffordability).toEqual({ status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
+    expect(light?.spendingGuidance).toEqual({ layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" });
+    expect(light?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
+  });
+
+  it("does not fabricate boundary values when NORMAL own money is UNKNOWN", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.money = { status: "UNKNOWN", source: "test", asOfSeq: 1, reason: "missing" };
+    expect(recommendPolicyV3(current)).toMatchObject({
+      status: "INSUFFICIENT_STATE",
+      futureAffordability: { status: "UNKNOWN", boundaries: [] },
+    });
   });
 });
