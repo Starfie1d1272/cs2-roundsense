@@ -599,22 +599,21 @@ function planOption(
   };
 }
 
-function genericModes(
+function genericOptions(
   state: PolicyV3State,
   boundaries: FutureAffordabilitySet,
-): Array<[Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]> {
+): RecommendationOption[] {
   const full = planOption(state, "FULL", "SUPPORTED", boundaries);
   const force = planOption(state, "FORCE", "SUPPORTED", boundaries);
   if (full) {
-    return [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]] : [])];
+    return [full, ...(force ? [{ ...force, adviceStrength: "ALTERNATIVE" as const }] : [])];
   }
   if (force) {
-    return [
-      ["FORCE", "SUPPORTED"],
-      ["PRESERVE", "ALTERNATIVE"],
-    ];
+    const preserve = planOption(state, "PRESERVE", "ALTERNATIVE", boundaries);
+    return [force, ...(preserve ? [preserve] : [])];
   }
-  return [["PRESERVE", "SUPPORTED"]];
+  const preserve = planOption(state, "PRESERVE", "SUPPORTED", boundaries);
+  return preserve ? [preserve] : [];
 }
 
 function previousPistolOutcome(state: PolicyV3State, side: Side): "WIN" | "LOSS" | "UNKNOWN" {
@@ -641,42 +640,47 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
       status: "UNSUPPORTED_POLICY_EVIDENCE", futureAffordability: affordability, options: [], unresolved: ["pistol-round purchase policy is outside the frozen Policy V3 evidence scope"], opponent: state.opponent,
     };
   }
-  let modes: Array<[Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]>;
-  let conversionWinner = false;
+  let options: RecommendationOption[];
   if (context === "POST_PISTOL") {
     const pistolOutcome = previousPistolOutcome(state, side);
     if (pistolOutcome === "WIN") {
-      conversionWinner = true;
-      modes = [["FULL", "SUPPORTED"]];
+      options = planPostPistolConversionOptions(state, "SUPPORTED");
     } else if (pistolOutcome === "LOSS") {
-      modes = side === "T"
+      const modes: Array<[Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]> = side === "T"
         ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
         : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]];
+      options = modes.flatMap(([mode, strength]) => {
+        const option = planOption(state, mode, strength, affordability);
+        return option ? [option] : [];
+      });
     } else {
       // Missing history must not be silently treated as either a pistol win or
       // loss. Keep the conservative supported set and suppress a default.
-      modes = [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]];
+      options = [
+        planOption(state, "PRESERVE", "SUPPORTED", affordability),
+        planOption(state, "FORCE", "SUPPORTED", affordability),
+      ].filter((option): option is RecommendationOption => option !== null);
     }
   } else {
-    modes = genericModes(state, affordability);
+    options = genericOptions(state, affordability);
   }
   const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED", affordability) : null;
   let saveForAwp = false;
   if (preference.source === "USER_DECLARED" && preference.awpPriority === "PREFER" && awp) {
-    modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
+    options = [{ ...awp, adviceStrength: "DOMINANT" }, ...options.filter((option) => option.mode !== "AWP_PATH")];
   } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && !awp) {
     const awpWithArmor = planPurchases({ ...inventory, primary: null, armor: 0, hasHelmet: false, hasDefuseKit: inventory.hasDefuseKit, grenades: inventory.grenades }, compact(["awp", "kevlar"]), DEFAULT_RULES, side);
     const noSpend = projectNextRoundMoney({ money, spendNow: 0, side, lossStreak: lossIndex, kills: [], rules: DEFAULT_RULES });
     // The preserved current inventory is not asserted as a future fact. This
     // uses the conservative empty-inventory AWP+armor cash requirement.
     saveForAwp = awpWithArmor.isComplete && noSpend.loss >= awpWithArmor.totalCost;
-    if (saveForAwp && !modes.some(([mode]) => mode === "PRESERVE")) modes.push(["PRESERVE", "ALTERNATIVE"]);
+    if (saveForAwp && !options.some((option) => option.mode === "PRESERVE")) {
+      const preserve = planOption(state, "PRESERVE", "ALTERNATIVE", affordability);
+      if (preserve) options.push(preserve);
+    }
   } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
-    modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
+    options = [{ ...awp, adviceStrength: "DOMINANT" }, ...options.filter((option) => option.mode !== "AWP_PATH")];
   }
-  let options = modes.flatMap(([mode, strength]) => conversionWinner && mode === "FULL"
-    ? planPostPistolConversionOptions(state, strength)
-    : [planOption(state, mode, strength, affordability)].filter((option): option is RecommendationOption => option !== null));
   if (context === "NORMAL" && affordability.status === "PROJECTED" && !options.some((option) => option.mode === "FULL")) {
     const lightStrength: RecommendationOption["adviceStrength"] = options.some((option) => option.mode === "FORCE") ? "ALTERNATIVE" : "SUPPORTED";
     const lightOptions = affordability.boundaries
