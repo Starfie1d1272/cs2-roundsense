@@ -34,6 +34,12 @@ import type { ItemId, RoundType, Side } from "../packages/shared-types/src/index
 
 const EXPECTED_CORPUS_SHA256 = "33f29c35fb124a4e45d38a00be8f389d32403c0762576b607db7a9a37fe0d9e6";
 const BASELINE_POLICY_SHA = "584ec5ce91c6d1bf8d138783a42d137fe7276a47";
+const FROZEN_BASELINE = {
+  overall: { severe_any: 0.4594, spend_mae: 579.0825, signed_spend_error: 281.2054 },
+  side: { CT: 0.5399, T: 0.3928 },
+  money_band: { "0-1999": 0.7558, "2000-2999": 0.8154, "3000-3999": 0.6443, "4000+": 0.2509 },
+  context: { NORMAL: 0.4548, POST_PISTOL: 0.5219, OVERTIME: 0.3416 },
+} as const;
 const DEFAULT_CORPUS = "/tmp/roundsense-cologne-policy/player-rounds.json";
 const DEFAULT_MAPS = "/tmp/roundsense-cologne-policy/maps";
 const DEFAULT_OUTPUT = "experiments/policy-v3/results/policy-v3-final-acceptance.json";
@@ -468,6 +474,9 @@ function percentile(values: readonly number[], q: number): number | null {
 
 function round4(value: number): number { return Math.round(value * 10_000) / 10_000; }
 function rate(value: number, n: number): number { return n === 0 ? 0 : round4(value / n); }
+function comparison(baseline: number, current: number) {
+  return { baseline, current, delta: round4(current - baseline), worsened: current > baseline };
+}
 
 class ModelMetrics {
   readonly fields = {
@@ -598,6 +607,11 @@ class Subgroups {
         n: cell.n, severe_n: cell.severe, severe_rate: rate(cell.severe, cell.n), policy_miss_n: cell.policyMiss, policy_miss_rate: rate(cell.policyMiss, cell.n),
       }]))
     ]));
+  }
+
+  severeRate(dimension: string, value: string): number {
+    const cell = this.dimensions.get(dimension)?.get(value);
+    return cell ? rate(cell.severe, cell.n) : 0;
   }
 }
 
@@ -1040,6 +1054,16 @@ async function main(): Promise<void> {
   ];
   const invariantResults = Object.fromEntries(invariantNames.map((name) => [name, invariants.get(name) ?? 0]));
   const blockers: Array<{ id: string; evidence: string }> = [];
+  for (const [name, count] of Object.entries(invariantResults)) {
+    if (count > 0) blockers.push({ id: "MECHANICAL_INVARIANT", evidence: `${name}=${count}` });
+  }
+  for (const [name, count] of Object.entries({
+    opponent_unknown_recommendation_set_changes: opponentFallbackChanges,
+    loss_projection_mismatch: lossProjectionMismatch,
+    post_pistol_conversion_winner_light_output: conversionWinnerLightOutput,
+  })) {
+    if (count > 0) blockers.push({ id: "MECHANICAL_INVARIANT", evidence: `${name}=${count}` });
+  }
   const forceBankViolations = invariants.get("force_obvious_strategic_bank") ?? 0;
   if (forceBankViolations > 0) blockers.push({
     id: "CT_FORCE_STRATEGIC_BANK",
@@ -1068,6 +1092,36 @@ async function main(): Promise<void> {
   if (conversionWinnerLightOutput > 0) blockers.push({
     id: "POST_PISTOL_CONVERSION_LIGHT",
     evidence: `${conversionWinnerLightOutput} pistol-winner conversion states still offer strategic LIGHT`,
+  });
+
+  const policyV3 = v3.result();
+  const severeRegression = {
+    overall: {
+      severe_any: comparison(FROZEN_BASELINE.overall.severe_any, policyV3.severe["any"]?.rate ?? 0),
+      spend_mae: comparison(FROZEN_BASELINE.overall.spend_mae, policyV3.spend.lead_mae),
+      signed_spend_error: comparison(FROZEN_BASELINE.overall.signed_spend_error, policyV3.spend.lead_mean_signed),
+    },
+    side: Object.fromEntries(Object.entries(FROZEN_BASELINE.side).map(([side, baseline]) => [side, comparison(baseline, subgroups.severeRate("side", side))])),
+    money_band: Object.fromEntries(Object.entries(FROZEN_BASELINE.money_band).map(([band, baseline]) => [band, comparison(baseline, subgroups.severeRate("money_band", band))])),
+    context: Object.fromEntries(Object.entries(FROZEN_BASELINE.context).map(([context, baseline]) => [context, comparison(baseline, subgroups.severeRate("context", context))])),
+    strategic_post_pistol: Object.fromEntries([...v3StrategicSegments].sort().map(([segment, metrics]) => [segment, {
+      baseline: "not separately comparable: 584ec5 predates the team-level POST_PISTOL winner taxonomy",
+      n: metrics.n,
+      severe_any: rate(metrics.severe.get("any") ?? 0, metrics.n),
+      spend_mae: metrics.result().spend.lead_mae,
+      signed_spend_error: metrics.result().spend.lead_mean_signed,
+    }])),
+  };
+  const sideRegression = ["CT", "T"].every((side) => severeRegression.side[side]!.worsened);
+  const moneyRegressions = Object.values(severeRegression.money_band).filter((cell) => cell.worsened);
+  const systemicRegression = {
+    overall_spend_and_severe: severeRegression.overall.spend_mae.worsened && severeRegression.overall.severe_any.worsened,
+    both_sides_severe: sideRegression,
+    major_money_bands_severe: moneyRegressions.length >= 2,
+  };
+  if (Object.values(systemicRegression).some(Boolean)) blockers.push({
+    id: "SYSTEMIC_SEVERE_REGRESSION",
+    evidence: JSON.stringify({ systemicRegression, overall: severeRegression.overall, side: severeRegression.side, money_band: severeRegression.money_band }),
   });
 
   const reasonResult = Object.fromEntries([...reasons].sort().map(([name, count]) => [name, { count, rate_of_material: rate(count, material.count), rate_of_eligible: rate(count, eligible.length) }]));
@@ -1107,7 +1161,7 @@ async function main(): Promise<void> {
       targeted,
     },
     behavioral_alignment: {
-      policy_v3: v3.result(),
+      policy_v3: policyV3,
       policy_v3_by_context: Object.fromEntries([...v3Segments].sort().map(([context, metrics]) => [context, metrics.result()])),
       policy_v3_by_strategic_segment: Object.fromEntries([...v3StrategicSegments].sort().map(([segment, metrics]) => [segment, metrics.result()])),
       normal_observational_semi: normalObservationalSemi.result(),
@@ -1123,6 +1177,12 @@ async function main(): Promise<void> {
       representative_cases: Object.fromEntries([...cases].sort()),
     },
     severe_subgroups: subgroups.result(),
+    severe_regression_gate: {
+      baseline_policy_sha: BASELINE_POLICY_SHA,
+      comparison: severeRegression,
+      systemic_conditions: systemicRegression,
+      blocker_rule: "block READY when overall spend MAE and severe-any both worsen, both sides worsen in severe-any, or at least two major money bands worsen in severe-any",
+    },
     frozen_follow_up_diagnostics: {
       actual_light_own_state: {
         n: lightDiagnostics.side.length,

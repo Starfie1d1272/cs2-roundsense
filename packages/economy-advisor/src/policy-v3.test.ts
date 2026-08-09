@@ -151,7 +151,8 @@ describe("Policy V3 deterministic core", () => {
     current.player.money = observed(4000);
     current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed(side), planted: observed(false) }] };
     const out = recommendPolicyV3(current);
-    expect(out.options.map((option) => option.mode)).toEqual(["FULL"]);
+    expect(out.options.map((option) => option.mode)).toEqual(expect.arrayContaining(["FULL"]));
+    expect(out.options.every((option) => option.mode === "FULL")).toBe(true);
     expect(out.options[0]?.reasons.some((reason) => reason.code === "POST_PISTOL_CONVERSION")).toBe(true);
     expect(out.defaultOptionId).toBeUndefined();
   });
@@ -444,8 +445,60 @@ describe("Policy V3 deterministic core", () => {
     const conversion = output.options[0];
     expect(output.futureAffordability).toEqual({ status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
     expect(conversion).toMatchObject({ mode: "FULL", spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" } });
-    expect(conversion?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
-    expect(conversion?.resultingInventory.armor).toBeGreaterThan(0);
+    expect(conversion?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar_helmet", quantity: 1 }]));
+    expect(conversion?.resultingInventory).toMatchObject({ armor: expect.any(Number), hasHelmet: true });
+  });
+
+  it.each(["T", "CT"] as const)("uses vesthelm for an affordable no-primary %s conversion", (side) => {
+    const current = state();
+    current.round.side = observed(side);
+    current.player.money = observed(2600);
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed(side), planted: observed(false) }] };
+    const conversion = recommendPolicyV3(current).options[0];
+    expect(conversion).toMatchObject({ mode: "FULL", adviceStrength: "SUPPORTED", resultingInventory: { hasHelmet: true } });
+    expect(conversion?.purchases.some((purchase) => purchase.item === (side === "T" ? "mac10" : "mp9"))).toBe(true);
+  });
+
+  it("preserves a retained primary while topping up a winner conversion", () => {
+    const current = state();
+    current.round.side = observed("CT");
+    current.player.money = observed(2000);
+    current.player.inventory = observed({ ...inventory, primary: "m4a4", armor: 100, hasHelmet: false, grenades: [] });
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("CT"), planted: observed(false) }] };
+    const conversion = recommendPolicyV3(current).options[0];
+    expect(conversion).toMatchObject({ mode: "FULL", resultingInventory: { primary: "m4a4", hasHelmet: true } });
+    expect(conversion?.purchases.some((purchase) => purchase.item === "mp9" || purchase.item === "m4a4")).toBe(false);
+  });
+
+  it.each(["T", "CT"] as const)("offers rifle and SMG bundles as FULL conversion options when %s can afford both", (side) => {
+    const current = state();
+    current.round.side = observed(side);
+    current.player.money = observed(6000);
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed(side), planted: observed(false) }] };
+    const options = recommendPolicyV3(current).options;
+    expect(options.every((option) => option.mode === "FULL")).toBe(true);
+    expect(options.some((option) => option.resultingInventory.primary === rifleFor(side))).toBe(true);
+    expect(options.some((option) => option.resultingInventory.primary === (side === "T" ? "mac10" : "mp9"))).toBe(true);
+  });
+
+  it("keeps frozen post-pistol loser and unknown-history bundles canonical", () => {
+    const compact = (output: ReturnType<typeof recommendPolicyV3>) => output.options.map((option) => ({
+      id: option.id, mode: option.mode, adviceStrength: option.adviceStrength, bundleSpend: option.bundleSpend, purchases: option.purchases,
+    }));
+    const tLoser = state();
+    tLoser.round.side = observed("T");
+    tLoser.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("CT"), planted: observed(false) }] };
+    expect(compact(recommendPolicyV3(tLoser))).toEqual([
+      { id: "preserve-hold", mode: "PRESERVE", adviceStrength: "SUPPORTED", bundleSpend: 0, purchases: [] },
+      { id: "force-ak471-kevlar1-smoke1-molotov1-flash1-he1", mode: "FORCE", adviceStrength: "SUPPORTED", bundleSpend: 4550, purchases: [{ item: "ak47", quantity: 1 }, { item: "kevlar", quantity: 1 }, { item: "smoke", quantity: 1 }, { item: "molotov", quantity: 1 }, { item: "flash", quantity: 1 }, { item: "he", quantity: 1 }] },
+    ]);
+    const unknown = state();
+    unknown.round.side = observed("CT");
+    unknown.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: { status: "UNKNOWN", source: "test", asOfSeq: 1, reason: "missing" }, planted: observed(false) }] };
+    expect(compact(recommendPolicyV3(unknown))).toEqual([
+      { id: "preserve-hold", mode: "PRESERVE", adviceStrength: "SUPPORTED", bundleSpend: 0, purchases: [] },
+      { id: "force-m4a41-kevlar1-smoke1-incendiary1-flash1-he1-kevlar_helmet1", mode: "FORCE", adviceStrength: "SUPPORTED", bundleSpend: 5850, purchases: [{ item: "m4a4", quantity: 1 }, { item: "kevlar", quantity: 1 }, { item: "smoke", quantity: 1 }, { item: "incendiary", quantity: 1 }, { item: "flash", quantity: 1 }, { item: "he", quantity: 1 }, { item: "kevlar_helmet", quantity: 1 }] },
+    ]);
   });
 
   it("does not fabricate boundary values when NORMAL own money is UNKNOWN", () => {

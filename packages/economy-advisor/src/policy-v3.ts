@@ -407,14 +407,94 @@ function planLightOption(
   return null;
 }
 
-/** A pistol winner is in a team-level conversion FULL state even when this
- * player's affordable, inventory-aware bundle is an SMG or a retained weapon. */
-function planPostPistolConversionOption(state: PolicyV3State, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
-  if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
+type ConversionPrimary = "RETAINED" | "SMG" | "RIFLE";
+
+interface ConversionPlan {
+  primary: ConversionPrimary;
+  plan: PurchasePlan;
+}
+
+/**
+ * Plans a post-pistol conversion bundle independently of ordinary FORCE
+ * selection. Conversion prioritizes an own-state vesthelm configuration,
+ * then spends the remaining canonical budget on legal utility.
+ */
+function conversionPlan(
+  side: Side,
+  inventory: InventoryState,
+  money: number,
+  primary: ConversionPrimary,
+  armor: "kevlar_helmet" | "kevlar",
+): PurchasePlan | null {
+  const base: ItemId[] = [armor];
+  if (primary === "SMG") base.unshift(smgFor(side));
+  if (primary === "RIFLE") base.unshift(rifleFor(side));
+  const core = planPurchases(inventory, compact(base), DEFAULT_RULES, side);
+  if (!core.isComplete || core.totalCost > money) return null;
+  const desired = [...base, ...utilityBundle(side, inventory, money - core.totalCost)];
+  const complete = planPurchases(inventory, compact(desired), DEFAULT_RULES, side);
+  return complete.isComplete && complete.totalCost <= money ? complete : core;
+}
+
+function conversionOption(
+  state: PolicyV3State,
+  conversion: ConversionPlan,
+  strength: RecommendationOption["adviceStrength"],
+): RecommendationOption {
+  const inventory = state.player.inventory.value!;
+  const side = state.round.side.value!;
+  const { plan } = conversion;
+  const desired = plan.purchases.flatMap((purchase) => Array.from({ length: purchase.quantity }, () => purchase.item));
+  const conditionalAlternatives: ConditionalAlternative[] = [];
+  if (side === "CT" && !inventory.hasDefuseKit) {
+    const kitPlan = planPurchases(inventory, compact([...desired, "defuse_kit"]), DEFAULT_RULES, side);
+    if (kitPlan.isComplete && kitPlan.totalCost <= state.player.money.value!) {
+      conditionalAlternatives.push({ condition: "若队友暂无钳子", purchases: kitPlan.purchases, reason: "钳子不占 grenade slot；队友覆盖不可见" });
+    }
+  }
+  const primaryDetail = conversion.primary === "RETAINED"
+    ? "retained primary is preserved; only armor and utility are topped up"
+    : conversion.primary === "RIFLE"
+      ? "canonical rifle plus vesthelm is affordable for higher current-round firepower"
+      : "canonical SMG plus vesthelm is the efficient anti-eco conversion configuration";
+  return {
+    id: `post-pistol-conversion-${conversion.primary.toLowerCase()}-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
+    mode: "FULL",
+    spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" },
+    purchases: plan.purchases,
+    bundleSpend: plan.totalCost,
+    resultingInventory: resultingLoadout(inventory, plan.purchases),
+    trajectory: trajectory(state, plan.totalCost),
+    reasons: [{ code: "POST_PISTOL_CONVERSION", detail: `pistol winner conversion is team-level FULL; ${primaryDetail}` }],
+    assumptions: ["normal-player GSI only", "POST_PISTOL conversion is independent from NORMAL future-affordability guidance", "canonical affordability and current inventory determine conversion options"],
+    conditionalAlternatives,
+    adviceStrength: strength,
+  };
+}
+
+/** A pistol winner is strategic FULL, while its individual bundle can be a
+ * retained-primary top-up, an efficient SMG conversion, or an affordable rifle
+ * conversion. These are not ordinary FORCE or NORMAL LIGHT strategies. */
+function planPostPistolConversionOptions(state: PolicyV3State, strength: RecommendationOption["adviceStrength"]): RecommendationOption[] {
+  if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return [];
   const inventory = state.player.inventory.value;
-  const currentRound = planOption(state, "FORCE", strength, { status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
-  if (!currentRound) {
-    return {
+  const money = state.player.money.value;
+  const side = state.round.side.value;
+  const retained = inventory.primary !== null && inventory.primary !== undefined;
+  const candidates: ConversionPlan[] = [];
+  if (retained) {
+    const topUp = conversionPlan(side, inventory, money, "RETAINED", "kevlar_helmet")
+      ?? conversionPlan(side, inventory, money, "RETAINED", "kevlar");
+    if (topUp) candidates.push({ primary: "RETAINED", plan: topUp });
+  } else {
+    const rifle = conversionPlan(side, inventory, money, "RIFLE", "kevlar_helmet");
+    const smg = conversionPlan(side, inventory, money, "SMG", "kevlar_helmet")
+      ?? conversionPlan(side, inventory, money, "SMG", "kevlar");
+    if (rifle) candidates.push({ primary: "RIFLE", plan: rifle });
+    if (smg) candidates.push({ primary: "SMG", plan: smg });
+  }
+  if (candidates.length === 0) {
+    return [{
       id: "post-pistol-conversion-hold",
       mode: "FULL",
       spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" },
@@ -422,23 +502,13 @@ function planPostPistolConversionOption(state: PolicyV3State, strength: Recommen
       bundleSpend: 0,
       resultingInventory: resultingLoadout(inventory, []),
       trajectory: trajectory(state, 0),
-      reasons: [{ code: "POST_PISTOL_CONVERSION", detail: "pistol winner conversion is team-level FULL; no legal individual armored purchase fits the observable state" }],
+      reasons: [{ code: "POST_PISTOL_CONVERSION", detail: "pistol winner conversion is team-level FULL; no legal own-state armor top-up fits the observable money" }],
       assumptions: ["normal-player GSI only", "POST_PISTOL conversion is independent from NORMAL future-affordability guidance"],
       conditionalAlternatives: [],
       adviceStrength: strength,
-    };
+    }];
   }
-  return {
-    ...currentRound,
-    id: `post-pistol-conversion-${currentRound.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
-    mode: "FULL",
-    spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" },
-    reasons: [
-      { code: "POST_PISTOL_CONVERSION", detail: "pistol winner conversion is team-level FULL; this player's bundle may remain an SMG or retained primary" },
-      ...currentRound.reasons.filter((reason) => reason.code !== "MODE_FORCE"),
-    ],
-    assumptions: [...currentRound.assumptions, "POST_PISTOL conversion is independent from NORMAL future-affordability guidance"],
-  };
+  return candidates.map((candidate, index) => conversionOption(state, candidate, index === 0 ? strength : "ALTERNATIVE"));
 }
 
 function planOption(
@@ -604,9 +674,9 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
     modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
   }
-  let options = modes.map(([mode, strength]) => conversionWinner && mode === "FULL"
-    ? planPostPistolConversionOption(state, strength)
-    : planOption(state, mode, strength, affordability)).filter((option): option is RecommendationOption => option !== null);
+  let options = modes.flatMap(([mode, strength]) => conversionWinner && mode === "FULL"
+    ? planPostPistolConversionOptions(state, strength)
+    : [planOption(state, mode, strength, affordability)].filter((option): option is RecommendationOption => option !== null));
   if (context === "NORMAL" && affordability.status === "PROJECTED" && !options.some((option) => option.mode === "FULL")) {
     const lightStrength: RecommendationOption["adviceStrength"] = options.some((option) => option.mode === "FORCE") ? "ALTERNATIVE" : "SUPPORTED";
     const lightOptions = affordability.boundaries
