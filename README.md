@@ -1,79 +1,156 @@
 # RoundSense
 
-面向 CS2 普通玩家的**只读实时决策辅助**（非 HUD / 非直播 / 非 Overlay）。产品只消费
-normal-player Game State Integration（GSI）及其可连续追踪的历史，不把 demo / spectator
-oracle 伪装成实时能力。
+**面向 CS2 玩家的本地、只读回合决策助手。**
 
-当前提供两类输出：
+RoundSense 读取 CS2 Game State Integration（GSI），在冻结时间结合你的现金、装备、
+败方奖励和回合上下文，帮助你判断这局该 eco、半起、强起还是全起，投入应控制在什么
+范围，以及如果输掉，下一局还能买什么。
 
-- **个人经济 Policy V3**：先给出当前策略（eco / 半起 / 强起 / 全起），再给出本局建议投入、
-  最多投入、输掉后的下局经济与购买能力；具体购买组合是第二层、inventory-aware 建议。
-- **C4 状态**：检测安放与状态转换。数字剩余时间在 Windows controlled calibration 完成前
-  保持 `UNKNOWN`；当前只安全表达 detection anchor 与 elapsed-since-detection。
+当前原型通过本地 CLI 展示结果；策略引擎与 presentation 解耦，后续可以接入更低认知
+负担的展示方式。
 
-经济策略已用冻结的 IEM Cologne Major 2026 语料做过完整行为验收。职业决策只作为
-behavioral reference，不是最优真值。
+## 为什么需要 RoundSense
 
-## Policy V3 语义
+多数购买辅助首先回答“买什么”。RoundSense 更先回答一个影响整场经济的问题：
 
-- eco = `PRESERVE`：优先 future economy，当前消费最小化；
-- 半起 = `LIGHT`：在 future-affordability boundary 内有限投入，不是固定 SMG + 甲；
-- 强起 = `FORCE`：当前回合优先，generic FORCE 的 resulting armor 必须大于 0；
-- 全起 = `FULL`：按当前装备补齐完整配置；手枪局赢家使用独立 conversion planner；
-- `bundleSpend` 只表示具体购买组合的增量成本；`spendingGuidance` 表达经济建议，
-  `futureAffordability` 表达明确假设下的未来可达能力；
-- `OBSERVED / TRACKED / UNKNOWN` 不静默补值；opponent `UNKNOWN` 不改变基础推荐。
+> **这一局值得投入到什么程度？**
 
-权威设计与冻结验收分别见 [`docs/policy-v3-architecture.md`](docs/policy-v3-architecture.md)
-和 [`docs/experiments/policy-v3-final-acceptance.md`](docs/experiments/policy-v3-final-acceptance.md)。
+它按“经济策略 → 投入边界 → 败后影响 → 具体购买”的顺序组织建议。枪械和道具组合很
+重要，但它们服务于回合策略，而不是替代策略本身。
 
-## 结构
+## 目标展示示例
+
+> 以下是 Policy V3 structured output 的目标展示示例，不是当前 CLI 的逐字输出。
 
 ```text
-apps/
-  roundsense/          # GSI lifecycle tracker、runtime orchestration 与终端输出
-  gsi-recorder/        # GSI 录制（验证 / 调试用）
-packages/
-  gsi-protocol/        # wire schema、GSI cfg、token、receipt clock
-  c4-estimator/        # bomb-state transition 与未校准 timing contract
-  economy-advisor/     # mechanics、Policy V3、compact opponent calibration
-  shared-types/        # 少量跨包 serializable contracts
-  replay-harness/      # demo replay 测试辅助
-scripts/
-  policy-v3-final-acceptance.ts  # 冻结 corpus 行为验收 harness
-tools/
-  validate-demo.ts     # P1 离线经济账本验证器
+CT · Round 8 · $3,450
+
+半起
+建议投入 ≤ $1,250
+激进上限 $1,750
+
+推荐：
+半甲 + 烟 + 闪
+
+如果输掉：
+下一局预计 $4,200
+✓ 可保持长枪 + 甲
+✗ 长枪 + 甲 + 基础道具
+
+对手经济：未知
 ```
+
+## 核心能力
+
+- **经济策略**：区分 eco、半起、强起与全起，先决定投入程度，再规划购买组合。
+- **投入边界**：同时表达建议投入和最多投入，半起不是固定的一套枪甲模板。
+- **败后经济**：给出输掉当前回合后的现金情景，以及下一局关键购买能力是否仍可达。
+- **装备感知建议**：根据已有主武器、护甲、头盔、钳子和道具，只补真正需要购买的内容。
+- **手枪局后策略**：区分手枪局赢家的 conversion 与输家的独立策略，不套用普通回合模板。
+- **C4 状态检测**：安全支持 bomb-state observation 与状态转换检测；数值剩余时间仍等待
+  Windows controlled calibration，当前不提供精确实时倒计时。
+
+## 工作方式
+
+```text
+CS2 GSI
+  → 当前可见状态与安全连续追踪的历史
+  → Policy V3
+  → 投入建议 / 未来经济 / 购买组合
+  → 当前 CLI / 未来 presentation
+```
+
+RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从连续 GSI payload 中安全
+追踪得到的上一回合状态。策略引擎输出结构化结果，CLI 只是当前的验证和展示界面。
 
 ## 快速开始
 
+### 前置要求
+
+- Node.js 22
+- pnpm 11.20.0
+- CS2 与 RoundSense 运行在同一台电脑上
+
+### 1. 安装依赖
+
 ```bash
 pnpm install
-pnpm test
-pnpm typecheck
-pnpm --filter @roundsense/roundsense start
 ```
 
-本地存在冻结 corpus 与 202 个 map package 时，可重跑完整 Policy V3 acceptance：
+### 2. 生成并安装 GSI 配置
+
+选择一个本地 token，并生成与 RoundSense 默认端口一致的配置：
 
 ```bash
-pnpm exec tsx scripts/policy-v3-final-acceptance.ts
+pnpm --filter @roundsense/gsi-recorder start --cfg --port 3001 --token roundsense-local
 ```
 
-## 产品与研究边界
+将命令输出的配置正文保存为 `gamestate_integration_roundsense.cfg`（UTF-8、无 BOM），
+放入 CS2 配置目录：
 
-- **产品 mainline**：runtime、compact/versioned calibration、权威架构、最终研究结论、
-  frozen acceptance harness 与机器可读验收结果。
-- **frozen research branches**：大型探索脚本、派生研究输入与诊断结果。CT helmet 研究固定在
-  `research/ct-helmet-decision @ d194d17`，最终 purchase-policy 诊断固定在
-  `research/purchase-policy-final-diagnostic @ aaf491b`。
-- live advisor 直接读取 own GSI money / inventory / loss counter；demo 字段只用于离线 label、
-  pre-state 恢复和审计，不进入 production policy 输入。
+```text
+<Steam>/steamapps/common/Counter-Strike 2/game/csgo/cfg/
+```
 
-## 规则来源
+### 3. 启动 RoundSense
 
-- 正式规则：`packages/economy-advisor/rules/cs2-competitive-2026-08.json`；
-- 武器表：`packages/economy-advisor/rules/weapons.v2026-08-06.json`；
-- opponent compact calibration：
-  `packages/economy-advisor/rules/opponent-economy-direct.v2026-08.json`；
-- 未决项与 server profile：`docs/evidence.md`。
+使用与 cfg 相同的 token：
+
+```bash
+pnpm --filter @roundsense/roundsense start --token roundsense-local --port 3001
+```
+
+服务默认只监听 [http://127.0.0.1:3001](http://127.0.0.1:3001)。进入游戏后，
+RoundSense 会在可验证的购买窗口（当前为 freezetime）输出经济建议。
+
+## 数据边界与安全性
+
+- 完全本地运行，HTTP receiver 绑定 loopback 地址。
+- 只读消费 CS2 官方提供的 GSI payload。
+- 不读取游戏内存，不向游戏进程注入代码，也不修改游戏状态。
+- 实时推荐不使用只有 demo 或 spectator 才能看到的对手隐藏经济与装备信息。
+- 信息缺失时保留“未知”，不会为了给出完整答案而伪造确定值。
+
+## 验证
+
+Policy V3 使用冻结的 IEM Cologne Major 2026 corpus 做 behavioral conformance
+validation：
+
+- 43,620 条 raw player-rounds
+- 23,552 条 eligible player-rounds
+- 202 个 map packages
+- 所有 Policy V3 mechanical invariant violations = 0
+
+职业比赛行为在这里是 expert behavioral reference，不是唯一正确或最优策略的真值。
+
+完整方法、限制与结果见：
+
+- [Policy V3 最终产品行为验收](docs/experiments/policy-v3-final-acceptance.md)
+- [Policy V3 architecture](docs/policy-v3-architecture.md)
+
+## 开发与仓库结构
+
+```text
+apps/
+  roundsense/          # 当前 CLI 与 runtime orchestration
+  gsi-recorder/        # GSI cfg 生成、录制与调试
+packages/
+  economy-advisor/     # Policy V3 与购买 mechanics
+  gsi-protocol/        # GSI schema、receiver 与 cfg
+  c4-estimator/        # C4 状态与 timing contract
+  shared-types/        # 跨包共享类型
+  replay-harness/      # 离线 replay 测试辅助
+scripts/
+  policy-v3-final-acceptance.ts
+```
+
+常用验证命令：
+
+```bash
+pnpm test
+pnpm typecheck
+pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip
+```
+
+完整研究资产保留在 frozen research branches；mainline 保留生产代码、权威结论与可复现
+验收入口。
