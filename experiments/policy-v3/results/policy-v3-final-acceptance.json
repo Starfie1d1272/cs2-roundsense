@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "baseline_policy_sha": "584ec5ce91c6d1bf8d138783a42d137fe7276a47",
   "decision_scope": "behavioral conformance on the frozen Cologne corpus; professional behavior is not optimal-policy ground truth",
   "inputs": {
@@ -22,7 +22,8 @@
     "demo_label_only_fields": [
       "resulting spend/loadout",
       "replay end armor/kit/grenades",
-      "professional action type"
+      "individual player-economies action type",
+      "rounds team economy for POST_PISTOL conversion label only"
     ],
     "forbidden_policy_fields_not_supplied": [
       "opponent exact money/weapons/survivors",
@@ -63,8 +64,10 @@
       "eco": "PRESERVE",
       "semi": "LIGHT",
       "force": "FORCE",
-      "full": "FULL"
+      "full": "FULL",
+      "post_pistol_winner": "FULL conversion override"
     },
+    "strategic_mode_label": "POST_PISTOL pistol winners use rounds.json team*Economy=full; all individual purchase fields remain player-economies labels",
     "exact": "first Policy V3 option (dominant when a dominant option exists)",
     "declared_default_states": 857,
     "declared_default_rate": 0.0364,
@@ -73,7 +76,7 @@
     "actual_spend": "strict individual player moneySpent; drop-sensitive regulation rows excluded"
   },
   "mechanical_invariants": {
-    "checked_recommendation_candidates": 61985,
+    "checked_recommendation_candidates": 59769,
     "violations": {
       "over_budget": 0,
       "side_illegal": 0,
@@ -92,7 +95,8 @@
       "overtime_has_no_normal_future_affordability": true,
       "c4_remaining_uncalibrated_unknown": true,
       "opponent_unknown_changes_base_recommendation_set": 0,
-      "loss_projection_mismatch": 0
+      "loss_projection_mismatch": 0,
+      "post_pistol_conversion_winner_light_output": 0
     }
   },
   "behavioral_alignment": {
@@ -100,168 +104,168 @@
       "n": 23552,
       "agreement": {
         "mode": {
-          "exact_n": 17697,
-          "exact_rate": 0.7514,
-          "compatible_n": 22114,
-          "compatible_rate": 0.9389
+          "exact_n": 18112,
+          "exact_rate": 0.769,
+          "compatible_n": 22221,
+          "compatible_rate": 0.9435
         },
         "primary_family": {
           "exact_n": 16372,
           "exact_rate": 0.6951,
-          "compatible_n": 20603,
-          "compatible_rate": 0.8748
+          "compatible_n": 20440,
+          "compatible_rate": 0.8679
         },
         "armor_state": {
-          "exact_n": 15876,
-          "exact_rate": 0.6741,
-          "compatible_n": 19876,
-          "compatible_rate": 0.8439
+          "exact_n": 14769,
+          "exact_rate": 0.6271,
+          "compatible_n": 18755,
+          "compatible_rate": 0.7963
         },
         "armor_presence": {
           "exact_n": 20664,
           "exact_rate": 0.8774,
-          "compatible_n": 23299,
-          "compatible_rate": 0.9893
+          "compatible_n": 23297,
+          "compatible_rate": 0.9892
         },
         "helmet": {
-          "exact_n": 18253,
-          "exact_rate": 0.775,
-          "compatible_n": 20119,
-          "compatible_rate": 0.8542
+          "exact_n": 17147,
+          "exact_rate": 0.728,
+          "compatible_n": 19000,
+          "compatible_rate": 0.8067
         },
         "utility_multiset": {
-          "exact_n": 9281,
-          "exact_rate": 0.3941,
-          "compatible_n": 14194,
-          "compatible_rate": 0.6027
+          "exact_n": 9031,
+          "exact_rate": 0.3834,
+          "compatible_n": 13844,
+          "compatible_rate": 0.5878
         },
         "kit": {
           "exact_n": 21349,
           "exact_rate": 0.9065,
-          "compatible_n": 23233,
-          "compatible_rate": 0.9865
+          "compatible_n": 23229,
+          "compatible_rate": 0.9863
         }
       },
       "utility_feature_agreement": {
         "smoke": {
-          "exact_rate": 0.7546,
-          "compatible_rate": 0.9018
+          "exact_rate": 0.765,
+          "compatible_rate": 0.897
         },
         "fire": {
-          "exact_rate": 0.7545,
-          "compatible_rate": 0.8789
+          "exact_rate": 0.7509,
+          "compatible_rate": 0.8666
         },
         "flash1": {
-          "exact_rate": 0.7165,
-          "compatible_rate": 0.875
+          "exact_rate": 0.7122,
+          "compatible_rate": 0.8605
         },
         "flash2": {
-          "exact_rate": 0.8024,
-          "compatible_rate": 0.9158
+          "exact_rate": 0.799,
+          "compatible_rate": 0.9093
         },
         "he": {
-          "exact_rate": 0.7004,
-          "compatible_rate": 0.8679
+          "exact_rate": 0.6975,
+          "compatible_rate": 0.858
         }
       },
       "spend": {
-        "lead_mae": 575.6517,
+        "lead_mae": 578.3798,
         "lead_median_ae": 100,
         "lead_p90_ae": 2000,
-        "lead_mean_signed": 275.3163,
-        "best_set_mae": 249.0341,
+        "lead_mean_signed": 273.0978,
+        "best_set_mae": 253.7109,
         "best_set_median_ae": 0
       },
       "loss_next_money": {
         "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-        "lead_mae": 575.6517,
-        "lead_mean_signed_policy_minus_actual": -275.3163
+        "lead_mae": 578.3798,
+        "lead_mean_signed_policy_minus_actual": -273.0978
       },
       "mode_matrix": {
-        "FORCE->FORCE": 2544,
-        "FORCE->FULL": 715,
+        "FORCE->FORCE": 2171,
+        "FORCE->FULL": 429,
         "FORCE->PRESERVE": 357,
-        "FULL->FORCE": 107,
-        "FULL->FULL": 14614,
-        "FULL->LIGHT": 111,
+        "FULL->FORCE": 73,
+        "FULL->FULL": 15402,
+        "FULL->LIGHT": 110,
         "FULL->PRESERVE": 8,
-        "LIGHT->FORCE": 1407,
-        "LIGHT->FULL": 887,
+        "LIGHT->FORCE": 1386,
+        "LIGHT->FULL": 816,
         "LIGHT->LIGHT": 1,
         "LIGHT->PRESERVE": 35,
-        "PRESERVE->FORCE": 2047,
-        "PRESERVE->FULL": 179,
+        "PRESERVE->FORCE": 2046,
+        "PRESERVE->FULL": 178,
         "PRESERVE->LIGHT": 2,
         "PRESERVE->PRESERVE": 538
       },
       "mode_by_actual": {
         "FORCE": {
-          "n": 3616,
-          "exact_n": 2544,
-          "exact_rate": 0.7035,
-          "compatible_n": 3616,
+          "n": 2957,
+          "exact_n": 2171,
+          "exact_rate": 0.7342,
+          "compatible_n": 2957,
           "compatible_rate": 1
         },
         "FULL": {
-          "n": 14840,
-          "exact_n": 14614,
-          "exact_rate": 0.9848,
-          "compatible_n": 14614,
-          "compatible_rate": 0.9848
+          "n": 15593,
+          "exact_n": 15402,
+          "exact_rate": 0.9878,
+          "compatible_n": 15402,
+          "compatible_rate": 0.9878
         },
         "LIGHT": {
-          "n": 2330,
+          "n": 2238,
           "exact_n": 1,
           "exact_rate": 0.0004,
-          "compatible_n": 1297,
-          "compatible_rate": 0.5567
+          "compatible_n": 1276,
+          "compatible_rate": 0.5702
         },
         "PRESERVE": {
-          "n": 2766,
+          "n": 2764,
           "exact_n": 538,
-          "exact_rate": 0.1945,
-          "compatible_n": 2587,
-          "compatible_rate": 0.9353
+          "exact_rate": 0.1946,
+          "compatible_n": 2586,
+          "compatible_rate": 0.9356
         }
       },
       "offered_mode_coverage": {
         "FORCE": {
-          "states": 23427,
-          "rate": 0.9947
+          "states": 21688,
+          "rate": 0.9209
         },
         "FULL": {
-          "states": 16395,
-          "rate": 0.6961
+          "states": 16825,
+          "rate": 0.7144
         },
         "LIGHT": {
-          "states": 5090,
-          "rate": 0.2161
+          "states": 4660,
+          "rate": 0.1979
         },
         "PRESERVE": {
-          "states": 7157,
-          "rate": 0.3039
+          "states": 6727,
+          "rate": 0.2856
         }
       },
       "severe": {
         "any": {
-          "count": 10582,
-          "rate": 0.4493
+          "count": 11516,
+          "rate": 0.489
         },
         "armor": {
           "count": 2888,
           "rate": 0.1226
         },
         "force_actual_eco": {
-          "count": 2047,
+          "count": 2046,
           "rate": 0.0869
         },
         "full_actual_eco": {
-          "count": 179,
+          "count": 180,
           "rate": 0.0076
         },
         "helmet": {
-          "count": 5299,
-          "rate": 0.225
+          "count": 6405,
+          "rate": 0.272
         },
         "preserve_actual_full": {
           "count": 8,
@@ -272,8 +276,8 @@
           "rate": 0.3049
         },
         "spend_ge_1000": {
-          "count": 5660,
-          "rate": 0.2403
+          "count": 5666,
+          "rate": 0.2406
         }
       }
     },
@@ -612,166 +616,158 @@
         "n": 3524,
         "agreement": {
           "mode": {
-            "exact_n": 2465,
-            "exact_rate": 0.6995,
-            "compatible_n": 3290,
-            "compatible_rate": 0.9336
+            "exact_n": 2880,
+            "exact_rate": 0.8173,
+            "compatible_n": 3397,
+            "compatible_rate": 0.964
           },
           "primary_family": {
             "exact_n": 2287,
             "exact_rate": 0.649,
-            "compatible_n": 3023,
-            "compatible_rate": 0.8578
+            "compatible_n": 2860,
+            "compatible_rate": 0.8116
           },
           "armor_state": {
-            "exact_n": 2088,
-            "exact_rate": 0.5925,
-            "compatible_n": 2362,
-            "compatible_rate": 0.6703
+            "exact_n": 981,
+            "exact_rate": 0.2784,
+            "compatible_n": 1241,
+            "compatible_rate": 0.3522
           },
           "armor_presence": {
             "exact_n": 2956,
             "exact_rate": 0.8388,
-            "compatible_n": 3522,
-            "compatible_rate": 0.9994
+            "compatible_n": 3520,
+            "compatible_rate": 0.9989
           },
           "helmet": {
-            "exact_n": 2351,
-            "exact_rate": 0.6671,
-            "compatible_n": 2364,
-            "compatible_rate": 0.6708
+            "exact_n": 1245,
+            "exact_rate": 0.3533,
+            "compatible_n": 1245,
+            "compatible_rate": 0.3533
           },
           "utility_multiset": {
-            "exact_n": 1100,
-            "exact_rate": 0.3121,
-            "compatible_n": 1469,
-            "compatible_rate": 0.4169
+            "exact_n": 850,
+            "exact_rate": 0.2412,
+            "compatible_n": 1119,
+            "compatible_rate": 0.3175
           },
           "kit": {
             "exact_n": 3466,
             "exact_rate": 0.9835,
-            "compatible_n": 3470,
-            "compatible_rate": 0.9847
+            "compatible_n": 3466,
+            "compatible_rate": 0.9835
           }
         },
         "utility_feature_agreement": {
           "smoke": {
-            "exact_rate": 0.5871,
-            "compatible_rate": 0.8255
+            "exact_rate": 0.6569,
+            "compatible_rate": 0.7934
           },
           "fire": {
-            "exact_rate": 0.7131,
-            "compatible_rate": 0.8243
+            "exact_rate": 0.6887,
+            "compatible_rate": 0.7418
           },
           "flash1": {
-            "exact_rate": 0.5851,
-            "compatible_rate": 0.7903
+            "exact_rate": 0.5568,
+            "compatible_rate": 0.6935
           },
           "flash2": {
-            "exact_rate": 0.8692,
-            "compatible_rate": 0.897
+            "exact_rate": 0.8468,
+            "compatible_rate": 0.8536
           },
           "he": {
-            "exact_rate": 0.7159,
-            "compatible_rate": 0.7687
+            "exact_rate": 0.6967,
+            "compatible_rate": 0.7023
           }
         },
         "spend": {
-          "lead_mae": 498.496,
+          "lead_mae": 516.7281,
           "lead_median_ae": 100,
           "lead_p90_ae": 2100,
-          "lead_mean_signed": -101.9864,
-          "best_set_mae": 144.424,
+          "lead_mean_signed": -116.8133,
+          "best_set_mae": 175.681,
           "best_set_median_ae": 50
         },
         "loss_next_money": {
           "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
-          "lead_mae": 498.496,
-          "lead_mean_signed_policy_minus_actual": 101.9864
+          "lead_mae": 516.7281,
+          "lead_mean_signed_policy_minus_actual": 116.8133
         },
         "mode_matrix": {
-          "FORCE->FORCE": 978,
-          "FORCE->FULL": 286,
+          "FORCE->FORCE": 605,
           "FORCE->PRESERVE": 357,
-          "FULL->FORCE": 38,
-          "FULL->FULL": 952,
-          "FULL->LIGHT": 1,
+          "FULL->FORCE": 4,
+          "FULL->FULL": 1740,
           "FULL->PRESERVE": 1,
-          "LIGHT->FORCE": 109,
-          "LIGHT->FULL": 71,
+          "LIGHT->FORCE": 88,
           "LIGHT->PRESERVE": 34,
-          "PRESERVE->FORCE": 161,
-          "PRESERVE->FULL": 1,
+          "PRESERVE->FORCE": 160,
           "PRESERVE->PRESERVE": 535
         },
         "mode_by_actual": {
           "FORCE": {
-            "n": 1621,
-            "exact_n": 978,
-            "exact_rate": 0.6033,
-            "compatible_n": 1621,
+            "n": 962,
+            "exact_n": 605,
+            "exact_rate": 0.6289,
+            "compatible_n": 962,
             "compatible_rate": 1
           },
           "FULL": {
-            "n": 992,
-            "exact_n": 952,
-            "exact_rate": 0.9597,
-            "compatible_n": 952,
-            "compatible_rate": 0.9597
+            "n": 1745,
+            "exact_n": 1740,
+            "exact_rate": 0.9971,
+            "compatible_n": 1740,
+            "compatible_rate": 0.9971
           },
           "LIGHT": {
-            "n": 214,
+            "n": 122,
             "exact_n": 0,
             "exact_rate": 0,
-            "compatible_n": 21,
-            "compatible_rate": 0.0981
+            "compatible_n": 0,
+            "compatible_rate": 0
           },
           "PRESERVE": {
-            "n": 697,
+            "n": 695,
             "exact_n": 535,
-            "exact_rate": 0.7676,
-            "compatible_n": 696,
-            "compatible_rate": 0.9986
+            "exact_rate": 0.7698,
+            "compatible_n": 695,
+            "compatible_rate": 1
           }
         },
         "offered_mode_coverage": {
           "FORCE": {
-            "states": 3523,
-            "rate": 0.9997
+            "states": 1784,
+            "rate": 0.5062
           },
           "FULL": {
-            "states": 1310,
-            "rate": 0.3717
-          },
-          "LIGHT": {
-            "states": 430,
-            "rate": 0.122
+            "states": 1740,
+            "rate": 0.4938
           },
           "PRESERVE": {
-            "states": 2214,
-            "rate": 0.6283
+            "states": 1784,
+            "rate": 0.5062
           }
         },
         "severe": {
           "any": {
-            "count": 1838,
-            "rate": 0.5216
+            "count": 2772,
+            "rate": 0.7866
           },
           "armor": {
             "count": 568,
             "rate": 0.1612
           },
           "force_actual_eco": {
-            "count": 161,
-            "rate": 0.0457
+            "count": 160,
+            "rate": 0.0454
           },
           "full_actual_eco": {
-            "count": 1,
-            "rate": 0.0003
+            "count": 2,
+            "rate": 0.0006
           },
           "helmet": {
-            "count": 1173,
-            "rate": 0.3329
+            "count": 2279,
+            "rate": 0.6467
           },
           "preserve_actual_full": {
             "count": 1,
@@ -782,9 +778,888 @@
             "rate": 0.351
           },
           "spend_ge_1000": {
-            "count": 629,
-            "rate": 0.1785
+            "count": 635,
+            "rate": 0.1802
           }
+        }
+      }
+    },
+    "policy_v3_by_strategic_segment": {
+      "NORMAL": {
+        "n": 18904,
+        "agreement": {
+          "mode": {
+            "exact_n": 14121,
+            "exact_rate": 0.747,
+            "compatible_n": 17706,
+            "compatible_rate": 0.9366
+          },
+          "primary_family": {
+            "exact_n": 13113,
+            "exact_rate": 0.6937,
+            "compatible_n": 16604,
+            "compatible_rate": 0.8783
+          },
+          "armor_state": {
+            "exact_n": 12937,
+            "exact_rate": 0.6844,
+            "compatible_n": 16639,
+            "compatible_rate": 0.8802
+          },
+          "armor_presence": {
+            "exact_n": 16584,
+            "exact_rate": 0.8773,
+            "compatible_n": 18653,
+            "compatible_rate": 0.9867
+          },
+          "helmet": {
+            "exact_n": 15051,
+            "exact_rate": 0.7962,
+            "compatible_n": 16880,
+            "compatible_rate": 0.8929
+          },
+          "utility_multiset": {
+            "exact_n": 7440,
+            "exact_rate": 0.3936,
+            "compatible_n": 11760,
+            "compatible_rate": 0.6221
+          },
+          "kit": {
+            "exact_n": 17082,
+            "exact_rate": 0.9036,
+            "compatible_n": 18646,
+            "compatible_rate": 0.9864
+          }
+        },
+        "utility_feature_agreement": {
+          "smoke": {
+            "exact_rate": 0.7758,
+            "compatible_rate": 0.914
+          },
+          "fire": {
+            "exact_rate": 0.7502,
+            "compatible_rate": 0.8838
+          },
+          "flash1": {
+            "exact_rate": 0.7267,
+            "compatible_rate": 0.885
+          },
+          "flash2": {
+            "exact_rate": 0.7932,
+            "compatible_rate": 0.9162
+          },
+          "he": {
+            "exact_rate": 0.6953,
+            "compatible_rate": 0.8807
+          }
+        },
+        "spend": {
+          "lead_mae": 602.1821,
+          "lead_median_ae": 100,
+          "lead_p90_ae": 2000,
+          "lead_mean_signed": 378.4993,
+          "best_set_mae": 269.1071,
+          "best_set_median_ae": 0
+        },
+        "loss_next_money": {
+          "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+          "lead_mae": 602.1821,
+          "lead_mean_signed_policy_minus_actual": -378.4993
+        },
+        "mode_matrix": {
+          "FORCE->FORCE": 1547,
+          "FORCE->FULL": 422,
+          "FULL->FORCE": 68,
+          "FULL->FULL": 12570,
+          "FULL->LIGHT": 110,
+          "FULL->PRESERVE": 5,
+          "LIGHT->FORCE": 1296,
+          "LIGHT->FULL": 815,
+          "LIGHT->LIGHT": 1,
+          "LIGHT->PRESERVE": 1,
+          "PRESERVE->FORCE": 1886,
+          "PRESERVE->FULL": 178,
+          "PRESERVE->LIGHT": 2,
+          "PRESERVE->PRESERVE": 3
+        },
+        "mode_by_actual": {
+          "FORCE": {
+            "n": 1969,
+            "exact_n": 1547,
+            "exact_rate": 0.7857,
+            "compatible_n": 1969,
+            "compatible_rate": 1
+          },
+          "FULL": {
+            "n": 12753,
+            "exact_n": 12570,
+            "exact_rate": 0.9857,
+            "compatible_n": 12570,
+            "compatible_rate": 0.9857
+          },
+          "LIGHT": {
+            "n": 2113,
+            "exact_n": 1,
+            "exact_rate": 0.0005,
+            "compatible_n": 1276,
+            "compatible_rate": 0.6039
+          },
+          "PRESERVE": {
+            "n": 2069,
+            "exact_n": 3,
+            "exact_rate": 0.0014,
+            "compatible_n": 1891,
+            "compatible_rate": 0.914
+          }
+        },
+        "offered_mode_coverage": {
+          "FORCE": {
+            "states": 18782,
+            "rate": 0.9935
+          },
+          "FULL": {
+            "states": 13985,
+            "rate": 0.7398
+          },
+          "LIGHT": {
+            "states": 4660,
+            "rate": 0.2465
+          },
+          "PRESERVE": {
+            "states": 4919,
+            "rate": 0.2602
+          }
+        },
+        "severe": {
+          "any": {
+            "count": 8360,
+            "rate": 0.4422
+          },
+          "armor": {
+            "count": 2320,
+            "rate": 0.1227
+          },
+          "force_actual_eco": {
+            "count": 1886,
+            "rate": 0.0998
+          },
+          "full_actual_eco": {
+            "count": 178,
+            "rate": 0.0094
+          },
+          "helmet": {
+            "count": 3853,
+            "rate": 0.2038
+          },
+          "preserve_actual_full": {
+            "count": 5,
+            "rate": 0.0003
+          },
+          "primary_family": {
+            "count": 5791,
+            "rate": 0.3063
+          },
+          "spend_ge_1000": {
+            "count": 4887,
+            "rate": 0.2585
+          }
+        }
+      },
+      "OVERTIME": {
+        "n": 1124,
+        "agreement": {
+          "mode": {
+            "exact_n": 1111,
+            "exact_rate": 0.9884,
+            "compatible_n": 1118,
+            "compatible_rate": 0.9947
+          },
+          "primary_family": {
+            "exact_n": 972,
+            "exact_rate": 0.8648,
+            "compatible_n": 976,
+            "compatible_rate": 0.8683
+          },
+          "armor_state": {
+            "exact_n": 851,
+            "exact_rate": 0.7571,
+            "compatible_n": 875,
+            "compatible_rate": 0.7785
+          },
+          "armor_presence": {
+            "exact_n": 1124,
+            "exact_rate": 1,
+            "compatible_n": 1124,
+            "compatible_rate": 1
+          },
+          "helmet": {
+            "exact_n": 851,
+            "exact_rate": 0.7571,
+            "compatible_n": 875,
+            "compatible_rate": 0.7785
+          },
+          "utility_multiset": {
+            "exact_n": 741,
+            "exact_rate": 0.6593,
+            "compatible_n": 965,
+            "compatible_rate": 0.8585
+          },
+          "kit": {
+            "exact_n": 801,
+            "exact_rate": 0.7126,
+            "compatible_n": 1117,
+            "compatible_rate": 0.9938
+          }
+        },
+        "utility_feature_agreement": {
+          "smoke": {
+            "exact_rate": 0.9235,
+            "compatible_rate": 0.9351
+          },
+          "fire": {
+            "exact_rate": 0.9573,
+            "compatible_rate": 0.9689
+          },
+          "flash1": {
+            "exact_rate": 0.9564,
+            "compatible_rate": 0.9724
+          },
+          "flash2": {
+            "exact_rate": 0.7464,
+            "compatible_rate": 0.968
+          },
+          "he": {
+            "exact_rate": 0.7367,
+            "compatible_rate": 0.9635
+          }
+        },
+        "spend": {
+          "lead_mae": 371.3523,
+          "lead_median_ae": 100,
+          "lead_p90_ae": 1500,
+          "lead_mean_signed": -277.1352,
+          "best_set_mae": 239.4128,
+          "best_set_median_ae": 0
+        },
+        "loss_next_money": {
+          "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+          "lead_mae": 371.3523,
+          "lead_mean_signed_policy_minus_actual": 277.1352
+        },
+        "mode_matrix": {
+          "FORCE->FORCE": 19,
+          "FORCE->FULL": 7,
+          "FULL->FORCE": 1,
+          "FULL->FULL": 1092,
+          "FULL->PRESERVE": 2,
+          "LIGHT->FORCE": 2,
+          "LIGHT->FULL": 1
+        },
+        "mode_by_actual": {
+          "FORCE": {
+            "n": 26,
+            "exact_n": 19,
+            "exact_rate": 0.7308,
+            "compatible_n": 26,
+            "compatible_rate": 1
+          },
+          "FULL": {
+            "n": 1095,
+            "exact_n": 1092,
+            "exact_rate": 0.9973,
+            "compatible_n": 1092,
+            "compatible_rate": 0.9973
+          },
+          "LIGHT": {
+            "n": 3,
+            "exact_n": 0,
+            "exact_rate": 0,
+            "compatible_n": 0,
+            "compatible_rate": 0
+          }
+        },
+        "offered_mode_coverage": {
+          "FORCE": {
+            "states": 1122,
+            "rate": 0.9982
+          },
+          "FULL": {
+            "states": 1100,
+            "rate": 0.9786
+          },
+          "PRESERVE": {
+            "states": 24,
+            "rate": 0.0214
+          }
+        },
+        "severe": {
+          "any": {
+            "count": 384,
+            "rate": 0.3416
+          },
+          "helmet": {
+            "count": 273,
+            "rate": 0.2429
+          },
+          "preserve_actual_full": {
+            "count": 2,
+            "rate": 0.0018
+          },
+          "primary_family": {
+            "count": 152,
+            "rate": 0.1352
+          },
+          "spend_ge_1000": {
+            "count": 144,
+            "rate": 0.1281
+          }
+        }
+      },
+      "POST_PISTOL_LOSS": {
+        "n": 1784,
+        "agreement": {
+          "mode": {
+            "exact_n": 1140,
+            "exact_rate": 0.639,
+            "compatible_n": 1657,
+            "compatible_rate": 0.9288
+          },
+          "primary_family": {
+            "exact_n": 1006,
+            "exact_rate": 0.5639,
+            "compatible_n": 1579,
+            "compatible_rate": 0.8851
+          },
+          "armor_state": {
+            "exact_n": 920,
+            "exact_rate": 0.5157,
+            "compatible_n": 1180,
+            "compatible_rate": 0.6614
+          },
+          "armor_presence": {
+            "exact_n": 1220,
+            "exact_rate": 0.6839,
+            "compatible_n": 1784,
+            "compatible_rate": 1
+          },
+          "helmet": {
+            "exact_n": 1180,
+            "exact_rate": 0.6614,
+            "compatible_n": 1180,
+            "compatible_rate": 0.6614
+          },
+          "utility_multiset": {
+            "exact_n": 705,
+            "exact_rate": 0.3952,
+            "compatible_n": 974,
+            "compatible_rate": 0.546
+          },
+          "kit": {
+            "exact_n": 1778,
+            "exact_rate": 0.9966,
+            "compatible_n": 1778,
+            "compatible_rate": 0.9966
+          }
+        },
+        "utility_feature_agreement": {
+          "smoke": {
+            "exact_rate": 0.5981,
+            "compatible_rate": 0.8677
+          },
+          "fire": {
+            "exact_rate": 0.8694,
+            "compatible_rate": 0.9742
+          },
+          "flash1": {
+            "exact_rate": 0.6177,
+            "compatible_rate": 0.8879
+          },
+          "flash2": {
+            "exact_rate": 0.9142,
+            "compatible_rate": 0.9277
+          },
+          "he": {
+            "exact_rate": 0.8425,
+            "compatible_rate": 0.8537
+          }
+        },
+        "spend": {
+          "lead_mae": 804.9888,
+          "lead_median_ae": 100,
+          "lead_p90_ae": 2550,
+          "lead_mean_signed": -318.8341,
+          "best_set_mae": 131.3061,
+          "best_set_median_ae": 50
+        },
+        "loss_next_money": {
+          "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+          "lead_mae": 804.9888,
+          "lead_mean_signed_policy_minus_actual": 318.8341
+        },
+        "mode_matrix": {
+          "FORCE->FORCE": 605,
+          "FORCE->PRESERVE": 357,
+          "FULL->FORCE": 4,
+          "FULL->PRESERVE": 1,
+          "LIGHT->FORCE": 88,
+          "LIGHT->PRESERVE": 34,
+          "PRESERVE->FORCE": 160,
+          "PRESERVE->PRESERVE": 535
+        },
+        "mode_by_actual": {
+          "FORCE": {
+            "n": 962,
+            "exact_n": 605,
+            "exact_rate": 0.6289,
+            "compatible_n": 962,
+            "compatible_rate": 1
+          },
+          "FULL": {
+            "n": 5,
+            "exact_n": 0,
+            "exact_rate": 0,
+            "compatible_n": 0,
+            "compatible_rate": 0
+          },
+          "LIGHT": {
+            "n": 122,
+            "exact_n": 0,
+            "exact_rate": 0,
+            "compatible_n": 0,
+            "compatible_rate": 0
+          },
+          "PRESERVE": {
+            "n": 695,
+            "exact_n": 535,
+            "exact_rate": 0.7698,
+            "compatible_n": 695,
+            "compatible_rate": 1
+          }
+        },
+        "offered_mode_coverage": {
+          "FORCE": {
+            "states": 1784,
+            "rate": 1
+          },
+          "PRESERVE": {
+            "states": 1784,
+            "rate": 1
+          }
+        },
+        "severe": {
+          "any": {
+            "count": 1088,
+            "rate": 0.6099
+          },
+          "armor": {
+            "count": 564,
+            "rate": 0.3161
+          },
+          "force_actual_eco": {
+            "count": 160,
+            "rate": 0.0897
+          },
+          "helmet": {
+            "count": 604,
+            "rate": 0.3386
+          },
+          "preserve_actual_full": {
+            "count": 1,
+            "rate": 0.0006
+          },
+          "primary_family": {
+            "count": 778,
+            "rate": 0.4361
+          },
+          "spend_ge_1000": {
+            "count": 563,
+            "rate": 0.3156
+          }
+        }
+      },
+      "POST_PISTOL_WIN": {
+        "n": 1740,
+        "agreement": {
+          "mode": {
+            "exact_n": 1740,
+            "exact_rate": 1,
+            "compatible_n": 1740,
+            "compatible_rate": 1
+          },
+          "primary_family": {
+            "exact_n": 1281,
+            "exact_rate": 0.7362,
+            "compatible_n": 1281,
+            "compatible_rate": 0.7362
+          },
+          "armor_state": {
+            "exact_n": 61,
+            "exact_rate": 0.0351,
+            "compatible_n": 61,
+            "compatible_rate": 0.0351
+          },
+          "armor_presence": {
+            "exact_n": 1736,
+            "exact_rate": 0.9977,
+            "compatible_n": 1736,
+            "compatible_rate": 0.9977
+          },
+          "helmet": {
+            "exact_n": 65,
+            "exact_rate": 0.0374,
+            "compatible_n": 65,
+            "compatible_rate": 0.0374
+          },
+          "utility_multiset": {
+            "exact_n": 145,
+            "exact_rate": 0.0833,
+            "compatible_n": 145,
+            "compatible_rate": 0.0833
+          },
+          "kit": {
+            "exact_n": 1688,
+            "exact_rate": 0.9701,
+            "compatible_n": 1688,
+            "compatible_rate": 0.9701
+          }
+        },
+        "utility_feature_agreement": {
+          "smoke": {
+            "exact_rate": 0.7172,
+            "compatible_rate": 0.7172
+          },
+          "fire": {
+            "exact_rate": 0.5034,
+            "compatible_rate": 0.5034
+          },
+          "flash1": {
+            "exact_rate": 0.4943,
+            "compatible_rate": 0.4943
+          },
+          "flash2": {
+            "exact_rate": 0.7776,
+            "compatible_rate": 0.7776
+          },
+          "he": {
+            "exact_rate": 0.5471,
+            "compatible_rate": 0.5471
+          }
+        },
+        "spend": {
+          "lead_mae": 221.1782,
+          "lead_median_ae": 100,
+          "lead_p90_ae": 500,
+          "lead_mean_signed": 90.3161,
+          "best_set_mae": 221.1782,
+          "best_set_median_ae": 100
+        },
+        "loss_next_money": {
+          "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+          "lead_mae": 221.1782,
+          "lead_mean_signed_policy_minus_actual": -90.3161
+        },
+        "mode_matrix": {
+          "FULL->FULL": 1740
+        },
+        "mode_by_actual": {
+          "FULL": {
+            "n": 1740,
+            "exact_n": 1740,
+            "exact_rate": 1,
+            "compatible_n": 1740,
+            "compatible_rate": 1
+          }
+        },
+        "offered_mode_coverage": {
+          "FULL": {
+            "states": 1740,
+            "rate": 1
+          }
+        },
+        "severe": {
+          "any": {
+            "count": 1684,
+            "rate": 0.9678
+          },
+          "armor": {
+            "count": 4,
+            "rate": 0.0023
+          },
+          "full_actual_eco": {
+            "count": 2,
+            "rate": 0.0011
+          },
+          "helmet": {
+            "count": 1675,
+            "rate": 0.9626
+          },
+          "primary_family": {
+            "count": 459,
+            "rate": 0.2638
+          },
+          "spend_ge_1000": {
+            "count": 72,
+            "rate": 0.0414
+          }
+        }
+      }
+    },
+    "normal_observational_semi": {
+      "n": 2113,
+      "agreement": {
+        "mode": {
+          "exact_n": 1,
+          "exact_rate": 0.0005,
+          "compatible_n": 1276,
+          "compatible_rate": 0.6039
+        },
+        "primary_family": {
+          "exact_n": 219,
+          "exact_rate": 0.1036,
+          "compatible_n": 1390,
+          "compatible_rate": 0.6578
+        },
+        "armor_state": {
+          "exact_n": 1321,
+          "exact_rate": 0.6252,
+          "compatible_n": 1718,
+          "compatible_rate": 0.8131
+        },
+        "armor_presence": {
+          "exact_n": 1886,
+          "exact_rate": 0.8926,
+          "compatible_n": 2066,
+          "compatible_rate": 0.9778
+        },
+        "helmet": {
+          "exact_n": 1521,
+          "exact_rate": 0.7198,
+          "compatible_n": 1765,
+          "compatible_rate": 0.8353
+        },
+        "utility_multiset": {
+          "exact_n": 239,
+          "exact_rate": 0.1131,
+          "compatible_n": 591,
+          "compatible_rate": 0.2797
+        },
+        "kit": {
+          "exact_n": 2104,
+          "exact_rate": 0.9957,
+          "compatible_n": 2106,
+          "compatible_rate": 0.9967
+        }
+      },
+      "utility_feature_agreement": {
+        "smoke": {
+          "exact_rate": 0.5315,
+          "compatible_rate": 0.7686
+        },
+        "fire": {
+          "exact_rate": 0.4927,
+          "compatible_rate": 0.8571
+        },
+        "flash1": {
+          "exact_rate": 0.4742,
+          "compatible_rate": 0.8249
+        },
+        "flash2": {
+          "exact_rate": 0.8282,
+          "compatible_rate": 0.8788
+        },
+        "he": {
+          "exact_rate": 0.6096,
+          "compatible_rate": 0.8609
+        }
+      },
+      "spend": {
+        "lead_mae": 1604.9219,
+        "lead_median_ae": 1550,
+        "lead_p90_ae": 2450,
+        "lead_mean_signed": 1603.9281,
+        "best_set_mae": 960.3881,
+        "best_set_median_ae": 700
+      },
+      "loss_next_money": {
+        "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+        "lead_mae": 1604.9219,
+        "lead_mean_signed_policy_minus_actual": -1603.9281
+      },
+      "mode_matrix": {
+        "LIGHT->FORCE": 1296,
+        "LIGHT->FULL": 815,
+        "LIGHT->LIGHT": 1,
+        "LIGHT->PRESERVE": 1
+      },
+      "mode_by_actual": {
+        "LIGHT": {
+          "n": 2113,
+          "exact_n": 1,
+          "exact_rate": 0.0005,
+          "compatible_n": 1276,
+          "compatible_rate": 0.6039
+        }
+      },
+      "offered_mode_coverage": {
+        "FORCE": {
+          "states": 2111,
+          "rate": 0.9991
+        },
+        "FULL": {
+          "states": 815,
+          "rate": 0.3857
+        },
+        "LIGHT": {
+          "states": 1276,
+          "rate": 0.6039
+        },
+        "PRESERVE": {
+          "states": 1298,
+          "rate": 0.6143
+        }
+      },
+      "severe": {
+        "any": {
+          "count": 2042,
+          "rate": 0.9664
+        },
+        "armor": {
+          "count": 227,
+          "rate": 0.1074
+        },
+        "helmet": {
+          "count": 592,
+          "rate": 0.2802
+        },
+        "primary_family": {
+          "count": 1894,
+          "rate": 0.8964
+        },
+        "spend_ge_1000": {
+          "count": 1858,
+          "rate": 0.8793
+        }
+      }
+    },
+    "post_pistol_winner_observational_semi": {
+      "n": 92,
+      "agreement": {
+        "mode": {
+          "exact_n": 92,
+          "exact_rate": 1,
+          "compatible_n": 92,
+          "compatible_rate": 1
+        },
+        "primary_family": {
+          "exact_n": 8,
+          "exact_rate": 0.087,
+          "compatible_n": 8,
+          "compatible_rate": 0.087
+        },
+        "armor_state": {
+          "exact_n": 1,
+          "exact_rate": 0.0109,
+          "compatible_n": 1,
+          "compatible_rate": 0.0109
+        },
+        "armor_presence": {
+          "exact_n": 91,
+          "exact_rate": 0.9891,
+          "compatible_n": 91,
+          "compatible_rate": 0.9891
+        },
+        "helmet": {
+          "exact_n": 2,
+          "exact_rate": 0.0217,
+          "compatible_n": 2,
+          "compatible_rate": 0.0217
+        },
+        "utility_multiset": {
+          "exact_n": 14,
+          "exact_rate": 0.1522,
+          "compatible_n": 14,
+          "compatible_rate": 0.1522
+        },
+        "kit": {
+          "exact_n": 91,
+          "exact_rate": 0.9891,
+          "compatible_n": 91,
+          "compatible_rate": 0.9891
+        }
+      },
+      "utility_feature_agreement": {
+        "smoke": {
+          "exact_rate": 0.6196,
+          "compatible_rate": 0.6196
+        },
+        "fire": {
+          "exact_rate": 0.6739,
+          "compatible_rate": 0.6739
+        },
+        "flash1": {
+          "exact_rate": 0.5761,
+          "compatible_rate": 0.5761
+        },
+        "flash2": {
+          "exact_rate": 0.8261,
+          "compatible_rate": 0.8261
+        },
+        "he": {
+          "exact_rate": 0.6196,
+          "compatible_rate": 0.6196
+        }
+      },
+      "spend": {
+        "lead_mae": 1333.6957,
+        "lead_median_ae": 1200,
+        "lead_p90_ae": 2295.0000000000005,
+        "lead_mean_signed": 1333.6957,
+        "best_set_mae": 1333.6957,
+        "best_set_median_ae": 1200
+      },
+      "loss_next_money": {
+        "assumption": "same zero-kill, no-drop LOSS_NO_PLANT branch; difference is the inverse of spend difference",
+        "lead_mae": 1333.6957,
+        "lead_mean_signed_policy_minus_actual": -1333.6957
+      },
+      "mode_matrix": {
+        "FULL->FULL": 92
+      },
+      "mode_by_actual": {
+        "FULL": {
+          "n": 92,
+          "exact_n": 92,
+          "exact_rate": 1,
+          "compatible_n": 92,
+          "compatible_rate": 1
+        }
+      },
+      "offered_mode_coverage": {
+        "FULL": {
+          "states": 92,
+          "rate": 1
+        }
+      },
+      "severe": {
+        "any": {
+          "count": 92,
+          "rate": 1
+        },
+        "armor": {
+          "count": 1,
+          "rate": 0.0109
+        },
+        "helmet": {
+          "count": 90,
+          "rate": 0.9783
+        },
+        "primary_family": {
+          "count": 84,
+          "rate": 0.913
+        },
+        "spend_ge_1000": {
+          "count": 62,
+          "rate": 0.6739
         }
       }
     },
@@ -792,10 +1667,10 @@
       "n": 23552,
       "agreement": {
         "mode": {
-          "exact_n": 16034,
-          "exact_rate": 0.6808,
-          "compatible_n": 16034,
-          "compatible_rate": 0.6808
+          "exact_n": 16697,
+          "exact_rate": 0.7089,
+          "compatible_n": 16697,
+          "compatible_rate": 0.7089
         },
         "primary_family": {
           "exact_n": 15676,
@@ -871,43 +1746,43 @@
       },
       "mode_matrix": {
         "FORCE->FORCE": 208,
-        "FORCE->FULL": 1385,
-        "FORCE->LIGHT": 2023,
-        "FULL->FULL": 14808,
-        "FULL->LIGHT": 32,
+        "FORCE->FULL": 803,
+        "FORCE->LIGHT": 1946,
+        "FULL->FULL": 15477,
+        "FULL->LIGHT": 116,
         "LIGHT->FORCE": 21,
-        "LIGHT->FULL": 1295,
-        "LIGHT->LIGHT": 1013,
+        "LIGHT->FULL": 1209,
+        "LIGHT->LIGHT": 1007,
         "LIGHT->PRESERVE": 1,
         "PRESERVE->FORCE": 32,
-        "PRESERVE->FULL": 244,
-        "PRESERVE->LIGHT": 2485,
+        "PRESERVE->FULL": 243,
+        "PRESERVE->LIGHT": 2484,
         "PRESERVE->PRESERVE": 5
       },
       "mode_by_actual": {
         "FORCE": {
-          "n": 3616,
+          "n": 2957,
           "exact_n": 208,
-          "exact_rate": 0.0575,
+          "exact_rate": 0.0703,
           "compatible_n": 208,
-          "compatible_rate": 0.0575
+          "compatible_rate": 0.0703
         },
         "FULL": {
-          "n": 14840,
-          "exact_n": 14808,
-          "exact_rate": 0.9978,
-          "compatible_n": 14808,
-          "compatible_rate": 0.9978
+          "n": 15593,
+          "exact_n": 15477,
+          "exact_rate": 0.9926,
+          "compatible_n": 15477,
+          "compatible_rate": 0.9926
         },
         "LIGHT": {
-          "n": 2330,
-          "exact_n": 1013,
-          "exact_rate": 0.4348,
-          "compatible_n": 1013,
-          "compatible_rate": 0.4348
+          "n": 2238,
+          "exact_n": 1007,
+          "exact_rate": 0.45,
+          "compatible_n": 1007,
+          "compatible_rate": 0.45
         },
         "PRESERVE": {
-          "n": 2766,
+          "n": 2764,
           "exact_n": 5,
           "exact_rate": 0.0018,
           "compatible_n": 5,
@@ -967,10 +1842,10 @@
       "n": 23552,
       "agreement": {
         "mode": {
-          "exact_n": 12577,
-          "exact_rate": 0.534,
-          "compatible_n": 15893,
-          "compatible_rate": 0.6748
+          "exact_n": 13223,
+          "exact_rate": 0.5614,
+          "compatible_n": 16499,
+          "compatible_rate": 0.7005
         },
         "primary_family": {
           "exact_n": 15676,
@@ -1045,46 +1920,46 @@
         "lead_mean_signed_policy_minus_actual": 139.5168
       },
       "mode_matrix": {
-        "FORCE->FULL": 1364,
-        "FORCE->LIGHT": 2157,
+        "FORCE->FULL": 797,
+        "FORCE->LIGHT": 2065,
         "FORCE->PRESERVE": 95,
-        "FULL->FULL": 11434,
-        "FULL->LIGHT": 565,
+        "FULL->FULL": 12087,
+        "FULL->LIGHT": 665,
         "FULL->PRESERVE": 2841,
-        "LIGHT->FULL": 1125,
-        "LIGHT->LIGHT": 1111,
+        "LIGHT->FULL": 1040,
+        "LIGHT->LIGHT": 1104,
         "LIGHT->PRESERVE": 94,
-        "PRESERVE->FULL": 143,
-        "PRESERVE->LIGHT": 2591,
+        "PRESERVE->FULL": 142,
+        "PRESERVE->LIGHT": 2590,
         "PRESERVE->PRESERVE": 32
       },
       "mode_by_actual": {
         "FORCE": {
-          "n": 3616,
+          "n": 2957,
           "exact_n": 0,
           "exact_rate": 0,
           "compatible_n": 0,
           "compatible_rate": 0
         },
         "FULL": {
-          "n": 14840,
-          "exact_n": 11434,
-          "exact_rate": 0.7705,
-          "compatible_n": 11434,
-          "compatible_rate": 0.7705
+          "n": 15593,
+          "exact_n": 12087,
+          "exact_rate": 0.7752,
+          "compatible_n": 12087,
+          "compatible_rate": 0.7752
         },
         "LIGHT": {
-          "n": 2330,
-          "exact_n": 1111,
-          "exact_rate": 0.4768,
-          "compatible_n": 1693,
-          "compatible_rate": 0.7266
+          "n": 2238,
+          "exact_n": 1104,
+          "exact_rate": 0.4933,
+          "compatible_n": 1648,
+          "compatible_rate": 0.7364
         },
         "PRESERVE": {
-          "n": 2766,
+          "n": 2764,
           "exact_n": 32,
           "exact_rate": 0.0116,
-          "compatible_n": 2766,
+          "compatible_n": 2764,
           "compatible_rate": 1
         }
       },
@@ -1144,37 +2019,37 @@
       "POLICY_MISS",
       "UNEXPLAINED"
     ],
-    "material_count": 17423,
+    "material_count": 17737,
     "reasons": {
       "COVERED_ALTERNATIVE": {
-        "count": 4825,
-        "rate_of_material": 0.2769,
-        "rate_of_eligible": 0.2049
+        "count": 4807,
+        "rate_of_material": 0.271,
+        "rate_of_eligible": 0.2041
       },
       "DATA_AMBIGUITY": {
-        "count": 30,
-        "rate_of_material": 0.0017,
-        "rate_of_eligible": 0.0013
+        "count": 49,
+        "rate_of_material": 0.0028,
+        "rate_of_eligible": 0.0021
       },
       "POLICY_MISS": {
-        "count": 4712,
-        "rate_of_material": 0.2704,
-        "rate_of_eligible": 0.2001
+        "count": 4694,
+        "rate_of_material": 0.2646,
+        "rate_of_eligible": 0.1993
       },
       "ROBUST_GENERAL_DEFAULT": {
-        "count": 6153,
-        "rate_of_material": 0.3532,
-        "rate_of_eligible": 0.2613
+        "count": 6638,
+        "rate_of_material": 0.3742,
+        "rate_of_eligible": 0.2818
       },
       "UNAVAILABLE_CONTEXT": {
-        "count": 1087,
-        "rate_of_material": 0.0624,
+        "count": 1088,
+        "rate_of_material": 0.0613,
         "rate_of_eligible": 0.0462
       },
       "UNEXPLAINED": {
-        "count": 616,
-        "rate_of_material": 0.0354,
-        "rate_of_eligible": 0.0262
+        "count": 461,
+        "rate_of_material": 0.026,
+        "rate_of_eligible": 0.0196
       }
     },
     "representative_cases": {
@@ -1922,6 +2797,43 @@
       ],
       "DATA_AMBIGUITY": [
         {
+          "map": "p-r1-qf3-m1-de_overpass",
+          "round": 2,
+          "player_index": 7,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 4100,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "flash+he+incendiary+smoke",
+            "kit": false,
+            "spend": 2300
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "flash+smoke",
+            "kit": false,
+            "spend": 4050
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
           "map": "p-r1-qf4-m1-de_anubis",
           "round": 6,
           "player_index": 3,
@@ -2033,6 +2945,80 @@
           }
         },
         {
+          "map": "p-r2-sf2-m2-de_mirage",
+          "round": 2,
+          "player_index": 8,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3650,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 1300
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "",
+            "kit": false,
+            "spend": 3550
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r2-sf2-m3-de_dust2",
+          "round": 14,
+          "player_index": 0,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3500,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "flash+incendiary+smoke",
+            "kit": false,
+            "spend": 1700
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "flash+he+incendiary+smoke",
+            "kit": false,
+            "spend": 2900
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
           "map": "p-r2-sf2-m3-de_dust2",
           "round": 14,
           "player_index": 1,
@@ -2052,10 +3038,10 @@
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash",
+            "armorState": "kevlar",
+            "utility": "flash+smoke",
             "kit": false,
-            "spend": 3900
+            "spend": 3850
           },
           "reason": "DATA_AMBIGUITY",
           "severe": {
@@ -2065,7 +3051,7 @@
             "primary_family": true,
             "spend_ge_1000": true,
             "armor": false,
-            "helmet": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -2144,6 +3130,43 @@
           }
         },
         {
+          "map": "s1-r2-w1-m1-de_dust2",
+          "round": 14,
+          "player_index": 2,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 4200,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 1000
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "flash+smoke",
+            "kit": false,
+            "spend": 4050
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
           "map": "s1-r2-w2-m1-de_mirage",
           "round": 17,
           "player_index": 9,
@@ -2177,6 +3200,80 @@
             "spend_ge_1000": true,
             "armor": false,
             "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "s1-r3-e2-m1-de_dust2",
+          "round": 2,
+          "player_index": 8,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3500,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "none",
+            "utility": "flash",
+            "kit": false,
+            "spend": 0
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "flash+he+incendiary+smoke",
+            "kit": false,
+            "spend": 3000
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": true,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": true,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "s1-r3-e2-m1-de_dust2",
+          "round": 2,
+          "player_index": 7,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3950,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 1000
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 3850
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -2255,6 +3352,80 @@
           }
         },
         {
+          "map": "s1-r4-a3-m2-de_inferno",
+          "round": 14,
+          "player_index": 8,
+          "side": "T",
+          "context": "POST_PISTOL",
+          "money": 3400,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "he+molotov+smoke",
+            "kit": false,
+            "spend": 2000
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "",
+            "kit": false,
+            "spend": 3350
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "s1-r4-e1-m1-de_anubis",
+          "round": 14,
+          "player_index": 2,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3950,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "none",
+            "utility": "",
+            "kit": false,
+            "spend": 0
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 3850
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": true,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": true,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
           "map": "s1-r5-d1-m1-de_ancient",
           "round": 2,
           "player_index": 1,
@@ -2274,195 +3445,10 @@
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 4000
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r2-l1-m1-de_overpass",
-          "round": 11,
-          "player_index": 1,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 3550,
-          "loss_index": 2,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
             "armorState": "kevlar",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 1450
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "kevlar",
-            "utility": "flash",
-            "kit": false,
-            "spend": 3550
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r2-w2-m1-de_nuke",
-          "round": 5,
-          "player_index": 0,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 2050,
-          "loss_index": 2,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "none",
-            "utility": "",
-            "kit": false,
-            "spend": 0
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "smg",
-            "armorState": "kevlar",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 2000
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": true,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r3-a1-m1-de_mirage",
-          "round": 4,
-          "player_index": 7,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 3300,
-          "loss_index": 1,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "kevlar",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": true,
-            "spend": 2350
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "smg",
-            "armorState": "kevlar",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": false,
-            "spend": 3200
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r4-a1-m3-de_dust2",
-          "round": 19,
-          "player_index": 2,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 3500,
-          "loss_index": 0,
-          "retained_primary_family": "rifle",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "",
-            "kit": true,
-            "spend": 0
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": true,
-            "spend": 1300
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r4-e3-m2-de_inferno",
-          "round": 15,
-          "player_index": 5,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 3600,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
             "utility": "flash+he+molotov+smoke",
             "kit": false,
-            "spend": 2200
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "kevlar",
-            "utility": "flash",
-            "kit": false,
-            "spend": 3550
+            "spend": 3900
           },
           "reason": "DATA_AMBIGUITY",
           "severe": {
@@ -2477,177 +3463,66 @@
           }
         },
         {
-          "map": "s2-r5-d1-m1-de_nuke",
-          "round": 4,
-          "player_index": 4,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 6100,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
-            "kit": false,
-            "spend": 2200
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
-            "kit": false,
-            "spend": 4900
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s2-r5-d1-m2-de_dust2",
-          "round": 9,
-          "player_index": 0,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 4950,
-          "loss_index": 3,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "",
-            "kit": false,
-            "spend": 1000
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
-            "kit": false,
-            "spend": 4900
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s3-r1-m1-m3-de_inferno",
+          "map": "s2-r1-m5-m1-de_mirage",
           "round": 2,
-          "player_index": 5,
+          "player_index": 8,
           "side": "CT",
           "context": "POST_PISTOL",
-          "money": 4200,
+          "money": 3800,
           "loss_index": 0,
           "retained_primary_family": "none",
           "actual": {
             "mode": "FULL",
             "primaryFamily": "none",
             "armorState": "vesthelm",
-            "utility": "flash+he+smoke",
+            "utility": "he+smoke",
             "kit": false,
-            "spend": 1150
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "incendiary+smoke",
-            "kit": false,
-            "spend": 4050
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s3-r2-l4-m2-de_ancient",
-          "round": 9,
-          "player_index": 1,
-          "side": "T",
-          "context": "NORMAL",
-          "money": 4550,
-          "loss_index": 4,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "",
-            "kit": false,
-            "spend": 1000
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "molotov+smoke",
-            "kit": false,
-            "spend": 4400
-          },
-          "reason": "DATA_AMBIGUITY",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": true,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "s3-r2-w3-m2-de_mirage",
-          "round": 20,
-          "player_index": 2,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 3550,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "none",
-            "armorState": "vesthelm",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": false,
-            "spend": 2300
+            "spend": 1900
           },
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
             "armorState": "kevlar",
-            "utility": "",
+            "utility": "flash",
             "kit": false,
-            "spend": 3550
+            "spend": 3750
+          },
+          "reason": "DATA_AMBIGUITY",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": true,
+            "spend_ge_1000": true,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "s2-r1-m7-m1-de_mirage",
+          "round": 2,
+          "player_index": 5,
+          "side": "CT",
+          "context": "POST_PISTOL",
+          "money": 3950,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "none",
+            "armorState": "vesthelm",
+            "utility": "he+smoke",
+            "kit": false,
+            "spend": 1600
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "flash+incendiary+smoke",
+            "kit": false,
+            "spend": 3900
           },
           "reason": "DATA_AMBIGUITY",
           "severe": {
@@ -2747,7 +3622,7 @@
           "loss_index": 0,
           "retained_primary_family": "none",
           "actual": {
-            "mode": "FORCE",
+            "mode": "FULL",
             "primaryFamily": "smg",
             "armorState": "vesthelm",
             "utility": "flash+he+molotov+smoke",
@@ -2755,7 +3630,7 @@
             "spend": 3250
           },
           "lead": {
-            "mode": "FORCE",
+            "mode": "FULL",
             "primaryFamily": "rifle",
             "armorState": "kevlar",
             "utility": "flash",
@@ -3154,7 +4029,7 @@
           "loss_index": 0,
           "retained_primary_family": "none",
           "actual": {
-            "mode": "FORCE",
+            "mode": "FULL",
             "primaryFamily": "smg",
             "armorState": "vesthelm",
             "utility": "flash+flash+he+smoke",
@@ -3162,7 +4037,7 @@
             "spend": 3400
           },
           "lead": {
-            "mode": "FORCE",
+            "mode": "FULL",
             "primaryFamily": "rifle",
             "armorState": "kevlar",
             "utility": "",
@@ -3191,7 +4066,7 @@
           "loss_index": 0,
           "retained_primary_family": "none",
           "actual": {
-            "mode": "FORCE",
+            "mode": "FULL",
             "primaryFamily": "smg",
             "armorState": "vesthelm",
             "utility": "flash+he+molotov+smoke",
@@ -3201,10 +4076,10 @@
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "",
+            "armorState": "kevlar",
+            "utility": "flash+molotov+smoke",
             "kit": false,
-            "spend": 3700
+            "spend": 3600
           },
           "reason": "POLICY_MISS",
           "severe": {
@@ -3214,7 +4089,7 @@
             "primary_family": true,
             "spend_ge_1000": false,
             "armor": false,
-            "helmet": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -3425,10 +4300,10 @@
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "",
+            "armorState": "kevlar",
+            "utility": "flash+molotov+smoke",
             "kit": false,
-            "spend": 3700
+            "spend": 3600
           },
           "reason": "ROBUST_GENERAL_DEFAULT",
           "severe": {
@@ -3438,7 +4313,81 @@
             "primary_family": false,
             "spend_ge_1000": false,
             "armor": false,
-            "helmet": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 2,
+          "player_index": 2,
+          "side": "T",
+          "context": "POST_PISTOL",
+          "money": 3400,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 3350
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "molotov+smoke",
+            "kit": false,
+            "spend": 3400
+          },
+          "reason": "ROBUST_GENERAL_DEFAULT",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf1-m1-de_dust2",
+          "round": 2,
+          "player_index": 1,
+          "side": "T",
+          "context": "POST_PISTOL",
+          "money": 4000,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "flash+molotov+smoke",
+            "kit": false,
+            "spend": 3950
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "flash+he+molotov+smoke",
+            "kit": false,
+            "spend": 3900
+          },
+          "reason": "ROBUST_GENERAL_DEFAULT",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -3462,10 +4411,10 @@
           "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "smoke",
+            "armorState": "kevlar",
+            "utility": "flash+smoke",
             "kit": false,
-            "spend": 4000
+            "spend": 3850
           },
           "reason": "ROBUST_GENERAL_DEFAULT",
           "severe": {
@@ -3475,7 +4424,7 @@
             "primary_family": false,
             "spend_ge_1000": false,
             "armor": false,
-            "helmet": false,
+            "helmet": true,
             "retained_weapon": false
           }
         },
@@ -4036,102 +4985,28 @@
         },
         {
           "map": "p-r1-qf1-m1-de_dust2",
-          "round": 16,
-          "player_index": 4,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 5200,
-          "loss_index": 4,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+incendiary+smoke",
-            "kit": false,
-            "spend": 5200
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": false,
-            "spend": 5200
-          },
-          "reason": "ROBUST_GENERAL_DEFAULT",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m1-de_dust2",
-          "round": 16,
-          "player_index": 6,
+          "round": 14,
+          "player_index": 9,
           "side": "T",
-          "context": "NORMAL",
-          "money": 5950,
+          "context": "POST_PISTOL",
+          "money": 3700,
           "loss_index": 0,
-          "retained_primary_family": "smg",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
-            "kit": false,
-            "spend": 700
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov+smoke",
-            "kit": false,
-            "spend": 3400
-          },
-          "reason": "ROBUST_GENERAL_DEFAULT",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": true,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m1-de_dust2",
-          "round": 16,
-          "player_index": 0,
-          "side": "CT",
-          "context": "NORMAL",
-          "money": 5750,
-          "loss_index": 4,
           "retained_primary_family": "none",
           "actual": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "flash+smoke",
+            "kit": false,
+            "spend": 3550
+          },
+          "lead": {
             "mode": "FULL",
             "primaryFamily": "rifle",
             "armorState": "kevlar",
-            "utility": "flash+he+incendiary+smoke",
-            "kit": true,
-            "spend": 5250
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+incendiary+smoke",
+            "utility": "flash+molotov+smoke",
             "kit": false,
-            "spend": 5200
+            "spend": 3600
           },
           "reason": "ROBUST_GENERAL_DEFAULT",
           "severe": {
@@ -4928,43 +5803,6 @@
         },
         {
           "map": "p-r1-qf1-m2-de_mirage",
-          "round": 2,
-          "player_index": 1,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 3700,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+molotov+smoke",
-            "kit": false,
-            "spend": 3700
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "",
-            "kit": false,
-            "spend": 3700
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m2-de_mirage",
           "round": 8,
           "player_index": 2,
           "side": "T",
@@ -4987,117 +5825,6 @@
             "utility": "flash+smoke",
             "kit": false,
             "spend": 4200
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m2-de_mirage",
-          "round": 14,
-          "player_index": 5,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 3400,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+he+molotov",
-            "kit": false,
-            "spend": 3250
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "kevlar",
-            "utility": "",
-            "kit": false,
-            "spend": 3350
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": true,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m2-de_mirage",
-          "round": 14,
-          "player_index": 6,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 3700,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+molotov+smoke",
-            "kit": false,
-            "spend": 3700
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "",
-            "kit": false,
-            "spend": 3700
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf1-m2-de_mirage",
-          "round": 14,
-          "player_index": 7,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 4000,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "molotov+smoke",
-            "kit": false,
-            "spend": 3500
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "smoke",
-            "kit": false,
-            "spend": 4000
           },
           "reason": "UNEXPLAINED",
           "severe": {
@@ -5520,80 +6247,6 @@
         },
         {
           "map": "p-r1-qf3-m3-de_mirage",
-          "round": 2,
-          "player_index": 2,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 3950,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+smoke",
-            "kit": false,
-            "spend": 3500
-          },
-          "lead": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash",
-            "kit": false,
-            "spend": 3900
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": false,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf3-m3-de_mirage",
-          "round": 2,
-          "player_index": 1,
-          "side": "T",
-          "context": "POST_PISTOL",
-          "money": 3350,
-          "loss_index": 0,
-          "retained_primary_family": "none",
-          "actual": {
-            "mode": "FULL",
-            "primaryFamily": "rifle",
-            "armorState": "vesthelm",
-            "utility": "flash+flash+molotov+smoke",
-            "kit": false,
-            "spend": 3300
-          },
-          "lead": {
-            "mode": "FORCE",
-            "primaryFamily": "rifle",
-            "armorState": "kevlar",
-            "utility": "",
-            "kit": false,
-            "spend": 3350
-          },
-          "reason": "UNEXPLAINED",
-          "severe": {
-            "force_actual_eco": false,
-            "preserve_actual_full": false,
-            "full_actual_eco": false,
-            "primary_family": false,
-            "spend_ge_1000": false,
-            "armor": false,
-            "helmet": true,
-            "retained_weapon": false
-          }
-        },
-        {
-          "map": "p-r1-qf3-m3-de_mirage",
           "round": 3,
           "player_index": 6,
           "side": "CT",
@@ -5628,6 +6281,228 @@
             "helmet": false,
             "retained_weapon": false
           }
+        },
+        {
+          "map": "p-r1-qf3-m3-de_mirage",
+          "round": 3,
+          "player_index": 7,
+          "side": "CT",
+          "context": "NORMAL",
+          "money": 2450,
+          "loss_index": 3,
+          "retained_primary_family": "smg",
+          "actual": {
+            "mode": "LIGHT",
+            "primaryFamily": "smg",
+            "armorState": "kevlar",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 500
+          },
+          "lead": {
+            "mode": "FORCE",
+            "primaryFamily": "smg",
+            "armorState": "vesthelm",
+            "utility": "flash+he+incendiary+smoke",
+            "kit": false,
+            "spend": 1350
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": true,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf4-m1-de_anubis",
+          "round": 3,
+          "player_index": 3,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 150,
+          "loss_index": 3,
+          "retained_primary_family": "rifle",
+          "actual": {
+            "mode": "LIGHT",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 0
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 0
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf4-m1-de_anubis",
+          "round": 5,
+          "player_index": 4,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 4150,
+          "loss_index": 4,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FORCE",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 3700
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "smoke",
+            "kit": false,
+            "spend": 4000
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf4-m2-de_inferno",
+          "round": 3,
+          "player_index": 4,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 3750,
+          "loss_index": 3,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FORCE",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 3700
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 3700
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf4-m2-de_inferno",
+          "round": 12,
+          "player_index": 6,
+          "side": "CT",
+          "context": "NORMAL",
+          "money": 3600,
+          "loss_index": 0,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FORCE",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "incendiary+smoke",
+            "kit": false,
+            "spend": 3400
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "kevlar",
+            "utility": "",
+            "kit": false,
+            "spend": 3550
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": false,
+            "retained_weapon": false
+          }
+        },
+        {
+          "map": "p-r1-qf4-m3-de_dust2",
+          "round": 7,
+          "player_index": 4,
+          "side": "T",
+          "context": "NORMAL",
+          "money": 3750,
+          "loss_index": 1,
+          "retained_primary_family": "none",
+          "actual": {
+            "mode": "FORCE",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "flash+molotov+smoke",
+            "kit": false,
+            "spend": 3700
+          },
+          "lead": {
+            "mode": "FULL",
+            "primaryFamily": "rifle",
+            "armorState": "vesthelm",
+            "utility": "",
+            "kit": false,
+            "spend": 3700
+          },
+          "reason": "UNEXPLAINED",
+          "severe": {
+            "force_actual_eco": false,
+            "preserve_actual_full": false,
+            "full_actual_eco": false,
+            "primary_family": false,
+            "spend_ge_1000": false,
+            "armor": false,
+            "helmet": false,
+            "retained_weapon": false
+          }
         }
       ]
     }
@@ -5636,17 +6511,17 @@
     "side": {
       "CT": {
         "n": 10659,
-        "severe_n": 5612,
-        "severe_rate": 0.5265,
-        "policy_miss_n": 1951,
-        "policy_miss_rate": 0.183
+        "severe_n": 6130,
+        "severe_rate": 0.5751,
+        "policy_miss_n": 1937,
+        "policy_miss_rate": 0.1817
       },
       "T": {
         "n": 12893,
-        "severe_n": 4970,
-        "severe_rate": 0.3855,
-        "policy_miss_n": 2761,
-        "policy_miss_rate": 0.2141
+        "severe_n": 5386,
+        "severe_rate": 0.4177,
+        "policy_miss_n": 2757,
+        "policy_miss_rate": 0.2138
       }
     },
     "context": {
@@ -5666,10 +6541,10 @@
       },
       "POST_PISTOL": {
         "n": 3524,
-        "severe_n": 1838,
-        "severe_rate": 0.5216,
-        "policy_miss_n": 1227,
-        "policy_miss_rate": 0.3482
+        "severe_n": 2772,
+        "severe_rate": 0.7866,
+        "policy_miss_n": 1209,
+        "policy_miss_rate": 0.3431
       }
     },
     "side_context": {
@@ -5689,10 +6564,10 @@
       },
       "CT:POST_PISTOL": {
         "n": 1748,
-        "severe_n": 1016,
-        "severe_rate": 0.5812,
-        "policy_miss_n": 636,
-        "policy_miss_rate": 0.3638
+        "severe_n": 1534,
+        "severe_rate": 0.8776,
+        "policy_miss_n": 622,
+        "policy_miss_rate": 0.3558
       },
       "T:NORMAL": {
         "n": 10532,
@@ -5710,10 +6585,10 @@
       },
       "T:POST_PISTOL": {
         "n": 1776,
-        "severe_n": 822,
-        "severe_rate": 0.4628,
-        "policy_miss_n": 591,
-        "policy_miss_rate": 0.3328
+        "severe_n": 1238,
+        "severe_rate": 0.6971,
+        "policy_miss_n": 587,
+        "policy_miss_rate": 0.3305
       }
     },
     "money_band": {
@@ -5733,26 +6608,26 @@
       },
       "3000-3999": {
         "n": 5392,
-        "severe_n": 3421,
-        "severe_rate": 0.6345,
-        "policy_miss_n": 2209,
-        "policy_miss_rate": 0.4097
+        "severe_n": 3898,
+        "severe_rate": 0.7229,
+        "policy_miss_n": 2193,
+        "policy_miss_rate": 0.4067
       },
       "4000+": {
         "n": 13119,
-        "severe_n": 3295,
-        "severe_rate": 0.2512,
-        "policy_miss_n": 535,
-        "policy_miss_rate": 0.0408
+        "severe_n": 3752,
+        "severe_rate": 0.286,
+        "policy_miss_n": 533,
+        "policy_miss_rate": 0.0406
       }
     },
     "loss_index": {
       "0": {
         "n": 8303,
-        "severe_n": 2071,
-        "severe_rate": 0.2494,
-        "policy_miss_n": 940,
-        "policy_miss_rate": 0.1132
+        "severe_n": 3005,
+        "severe_rate": 0.3619,
+        "policy_miss_n": 922,
+        "policy_miss_rate": 0.111
       },
       "1": {
         "n": 4320,
@@ -5786,10 +6661,10 @@
     "retained_primary": {
       "empty": {
         "n": 19945,
-        "severe_n": 9824,
-        "severe_rate": 0.4926,
-        "policy_miss_n": 4359,
-        "policy_miss_rate": 0.2186
+        "severe_n": 10758,
+        "severe_rate": 0.5394,
+        "policy_miss_n": 4341,
+        "policy_miss_rate": 0.2176
       },
       "retained_primary": {
         "n": 3607,
@@ -5802,73 +6677,68 @@
   },
   "frozen_follow_up_diagnostics": {
     "actual_light_own_state": {
-      "n": 2330,
+      "n": 2113,
       "side": {
-        "CT": 893,
-        "T": 1437
+        "CT": 746,
+        "T": 1367
       },
       "context": {
-        "NORMAL": 2113,
-        "OVERTIME": 3,
-        "POST_PISTOL": 214
+        "NORMAL": 2113
       },
       "money_band": {
-        "0-1999": 78,
-        "2000-2999": 523,
-        "3000-3999": 1345,
-        "4000-4999": 290,
-        "5000+": 94
+        "0-1999": 77,
+        "2000-2999": 401,
+        "3000-3999": 1272,
+        "4000-4999": 270,
+        "5000+": 93
       },
       "retained_primary_family": {
-        "none": 2133,
+        "none": 1916,
         "rifle": 65,
         "smg": 120,
         "sniper": 12
       },
       "retained_armor": {
-        "kevlar": 114,
-        "none": 2033,
+        "kevlar": 80,
+        "none": 1850,
         "vesthelm": 183
       },
       "resulting_primary_family": {
         "heavy": 6,
-        "none": 1701,
-        "rifle": 141,
-        "smg": 421,
-        "sniper": 61
+        "none": 1587,
+        "rifle": 135,
+        "smg": 344,
+        "sniper": 41
       },
       "resulting_armor": {
-        "kevlar": 1126,
-        "none": 253,
-        "vesthelm": 951
+        "kevlar": 1069,
+        "none": 227,
+        "vesthelm": 817
       },
       "spend_band": {
-        "0": 106,
-        "1-500": 94,
-        "1001-2000": 1233,
-        "2000+": 662,
-        "501-1000": 235
+        "0": 99,
+        "1-500": 93,
+        "1001-2000": 1121,
+        "2000+": 579,
+        "501-1000": 221
       },
       "current_to_resulting_bundle": {
-        "none+kevlar->none+kevlar": 30,
-        "none+kevlar->none+vesthelm": 6,
-        "none+kevlar->rifle+vesthelm": 1,
-        "none+kevlar->smg+kevlar": 5,
-        "none+kevlar->smg+vesthelm": 24,
-        "none+kevlar->sniper+kevlar": 1,
+        "none+kevlar->none+kevlar": 28,
+        "none+kevlar->none+vesthelm": 1,
+        "none+kevlar->smg+kevlar": 4,
         "none+none->heavy+kevlar": 3,
         "none+none->heavy+none": 3,
-        "none+none->none+kevlar": 890,
-        "none+none->none+none": 202,
-        "none+none->none+vesthelm": 532,
+        "none+none->none+kevlar": 847,
+        "none+none->none+none": 190,
+        "none+none->none+vesthelm": 480,
         "none+none->rifle+kevlar": 50,
-        "none+none->rifle+none": 5,
-        "none+none->rifle+vesthelm": 34,
-        "none+none->smg+kevlar": 89,
-        "none+none->smg+none": 8,
-        "none+none->smg+vesthelm": 165,
-        "none+none->sniper+kevlar": 15,
-        "none+none->sniper+none": 33,
+        "none+none->rifle+none": 4,
+        "none+none->rifle+vesthelm": 30,
+        "none+none->smg+kevlar": 86,
+        "none+none->smg+none": 7,
+        "none+none->smg+vesthelm": 117,
+        "none+none->sniper+kevlar": 8,
+        "none+none->sniper+none": 21,
         "none+none->sniper+vesthelm": 1,
         "none+vesthelm->none+vesthelm": 35,
         "none+vesthelm->smg+vesthelm": 1,
@@ -5898,9 +6768,11 @@
         "LOSS": 1784,
         "WIN": 1740
       },
-      "actual_full": {
-        "LOSS": 5,
-        "WIN": 987
+      "winner_team_economy": {
+        "full": 1740
+      },
+      "winner_observational_semi": {
+        "semi": 92
       }
     }
   },
@@ -5921,13 +6793,13 @@
     }
   },
   "acceptance_counts": {
-    "policy_miss": 4712,
-    "unexplained": 616
+    "policy_miss": 4694,
+    "unexplained": 461
   },
   "final_acceptance": {
     "status": "READY_FOR_FINAL_SOL_RE_AUDIT",
     "blockers": [],
     "reopen_economy_research_required": false
   },
-  "artifact_sha256": "81433baead2688851af67d26e2aeab87c975cebcaea6e9a33ed80fc6608da306"
+  "artifact_sha256": "a0b21f5b9240327b1f365914d87b5dd9e0e0c382b1040db6d579208d2a776cd1"
 }

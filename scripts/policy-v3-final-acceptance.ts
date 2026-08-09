@@ -55,6 +55,7 @@ const GRENADE_PRICES: Readonly<Record<string, number>> = {
 };
 
 type ActualMode = Exclude<PolicyMode, "AWP_PATH">;
+type TeamEconomy = "pistol" | "eco" | "semi" | "force" | "full";
 type PrimaryFamily = "rifle" | "sniper" | "smg" | "heavy" | "none" | "other";
 type ArmorState = "none" | "kevlar" | "vesthelm";
 type Reason = "COVERED_ALTERNATIVE" | "UNAVAILABLE_CONTEXT" | "ROBUST_GENERAL_DEFAULT" | "DATA_AMBIGUITY" | "POLICY_MISS" | "UNEXPLAINED";
@@ -121,6 +122,7 @@ interface Eligible {
   opponentLossIndex: number;
   context: "POST_PISTOL" | "NORMAL" | "OVERTIME";
   previousWinner: Side | "UNKNOWN";
+  teamEconomy: TeamEconomy;
 }
 
 interface Candidate {
@@ -271,7 +273,7 @@ function candidateFrom(mode: PolicyMode, inventory: InventoryState, purchases: r
   };
 }
 
-function actualFrom(row: Row): Actual {
+function actualFrom(row: Row, mode = actualMode(row.actionType)): Actual {
   const grenades = normGrenades(row.grenades).map((item) => {
     const mapped = DEMO_GRENADE[item];
     if (!mapped) throw new Error(`unknown demo grenade: ${item}`);
@@ -280,7 +282,7 @@ function actualFrom(row: Row): Actual {
   const primary = itemOf(row.primary);
   return {
     sourceMode: row.actionType,
-    mode: actualMode(row.actionType),
+    mode,
     primaryFamily: family(primary),
     armorState: armorState(row.hasArmor, row.hasHelmet),
     utility: canonicalGrenades(grenades),
@@ -629,6 +631,26 @@ async function extractPrestates(rows: readonly Row[], mapsDir: string): Promise<
   return { values, maps: grouped.size, extractionHash: sha256(JSON.stringify(hashRows)) };
 }
 
+async function extractTeamEconomies(rows: readonly Row[], mapsDir: string): Promise<Map<string, TeamEconomy>> {
+  const maps = [...new Set(rows.map((row) => row.map))].sort();
+  const values = new Map<string, TeamEconomy>();
+  for (const map of maps) {
+    const zipped = await JSZip.loadAsync(readFileSync(resolve(mapsDir, `${map}.zip`)));
+    const roundsFile = zipped.file("rounds.json");
+    if (!roundsFile) throw new Error(`missing rounds.json: ${map}`);
+    const rounds = JSON.parse(await roundsFile.async("string")) as Array<{
+      roundNumber: number;
+      teamAEconomy: TeamEconomy;
+      teamBEconomy: TeamEconomy;
+    }>;
+    for (const round of rounds) {
+      values.set(`${map}:${round.roundNumber}:teamA`, round.teamAEconomy);
+      values.set(`${map}:${round.roundNumber}:teamB`, round.teamBEconomy);
+    }
+  }
+  return values;
+}
+
 function inventoryFor(row: Row, prestate: Prestate, retainedPrimary: string | null): InventoryState {
   const grenades = prestate.grenades.map((name) => {
     const item = DEMO_GRENADE[name];
@@ -702,6 +724,7 @@ async function buildEligible(rows: Row[], mapsDir: string) {
 
   const needsReplay = candidates.filter((candidate) => !candidate.reset).map((candidate) => candidate.row);
   const extraction = await extractPrestates(needsReplay, mapsDir);
+  const teamEconomies = await extractTeamEconomies(candidates.map((candidate) => candidate.row), mapsDir);
   const eligible: Eligible[] = [];
   for (const candidate of candidates) {
     const prestate: Prestate | undefined = candidate.reset
@@ -713,6 +736,8 @@ async function buildEligible(rows: Row[], mapsDir: string) {
     const opponentSide = candidate.row.side === "ct" ? "t" : "ct";
     const opponentLossIndex = teamLoss.get(`${candidate.row.map}:${candidate.row.roundNumber}:${opponentSide}`);
     if (opponentLossIndex === undefined) { increment(exclusions, "opponent_loss_index_missing"); continue; }
+    const teamEconomy = teamEconomies.get(`${candidate.row.map}:${candidate.row.roundNumber}:${candidate.row.teamKey}`);
+    if (!teamEconomy) throw new Error(`missing team economy for ${candidate.row.map}:r${candidate.row.roundNumber}:${candidate.row.teamKey}`);
     eligible.push({
       row: candidate.row,
       money: candidate.money,
@@ -722,6 +747,7 @@ async function buildEligible(rows: Row[], mapsDir: string) {
       previousWinner: candidate.context === "POST_PISTOL"
         ? winnerByRound.get(`${candidate.row.map}:${candidate.row.roundNumber - 1}`) ?? "UNKNOWN"
         : "UNKNOWN",
+      teamEconomy,
     });
   }
   return {
@@ -754,6 +780,20 @@ function moneyBand(money: number): string {
 function pistolOutcome(eligible: Eligible): "WIN" | "LOSS" | "UNKNOWN" {
   if (eligible.previousWinner === "UNKNOWN") return "UNKNOWN";
   return eligible.previousWinner === (eligible.row.side === "t" ? "T" : "CT") ? "WIN" : "LOSS";
+}
+
+function strategicActualMode(eligible: Eligible): ActualMode {
+  if (eligible.context === "POST_PISTOL" && pistolOutcome(eligible) === "WIN") {
+    if (eligible.teamEconomy !== "full") {
+      throw new Error(`pistol winner conversion team economy is not full: ${eligible.row.map}:r${eligible.row.roundNumber}:${eligible.row.teamKey}=${eligible.teamEconomy}`);
+    }
+    return "FULL";
+  }
+  return actualMode(eligible.row.actionType);
+}
+
+function strategicSegment(eligible: Eligible): string {
+  return eligible.context === "POST_PISTOL" ? `POST_PISTOL_${pistolOutcome(eligible)}` : eligible.context;
 }
 
 function canonicalOptions(output: ReturnType<typeof recommendPolicyV3>): string {
@@ -826,6 +866,9 @@ async function main(): Promise<void> {
   const naive = new ModelMetrics();
   const v2 = new ModelMetrics();
   const v3Segments = new Map<Eligible["context"], ModelMetrics>();
+  const v3StrategicSegments = new Map<string, ModelMetrics>();
+  const normalObservationalSemi = new ModelMetrics();
+  const postPistolWinnerObservationalSemi = new ModelMetrics();
   const subgroups = new Subgroups();
   const reasons = new Map<Reason, number>();
   const material = { count: 0, unexplained: 0, policyMiss: 0 };
@@ -850,12 +893,15 @@ async function main(): Promise<void> {
   };
   const postPistolDiagnostics = {
     all: [] as string[],
-    actual_full: [] as string[],
+    winner_team_economy: [] as string[],
+    winner_observational_semi: [] as string[],
   };
+  let conversionWinnerLightOutput = 0;
 
   for (const entry of eligible) {
-    const actual = actualFrom(entry.row);
-    if (actual.mode === "LIGHT") {
+    const outcome = entry.context === "POST_PISTOL" ? pistolOutcome(entry) : undefined;
+    const actual = actualFrom(entry.row, strategicActualMode(entry));
+    if (entry.context === "NORMAL" && entry.row.actionType === "semi") {
       const retainedArmor = armorState(entry.inventory.armor, entry.inventory.hasHelmet);
       const resultingArmor = actual.armorState;
       lightDiagnostics.side.push(entry.row.side === "t" ? "T" : "CT");
@@ -869,9 +915,11 @@ async function main(): Promise<void> {
       lightDiagnostics.current_to_resulting_bundle.push(`${family(entry.inventory.primary)}+${retainedArmor}->${actual.primaryFamily}+${resultingArmor}`);
     }
     if (entry.context === "POST_PISTOL") {
-      const outcome = pistolOutcome(entry);
-      postPistolDiagnostics.all.push(outcome);
-      if (actual.mode === "FULL") postPistolDiagnostics.actual_full.push(outcome);
+      postPistolDiagnostics.all.push(outcome ?? "UNKNOWN");
+      if (outcome === "WIN") {
+        postPistolDiagnostics.winner_team_economy.push(entry.teamEconomy);
+        if (entry.row.actionType === "semi") postPistolDiagnostics.winner_observational_semi.push(entry.row.actionType);
+      }
     }
     const state = stateFor(entry);
     const current = v3Candidates(state);
@@ -880,6 +928,7 @@ async function main(): Promise<void> {
     if (canonicalOptions(current.output) !== canonicalOptions(recommendPolicyV3(unknownOpponentState))) opponentFallbackChanges++;
     increment(opponentStatuses, state.opponent.status === "INFERRED" ? state.opponent.value! : "UNKNOWN");
     if (current.output.defaultOptionId !== undefined) declaredDefaultStates++;
+    if (outcome === "WIN" && current.output.options.some((option) => option.mode === "LIGHT")) conversionWinnerLightOutput++;
 
     for (const option of current.output.options) {
       const optionCandidate = candidateFrom(option.mode, entry.inventory, option.purchases, option.bundleSpend);
@@ -929,6 +978,12 @@ async function main(): Promise<void> {
     const segment = v3Segments.get(entry.context) ?? new ModelMetrics();
     segment.add(current.candidates, actual, entry.inventory);
     v3Segments.set(entry.context, segment);
+    const strategic = strategicSegment(entry);
+    const strategicMetrics = v3StrategicSegments.get(strategic) ?? new ModelMetrics();
+    strategicMetrics.add(current.candidates, actual, entry.inventory);
+    v3StrategicSegments.set(strategic, strategicMetrics);
+    if (entry.context === "NORMAL" && entry.row.actionType === "semi") normalObservationalSemi.add(current.candidates, actual, entry.inventory);
+    if (outcome === "WIN" && entry.row.actionType === "semi") postPistolWinnerObservationalSemi.add(current.candidates, actual, entry.inventory);
     naive.add(naiveCandidates(entry), actual, entry.inventory);
     v2.add(v2Candidates(entry), actual, entry.inventory);
     const reason = discrepancyReason(current.candidates, actual, v3Flags);
@@ -976,6 +1031,7 @@ async function main(): Promise<void> {
     c4_remaining_uncalibrated_unknown: unknownTiming(1_000_000n, 2_000_000n).status === "UNKNOWN",
     opponent_unknown_changes_base_recommendation_set: opponentFallbackChanges,
     loss_projection_mismatch: lossProjectionMismatch,
+    post_pistol_conversion_winner_light_output: conversionWinnerLightOutput,
   };
   const invariantNames = [
     "over_budget", "side_illegal", "grenade_slots_over_4", "flash_over_2",
@@ -1009,6 +1065,10 @@ async function main(): Promise<void> {
     id: "POST_PISTOL_FULL_UNREACHABLE",
     evidence: `${postPistolFull!.n} actual POST_PISTOL FULL rows have zero compatible coverage`,
   });
+  if (conversionWinnerLightOutput > 0) blockers.push({
+    id: "POST_PISTOL_CONVERSION_LIGHT",
+    evidence: `${conversionWinnerLightOutput} pistol-winner conversion states still offer strategic LIGHT`,
+  });
 
   const reasonResult = Object.fromEntries([...reasons].sort().map(([name, count]) => [name, { count, rate_of_material: rate(count, material.count), rate_of_eligible: rate(count, eligible.length) }]));
   for (const reason of ["COVERED_ALTERNATIVE", "UNAVAILABLE_CONTEXT", "ROBUST_GENERAL_DEFAULT", "DATA_AMBIGUITY", "POLICY_MISS", "UNEXPLAINED"] as const) {
@@ -1016,7 +1076,7 @@ async function main(): Promise<void> {
   }
 
   const resultWithoutHash = {
-    schema_version: 2,
+    schema_version: 3,
     baseline_policy_sha: BASELINE_POLICY_SHA,
     decision_scope: "behavioral conformance on the frozen Cologne corpus; professional behavior is not optimal-policy ground truth",
     inputs: {
@@ -1026,12 +1086,13 @@ async function main(): Promise<void> {
       runtime_policy_import: "packages/economy-advisor/src/policy-v3.ts",
       production_visible_policy_fields: ["own side", "own money", "own inventory", "own loss index", "round number/context", "score", "opponent loss index"],
       tracked_history_facts_used: ["previous round winner only for POST_PISTOL; reconstructed from the immediately preceding audit round to model continuous normal-player GSI"],
-      demo_label_only_fields: ["resulting spend/loadout", "replay end armor/kit/grenades", "professional action type"],
+      demo_label_only_fields: ["resulting spend/loadout", "replay end armor/kit/grenades", "individual player-economies action type", "rounds team economy for POST_PISTOL conversion label only"],
       forbidden_policy_fields_not_supplied: ["opponent exact money/weapons/survivors", "teammate hidden purchases", "identity/role", "map position/spawn", "future result/kills"],
     },
     eligibility: audit,
     comparison_contract: {
-      mode_mapping: { eco: "PRESERVE", semi: "LIGHT", force: "FORCE", full: "FULL" },
+      mode_mapping: { eco: "PRESERVE", semi: "LIGHT", force: "FORCE", full: "FULL", post_pistol_winner: "FULL conversion override" },
+      strategic_mode_label: "POST_PISTOL pistol winners use rounds.json team*Economy=full; all individual purchase fields remain player-economies labels",
       exact: "first Policy V3 option (dominant when a dominant option exists)",
       declared_default_states: declaredDefaultStates,
       declared_default_rate: rate(declaredDefaultStates, eligible.length),
@@ -1048,6 +1109,9 @@ async function main(): Promise<void> {
     behavioral_alignment: {
       policy_v3: v3.result(),
       policy_v3_by_context: Object.fromEntries([...v3Segments].sort().map(([context, metrics]) => [context, metrics.result()])),
+      policy_v3_by_strategic_segment: Object.fromEntries([...v3StrategicSegments].sort().map(([segment, metrics]) => [segment, metrics.result()])),
+      normal_observational_semi: normalObservationalSemi.result(),
+      post_pistol_winner_observational_semi: postPistolWinnerObservationalSemi.result(),
       naive_affordability: naive.result(),
       v2_fixed_tier_rifle_armor: v2.result(),
     },
@@ -1074,7 +1138,8 @@ async function main(): Promise<void> {
       },
       post_pistol_previous_winner: {
         all_post_pistol: countLabels(postPistolDiagnostics.all),
-        actual_full: countLabels(postPistolDiagnostics.actual_full),
+        winner_team_economy: countLabels(postPistolDiagnostics.winner_team_economy),
+        winner_observational_semi: countLabels(postPistolDiagnostics.winner_observational_semi),
       },
     },
     opponent_deployment: {

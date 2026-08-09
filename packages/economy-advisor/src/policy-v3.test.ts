@@ -145,14 +145,14 @@ describe("Policy V3 deterministic core", () => {
     expect(out.defaultOptionId).toBe(out.options[0]?.id);
   });
 
-  it("lets a witnessed pistol winner reach the generic full-buy bundle", () => {
+  it.each(["T", "CT"] as const)("classifies a witnessed pistol winner as strategic FULL for %s", (side) => {
     const current = state();
-    current.round.side = observed("T");
+    current.round.side = observed(side);
     current.player.money = observed(4000);
-    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("T" as const), planted: observed(false) }] };
+    current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed(side), planted: observed(false) }] };
     const out = recommendPolicyV3(current);
-    expect(out.options.map((option) => option.mode)).toContain("FULL");
-    expect(out.options.find((option) => option.mode === "FULL")?.purchases).toContainEqual({ item: "ak47", quantity: 1 });
+    expect(out.options.map((option) => option.mode)).toEqual(["FULL"]);
+    expect(out.options[0]?.reasons.some((reason) => reason.code === "POST_PISTOL_CONVERSION")).toBe(true);
     expect(out.defaultOptionId).toBeUndefined();
   });
 
@@ -435,16 +435,17 @@ describe("Policy V3 deterministic core", () => {
     expect(output.options.some((option) => option.mode === "LIGHT")).toBe(false);
   });
 
-  it("keeps the isolated post-pistol LIGHT alternative free of NORMAL boundaries", () => {
+  it("keeps an affordable SMG conversion bundle under strategic FULL", () => {
     const current = state();
     current.round.side = observed("CT");
     current.player.money = observed(2600);
     current.history = { integrity: "COMPLETE", previousRounds: [{ roundNumber: 1, winner: observed("CT"), planted: observed(false) }] };
     const output = recommendPolicyV3(current);
-    const light = output.options.find((option) => option.mode === "LIGHT");
+    const conversion = output.options[0];
     expect(output.futureAffordability).toEqual({ status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
-    expect(light?.spendingGuidance).toEqual({ layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" });
-    expect(light?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
+    expect(conversion).toMatchObject({ mode: "FULL", spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" } });
+    expect(conversion?.purchases).toEqual(expect.arrayContaining([{ item: "mp9", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
+    expect(conversion?.resultingInventory.armor).toBeGreaterThan(0);
   });
 
   it("does not fabricate boundary values when NORMAL own money is UNKNOWN", () => {

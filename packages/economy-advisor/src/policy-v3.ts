@@ -407,26 +407,37 @@ function planLightOption(
   return null;
 }
 
-/** POST_PISTOL keeps its previously accepted, isolated partial-buy option.
- * It intentionally has no NORMAL future-affordability claim or boundary. */
-function planPostPistolLightOption(state: PolicyV3State, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
+/** A pistol winner is in a team-level conversion FULL state even when this
+ * player's affordable, inventory-aware bundle is an SMG or a retained weapon. */
+function planPostPistolConversionOption(state: PolicyV3State, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
   if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
   const inventory = state.player.inventory.value;
-  const side = state.round.side.value;
-  const plan = planPurchases(inventory, compact([smgFor(side), "kevlar"]), DEFAULT_RULES, side);
-  if (!plan.isComplete || plan.totalCost > state.player.money.value) return null;
+  const currentRound = planOption(state, "FORCE", strength, { status: "NOT_APPLICABLE", boundaries: [], reason: "POST_PISTOL_STRATEGY" });
+  if (!currentRound) {
+    return {
+      id: "post-pistol-conversion-hold",
+      mode: "FULL",
+      spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" },
+      purchases: [],
+      bundleSpend: 0,
+      resultingInventory: resultingLoadout(inventory, []),
+      trajectory: trajectory(state, 0),
+      reasons: [{ code: "POST_PISTOL_CONVERSION", detail: "pistol winner conversion is team-level FULL; no legal individual armored purchase fits the observable state" }],
+      assumptions: ["normal-player GSI only", "POST_PISTOL conversion is independent from NORMAL future-affordability guidance"],
+      conditionalAlternatives: [],
+      adviceStrength: strength,
+    };
+  }
   return {
-    id: `post-pistol-light-${plan.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
-    mode: "LIGHT",
-    spendingGuidance: { layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" },
-    purchases: plan.purchases,
-    bundleSpend: plan.totalCost,
-    resultingInventory: resultingLoadout(inventory, plan.purchases),
-    trajectory: trajectory(state, plan.totalCost),
-    reasons: [{ code: "POST_PISTOL_LIGHT", detail: "isolated post-pistol partial-buy policy; no NORMAL future-affordability boundary is claimed" }],
-    assumptions: ["normal-player GSI only", "post-pistol policy is independent from NORMAL future-affordability guidance"],
-    conditionalAlternatives: [],
-    adviceStrength: strength,
+    ...currentRound,
+    id: `post-pistol-conversion-${currentRound.purchases.map((purchase) => `${purchase.item}${purchase.quantity}`).join("-") || "hold"}`,
+    mode: "FULL",
+    spendingGuidance: { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" },
+    reasons: [
+      { code: "POST_PISTOL_CONVERSION", detail: "pistol winner conversion is team-level FULL; this player's bundle may remain an SMG or retained primary" },
+      ...currentRound.reasons.filter((reason) => reason.code !== "MODE_FORCE"),
+    ],
+    assumptions: [...currentRound.assumptions, "POST_PISTOL conversion is independent from NORMAL future-affordability guidance"],
   };
 }
 
@@ -521,24 +532,18 @@ function planOption(
 function genericModes(
   state: PolicyV3State,
   boundaries: FutureAffordabilitySet,
-  includePostPistolLight = false,
-): Array<[PolicyMode, RecommendationOption["adviceStrength"]]> {
+): Array<[Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]> {
   const full = planOption(state, "FULL", "SUPPORTED", boundaries);
   const force = planOption(state, "FORCE", "SUPPORTED", boundaries);
-  const postPistolLight = includePostPistolLight ? planPostPistolLightOption(state, "ALTERNATIVE") : null;
   if (full) {
-    return [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : [])];
+    return [["FULL", "SUPPORTED"], ...(force ? [["FORCE", "ALTERNATIVE"] as [Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]] : [])];
   }
   if (force) {
     return [
       ["FORCE", "SUPPORTED"],
-      ...(postPistolLight && postPistolLight.bundleSpend > 0 && postPistolLight.bundleSpend < force.bundleSpend
-        ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]]
-        : []),
       ["PRESERVE", "ALTERNATIVE"],
     ];
   }
-  if (postPistolLight) return [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]];
   return [["PRESERVE", "SUPPORTED"]];
 }
 
@@ -566,11 +571,13 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
       status: "UNSUPPORTED_POLICY_EVIDENCE", futureAffordability: affordability, options: [], unresolved: ["pistol-round purchase policy is outside the frozen Policy V3 evidence scope"], opponent: state.opponent,
     };
   }
-  let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]>;
+  let modes: Array<[Exclude<PolicyMode, "LIGHT">, RecommendationOption["adviceStrength"]]>;
+  let conversionWinner = false;
   if (context === "POST_PISTOL") {
     const pistolOutcome = previousPistolOutcome(state, side);
     if (pistolOutcome === "WIN") {
-      modes = genericModes(state, affordability, true);
+      conversionWinner = true;
+      modes = [["FULL", "SUPPORTED"]];
     } else if (pistolOutcome === "LOSS") {
       modes = side === "T"
         ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
@@ -597,8 +604,8 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
     modes = [["AWP_PATH", "DOMINANT"], ...modes.filter(([mode]) => mode !== "AWP_PATH")];
   }
-  let options = modes.map(([mode, strength]) => mode === "LIGHT"
-    ? planPostPistolLightOption(state, strength)
+  let options = modes.map(([mode, strength]) => conversionWinner && mode === "FULL"
+    ? planPostPistolConversionOption(state, strength)
     : planOption(state, mode, strength, affordability)).filter((option): option is RecommendationOption => option !== null);
   if (context === "NORMAL" && affordability.status === "PROJECTED" && !options.some((option) => option.mode === "FULL")) {
     const lightStrength: RecommendationOption["adviceStrength"] = options.some((option) => option.mode === "FORCE") ? "ALTERNATIVE" : "SUPPORTED";
