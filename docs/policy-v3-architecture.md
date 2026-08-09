@@ -331,13 +331,32 @@ interface PolicyV3Output {
 `OpponentEconomyClass` 不出现在 FACT 或 purchase planner 输入中。Policy V3
 只允许在 option 已经机械合法、可负担后使用它：
 
-- likely established：可提高“对 rifle threat 的防护”类理由权重；
+- likely established：可提高一般 rifle-economy context 的理由权重，但不得把它
+  翻译为 exact weapon mix 或“helmet 无价值”；
 - likely not established：只在 post-pistol/calibrated support 内作为 soft modifier；
 - UNKNOWN：删除所有 opponent-specific reason，保持同一组基础 modes；
 - inference 变化不能使一个原本不可负担的 plan 变得可负担；
 - inference 变化不能隐藏 multimodal alternative。
 
 runtime contract 没有 `opponentMoney` 字段，避免下游误用 exact 数值。
+
+### 9.1 CT helmet semantic amendment
+
+`docs/experiments/ct-helmet-decision-targeted-study.md` 的 targeted evidence 将
+helmet gate 锁为 **B（weak evidence）**：normal-GSI opponent context 对完整 fresh
+purchase surface 只有很小的 held-out 概率增量，对 Kevlar-vs-vesthelm target 没有
+稳定的实质增量；可判定“低 helmet threat”的覆盖仅 15/3,790 team-round。
+
+因此 V3：
+
+- 不新增独立 opponent helmet-threat inference；
+- `LIKELY_ESTABLISHED_RIFLE` 不得创建、删除或默认选择 skip-helmet plan；
+- 它只可在 own-state 已把 Kevlar / vesthelm 判为近似平局时，作为非约束性的轻量
+  explanation/ranking tie-break；
+- `LIKELY_NOT_ESTABLISHED_RIFLE` 不能作为省头信号；`UNKNOWN` 删除 helmet 的
+  opponent-specific reason；
+- CT fresh 买甲与已有满甲的基础 fallback 均保持保守：默认包含 helmet；只有明确的
+  own-state opportunity cost / trajectory constraint 才保留 Kevlar 或 skip alternative。
 
 ## 10. AWP 与用户主动偏好
 
