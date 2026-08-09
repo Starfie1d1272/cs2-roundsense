@@ -27,7 +27,7 @@ describe("live observation adapter → C4StateMachine", () => {
 
     expect(events.map((e) => e.type)).toEqual(["planted", "exploded", "reset"]);
     expect(events[0]?.roundNumber).toBe(3);
-    expect(events[0]?.plantedAtMonotonicNs).toBe(3_000_000_000n);
+    expect(events[0]?.detectedPlantedAtMonotonicNs).toBe(3_000_000_000n);
     expect(events[1]?.roundNumber).toBe(3);
     expect(m.state.state).toBe("idle");
     expect(m.state.roundNumber).toBe(4);
@@ -39,6 +39,6 @@ describe("live observation adapter → C4StateMachine", () => {
     m.observe(toC4Observation(receipt(0, { round: 3, phase: "live", bomb: "planted" }, 1_000_000_000n)));
     m.observe(toC4Observation(receipt(1, { round: 3, phase: "live", bomb: "planted" }, 2_000_000_000n)));
     expect(events.map((e) => e.type)).toEqual(["baseline_only"]);
-    expect(events[0]?.plantedAtMonotonicNs).toBeUndefined();
+    expect(events[0]?.detectedPlantedAtMonotonicNs).toBeUndefined();
   });
 });

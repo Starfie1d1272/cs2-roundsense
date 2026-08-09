@@ -19,15 +19,15 @@ export interface C4Event {
   roundNumber: number | null;
   atMonotonicNs: bigint;
   atWallClock: string;
-  plantedAtMonotonicNs?: bigint;
+  detectedPlantedAtMonotonicNs?: bigint;
   note?: string;
 }
 
 export interface C4MachineState {
   state: C4State;
   roundNumber: number | null;
-  plantedAtMonotonicNs?: bigint;
-  plantedAtWallClock?: string;
+  detectedPlantedAtMonotonicNs?: bigint;
+  detectedPlantedAtWallClock?: string;
   /** True when we have seen enough of this round to trust a planted signal. */
   hasRoundBaseline: boolean;
   /** True when an explosion signal ("exploding"/"exploded") was observed. */
@@ -153,7 +153,7 @@ export class C4StateMachine {
       if (bomb === "defused") {
         this.st.state = "defused";
         this.emit(
-          { type: "defused", plantedAtMonotonicNs: this.st.plantedAtMonotonicNs, ...at(obs) },
+          { type: "defused", detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs, ...at(obs) },
           obs,
         );
         return;
@@ -163,7 +163,7 @@ export class C4StateMachine {
         if (bomb === "exploded") {
           this.st.state = "exploded";
           this.emit(
-            { type: "exploded", plantedAtMonotonicNs: this.st.plantedAtMonotonicNs, ...at(obs) },
+            { type: "exploded", detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs, ...at(obs) },
             obs,
           );
           return;
@@ -175,7 +175,7 @@ export class C4StateMachine {
         this.emit(
           {
             type: "round_over",
-            plantedAtMonotonicNs: this.st.plantedAtMonotonicNs,
+            detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs,
             note: this.st.observedExplosionSignal
               ? "round ended; explosion signal observed earlier"
               : "round ended without observed explosion/defuse — no explosion fabricated",
@@ -193,12 +193,12 @@ export class C4StateMachine {
 
   private enterPlanted(obs: C4Observation): void {
     this.st.state = "planted";
-    this.st.plantedAtMonotonicNs = obs.receivedAtMonotonicNs;
-    this.st.plantedAtWallClock = obs.receivedAtWallClock;
+    this.st.detectedPlantedAtMonotonicNs = obs.receivedAtMonotonicNs;
+    this.st.detectedPlantedAtWallClock = obs.receivedAtWallClock;
     this.emit(
       {
         type: "planted",
-        plantedAtMonotonicNs: obs.receivedAtMonotonicNs,
+        detectedPlantedAtMonotonicNs: obs.receivedAtMonotonicNs,
         ...at(obs),
       },
       obs,

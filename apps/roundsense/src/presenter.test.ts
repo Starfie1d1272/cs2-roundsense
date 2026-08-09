@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 import { C4Presenter } from "./presenter.js";
 import type { C4Event } from "@roundsense/c4-estimator";
 
-const event = (type: C4Event["type"], plantedAt?: bigint): C4Event => ({
+const event = (type: C4Event["type"], detectedAt?: bigint): C4Event => ({
   type,
   roundNumber: 3,
   atMonotonicNs: 1_000_000_000n,
   atWallClock: "2026-08-07T00:00:00.000Z",
-  ...(plantedAt !== undefined ? { plantedAtMonotonicNs: plantedAt } : {}),
+  ...(detectedAt !== undefined ? { detectedPlantedAtMonotonicNs: detectedAt } : {}),
 });
 
 describe("C4Presenter (injectable clock + scheduler)", () => {
-  it("starts a 500ms countdown on planted and keeps updating without new GSI payloads", () => {
+  it("reports elapsed time since detection without claiming remaining seconds", () => {
     const lines: string[] = [];
     const ticks: (() => void)[] = [];
     let nowNs = 10_000_000_000n; // planted at t=10s
@@ -28,16 +28,16 @@ describe("C4Presenter (injectable clock + scheduler)", () => {
     });
 
     p.handleEvent(event("planted", 10_000_000_000n));
-    expect(lines[0]).toContain("41.0s remaining");
+    expect(lines[0]).toContain("0.0s since detection; remaining time unknown");
     expect(ticks).toHaveLength(1);
 
-    // no GSI payload arrives; the local timer keeps counting down
+    // no GSI payload arrives; elapsed time remains display-only context
     nowNs = 12_000_000_000n;
     ticks[0]!();
     nowNs = 15_000_000_000n;
     ticks[0]!();
-    expect(lines[1]).toContain("39.0s remaining");
-    expect(lines[2]).toContain("36.0s remaining");
+    expect(lines[1]).toContain("2.0s since detection; remaining time unknown");
+    expect(lines[2]).toContain("5.0s since detection; remaining time unknown");
   });
 
   it("stops the interval on terminal events", () => {
@@ -108,7 +108,7 @@ describe("C4Presenter (injectable clock + scheduler)", () => {
     expect(ticks).toHaveLength(0);
   });
 
-  it("stops silently when the local estimate reaches zero (no fabricated outcome)", () => {
+  it("does not fabricate an outcome after any local elapsed duration", () => {
     const lines: string[] = [];
     const ticks: (() => void)[] = [];
     let cancelled = 0;
@@ -126,11 +126,11 @@ describe("C4Presenter (injectable clock + scheduler)", () => {
       onOutput: (l) => lines.push(l),
     });
     p.handleEvent(event("planted", 10_000_000_000n));
-    nowNs = 10_000_000_000n + 42_000_000_000n; // past the 41s fuse
+    nowNs = 10_000_000_000n + 42_000_000_000n;
     ticks[0]!();
-    expect(p.isCountingDown).toBe(false);
-    expect(cancelled).toBe(1);
-    // no "0.0s" spam, no "exploded" domain claim
-    expect(lines.every((l) => !l.includes("0.0s") && !l.includes("EXPLODED"))).toBe(true);
+    expect(p.isCountingDown).toBe(true);
+    expect(cancelled).toBe(0);
+    expect(lines[lines.length - 1]).toContain("42.0s since detection; remaining time unknown");
+    expect(lines.every((l) => !l.includes("EXPLODED"))).toBe(true);
   });
 });

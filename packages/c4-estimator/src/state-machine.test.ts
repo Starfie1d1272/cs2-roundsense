@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { C4StateMachine, type C4Observation } from "./state-machine.js";
-import { estimateRemaining, estimateRemainingDefault, C4_FUSE_RULES } from "./estimator.js";
+import { C4_TIMING_CALIBRATION, unknownTiming } from "./estimator.js";
 
 let seq = 0;
 function obs(partial: Partial<C4Observation> & { roundNumber: number }): C4Observation {
@@ -100,7 +100,7 @@ describe("C4StateMachine", () => {
     expect(m.state.state).toBe("defused");
     // The defused event must NOT carry a plantedAt (unknown start)
     const defused = m.events.find((e) => e.type === "defused");
-    expect(defused?.plantedAtMonotonicNs).toBeUndefined();
+    expect(defused?.detectedPlantedAtMonotonicNs).toBeUndefined();
   });
 
   it("missing intermediate states: round end without explosion is round_over, never exploded", () => {
@@ -191,26 +191,15 @@ describe("C4StateMachine", () => {
   });
 });
 
-describe("estimateRemaining", () => {
-  const planted = 10_000_000_000n; // 10s in ns
-
-  it("computes remaining and elapsed from monotonic clock", () => {
-    const out = estimateRemaining({ plantedAtMonotonicNs: planted, nowMonotonicNs: planted + 5_000_000_000n, fuseMs: 40_000 });
-    expect(out.elapsedMs).toBe(5000);
-    expect(out.remainingMs).toBe(35_000);
-    expect(out.exploded).toBe(false);
+describe("uncalibrated C4 timing", () => {
+  it("only reports elapsed time from the local detection receipt", () => {
+    const detectedAt = 10_000_000_000n;
+    const out = unknownTiming(detectedAt, detectedAt + 5_000_000_000n);
+    expect(out).toEqual({ status: "UNKNOWN", detectedPlantedAtNs: detectedAt, elapsedSinceDetectionMs: 5000, reason: "UNCALIBRATED" });
+    expect(C4_TIMING_CALIBRATION.status).toBe("UNCALIBRATED");
   });
 
-  it("clamps at zero and flags exploded", () => {
-    const out = estimateRemaining({ plantedAtMonotonicNs: planted, nowMonotonicNs: planted + 41_000_000_000n, fuseMs: 40_000 });
-    expect(out.remainingMs).toBe(0);
-    expect(out.exploded).toBe(true);
-  });
-
-  it("uses the versioned default fuse (B1/B2)", () => {
-    const out = estimateRemainingDefault(planted, planted + 20_000_000_000n);
-    expect(C4_FUSE_RULES.fuseMs).toBe(41_000); // corpus-verified: 2624 ticks @64, 223 samples
-    expect(out.remainingMs).toBe(21_000);
-    expect(C4_FUSE_RULES.status).toBe("corpus-verified");
+  it("keeps a cold-start planted signal numeric-free", () => {
+    expect(unknownTiming(undefined, 20_000_000_000n)).toEqual({ status: "UNKNOWN", reason: "COLD_START" });
   });
 });
