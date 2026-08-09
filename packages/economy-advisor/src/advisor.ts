@@ -1,5 +1,5 @@
 import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
-import { DEFAULT_RULES, type EconomyRules, price } from "./rules.js";
+import { DEFAULT_RULES, type EconomyRules, price, weaponClassOf } from "./rules.js";
 import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
 import { classifyPurchase } from "./round-type.js";
 import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
@@ -13,16 +13,23 @@ export function smgFor(side: Side): ItemId {
 }
 
 /** Same rifle family definition as goal semantics (not re-invented here). */
-const RIFLE_FAMILY = ["ak47", "m4a4", "m4a1s", "galil", "famas"];
-const SMG_FAMILY = ["mac10", "mp9", "mp7", "mp5sd", "ump45", "p90", "bizon"];
 const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary"] as const;
+export const PAID_PISTOLS = ["p250", "dual", "tec9", "cz75", "fiveseven", "deagle", "r8"] as const;
 
 function isRifle(item: ItemId): boolean {
-  return RIFLE_FAMILY.includes(item);
+  return weaponClassOf(item) === "rifle";
 }
 
 function isSmg(item: ItemId): boolean {
-  return SMG_FAMILY.includes(item);
+  return weaponClassOf(item) === "smg";
+}
+
+function isSniper(item: ItemId): boolean {
+  return weaponClassOf(item) === "sniper";
+}
+
+function isPaidPistol(item: ItemId): boolean {
+  return (PAID_PISTOLS as readonly string[]).includes(item);
 }
 
 function isGrenade(item: ItemId): boolean {
@@ -35,6 +42,7 @@ export interface PostLoadout {
   secondary?: ItemId;
   armor: number;
   hasHelmet: boolean;
+  hasDefuseKit: boolean;
   grenades: ItemId[];
 }
 
@@ -48,14 +56,17 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
     secondary: inventory.secondary,
     armor: inventory.armor,
     hasHelmet: inventory.hasHelmet,
+    hasDefuseKit: inventory.hasDefuseKit,
     grenades: [...inventory.grenades],
   };
   for (const p of purchases) {
-    if (isRifle(p.item) || isSmg(p.item) || p.item === "awp") loadout.primary = p.item;
-    else if (p.item === "deagle") loadout.secondary = "deagle";
+    if (isRifle(p.item) || isSmg(p.item) || isSniper(p.item)) loadout.primary = p.item;
+    else if (isPaidPistol(p.item)) loadout.secondary = p.item;
     else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
       loadout.armor = 100;
       if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
+    } else if (p.item === "defuse_kit") {
+      loadout.hasDefuseKit = true;
     } else if (isGrenade(p.item)) {
       for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
     }
@@ -123,7 +134,7 @@ export interface PurchasePlan {
  * - kevlar/kevlar_helmet: armor/helmet state with incremental upgrade cost
  * - grenades: multiset subtraction (quantity matters, no set dedupe)
  */
-export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules): PurchasePlan {
+export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules, side?: Side): PurchasePlan {
   const purchases = new Map<ItemId, number>();
   let targetCost = 0;
   const add = (item: ItemId, qty = 1) => purchases.set(item, (purchases.get(item) ?? 0) + qty);
@@ -145,9 +156,13 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     } else if (item === "awp") {
       if (inventory.primary !== "awp") add("awp");
       targetCost += price(rules, "awp");
-    } else if (item === "deagle") {
-      if (inventory.secondary !== "deagle") add("deagle");
-      targetCost += price(rules, "deagle");
+    } else if (isSniper(item)) {
+      const hasSniper = inventory.primary !== null && inventory.primary !== undefined && isSniper(inventory.primary);
+      if (!hasSniper) add(item);
+      targetCost += price(rules, item);
+    } else if (isPaidPistol(item)) {
+      if (inventory.secondary !== item) add(item);
+      targetCost += price(rules, item);
     } else if (item === "kevlar") {
       // "具有护甲" — not a forced 100-armor refill; any armor satisfies it
       if (!hasArmor) add("kevlar");
@@ -155,6 +170,9 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     } else if (item === "kevlar_helmet") {
       if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
       targetCost += price(rules, "kevlar_helmet");
+    } else if (item === "defuse_kit") {
+      if (side === "CT" && !inventory.hasDefuseKit) add(item);
+      if (side === "CT") targetCost += price(rules, item);
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
       if (owned > 0) ownedGrenades.set(item, owned - 1);
@@ -240,7 +258,7 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
 
   const schemes: Scheme[] = templates.map((template) => {
     const targetItems = resolveItems(rules, input.side, template.items);
-    const plan = planPurchases(input.inventory, targetItems, rules);
+    const plan = planPurchases(input.inventory, targetItems, rules, input.side);
     const { purchases, totalCost, targetCost } = plan;
     const affordable = totalCost <= input.money;
     const projectionInput: ProjectionInput = {

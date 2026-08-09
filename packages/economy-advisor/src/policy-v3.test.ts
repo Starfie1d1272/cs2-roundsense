@@ -84,7 +84,71 @@ describe("Policy V3 deterministic core", () => {
     const current = state();
     current.round = { ...current.round, number: observed(5), side: observed("CT"), context: observed("NORMAL") };
     const full = recommendPolicyV3(current).options.find((option) => option.mode === "FULL");
-    expect(full?.conditionalAlternatives.some((alternative) => alternative.condition.includes("队友暂无钳子"))).toBe(true);
+    const kit = full?.conditionalAlternatives.find((alternative) => alternative.condition.includes("队友暂无钳子"));
+    expect(kit?.purchases).toContainEqual({ item: "defuse_kit", quantity: 1 });
+    expect(full?.resultingInventory.hasDefuseKit).toBe(false);
+  });
+
+  it("requires armor for an AWP path and preserves existing armor", () => {
+    const empty = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    empty.preference = { source: "USER_DECLARED", awpPriority: "PREFER" };
+    const awp = recommendPolicyV3(empty).options.find((option) => option.mode === "AWP_PATH");
+    expect(awp?.purchases).toEqual(expect.arrayContaining([{ item: "awp", quantity: 1 }, { item: "kevlar", quantity: 1 }]));
+
+    const armored = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    armored.preference = { source: "USER_DECLARED", awpPriority: "PREFER" };
+    armored.player.inventory = observed({ ...inventory, armor: 100, grenades: [] });
+    const existingArmor = recommendPolicyV3(armored).options.find((option) => option.mode === "AWP_PATH");
+    expect(existingArmor?.purchases.some((purchase) => purchase.item === "kevlar")).toBe(false);
+  });
+
+  it("does not emit a fake complete AWP path below AWP plus armor cost", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.money = observed(5000);
+    current.preference = { source: "USER_DECLARED", awpPriority: "PREFER" };
+    expect(recommendPolicyV3(current).options.some((option) => option.mode === "AWP_PATH")).toBe(false);
+  });
+
+  it("keeps unverified WIN loss-index transition UNKNOWN and WIN money bounded", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.lossIndex = observed(3);
+    const scenario = recommendPolicyV3(current).options[0]?.trajectory.find((item) => item.id === "WIN");
+    expect(scenario?.nextLossIndex.status).toBe("UNKNOWN");
+    expect(scenario?.nextMoney.min).toBeLessThan(scenario?.nextMoney.max ?? 0);
+  });
+
+  it("offers Kevlar only when vesthelm itself makes the CT full bundle unaffordable", () => {
+    const current = state({ round: { ...state().round, number: observed(5), side: observed("CT"), context: observed("NORMAL") } });
+    current.player.money = observed(3800);
+    const full = recommendPolicyV3(current).options.find((option) => option.mode === "FULL");
+    expect(full?.purchases.some((purchase) => purchase.item === "kevlar")).toBe(true);
+    expect(full?.purchases.some((purchase) => purchase.item === "kevlar_helmet")).toBe(false);
+    expect(full?.reasons.some((reason) => reason.code === "CT_KEVLAR_OWN_STATE")).toBe(true);
+  });
+
+  it("does not let opponent class create or remove the CT Kevlar alternative", () => {
+    const unknown = state({ round: { ...state().round, number: observed(5), side: observed("CT"), context: observed("NORMAL") } });
+    unknown.player.money = observed(3800);
+    const inferred = structuredClone(unknown);
+    inferred.opponent = { status: "INFERRED", value: "LIKELY_ESTABLISHED_RIFLE", probability: 0.9, calibrationId: "test", inputsAsOfSeq: 1 };
+    const kitItem = (current: PolicyV3State) => recommendPolicyV3(current).options.find((option) => option.mode === "FULL")?.purchases.find((purchase) => purchase.item === "kevlar" || purchase.item === "kevlar_helmet")?.item;
+    expect(kitItem(inferred)).toBe(kitItem(unknown));
+  });
+
+  it("uses retained utility without rebuying or consuming virtual budget", () => {
+    expect(utilityBundle("T", { ...inventory, grenades: ["smoke"] }, 500)).toEqual(["smoke", "flash"]);
+    expect(utilityBundle("T", { ...inventory, grenades: ["flash"] }, 300)).toEqual(["flash", "smoke"]);
+    expect(utilityBundle("T", { ...inventory, grenades: ["smoke", "flash"] }, 500)).toEqual(["smoke", "flash"]);
+    expect(utilityBundle("CT", { ...inventory, grenades: ["flash", "flash"] }, 1200).filter((item) => item === "flash")).toHaveLength(2);
+  });
+
+  it("selects normal-round modes from affordability rather than listing every mode", () => {
+    const rich = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    const poor = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    poor.player.money = observed(3000);
+    expect(recommendPolicyV3(rich).options.map((option) => option.mode)).toEqual(["FULL", "PRESERVE"]);
+    expect(recommendPolicyV3(poor).options.map((option) => option.mode)).toContain("FORCE");
+    expect(recommendPolicyV3(poor).options.map((option) => option.mode)).not.toContain("FULL");
   });
 
   it("keeps the approved $200/$300/$500 utility boundaries deterministic", () => {

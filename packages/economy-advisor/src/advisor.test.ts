@@ -396,7 +396,7 @@ describe("armor condition handling (Review Fix)", () => {
 
 describe("goal fulfillment semantics (Final Convergence)", () => {
   const loadout = (over: Partial<import("./advisor.js").PostLoadout>): import("./advisor.js").PostLoadout => ({
-    primary: null, armor: 0, hasHelmet: false, grenades: [], ...over,
+    primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [], ...over,
   });
 
   it("AWP + armor → fulfills awp", () => {
@@ -440,6 +440,31 @@ describe("goal fulfillment semantics (Final Convergence)", () => {
     }
     // and there must be at least one spending scheme in this position
     expect(out.recommended).not.toBeNull();
+  });
+});
+
+describe("approved purchase mechanics", () => {
+  const empty: InventoryState = { primary: null, armor: 0, hasHelmet: false, hasDefuseKit: false, grenades: [] };
+
+  it("buys a CT defuse kit once and carries it into the resulting loadout", () => {
+    const plan = planPurchases(empty, [{ item: "defuse_kit", quantity: 1 }], DEFAULT_RULES, "CT");
+    expect(plan.purchases).toEqual([{ item: "defuse_kit", quantity: 1 }]);
+    expect(plan.totalCost).toBe(400);
+    expect(resultingLoadout(empty, plan.purchases).hasDefuseKit).toBe(true);
+    expect(resultingLoadout(empty, plan.purchases).grenades).toEqual([]);
+  });
+
+  it("does not rebuy an owned CT kit or allow a T kit purchase", () => {
+    const owned = { ...empty, hasDefuseKit: true };
+    expect(planPurchases(owned, [{ item: "defuse_kit", quantity: 1 }], DEFAULT_RULES, "CT")).toMatchObject({ purchases: [], totalCost: 0 });
+    expect(planPurchases(empty, [{ item: "defuse_kit", quantity: 1 }], DEFAULT_RULES, "T")).toMatchObject({ purchases: [], totalCost: 0 });
+  });
+
+  it("handles every paid-pistol secondary inventory-aware, not only deagle", () => {
+    const p250 = planPurchases(empty, [{ item: "p250", quantity: 1 }], DEFAULT_RULES, "T");
+    expect(p250.purchases).toEqual([{ item: "p250", quantity: 1 }]);
+    expect(resultingLoadout(empty, p250.purchases).secondary).toBe("p250");
+    expect(planPurchases({ ...empty, secondary: "p250" }, [{ item: "p250", quantity: 1 }], DEFAULT_RULES, "T").totalCost).toBe(0);
   });
 });
 

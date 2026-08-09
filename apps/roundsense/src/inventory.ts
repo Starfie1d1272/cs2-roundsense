@@ -14,11 +14,22 @@ const GSI_NON_WEAPON: Record<string, ItemId> = {
 const GSI_NAME_ALIASES: Record<string, ItemId> = { weapon_m4a4: "m4a4" };
 const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machine Gun", "SniperRifle"];
 
-/** Normal-player GSI inventory mapping. Spectator blocks are deliberately not
- * accepted as an input to this boundary. */
-export function inventoryFrom(payload: GsiPayload): InventoryState {
+/**
+ * Decode only a complete normal-player inventory observation. GSI payloads
+ * are partial; omitted fields are not evidence of an empty slot or false
+ * equipment flag. Callers retain a prior complete observation explicitly or
+ * expose UNKNOWN.
+ */
+export function inventoryFrom(payload: GsiPayload): InventoryState | undefined {
   const state = payload.player?.state;
-  const weapons = payload.player?.weapons ?? {};
+  const weapons = payload.player?.weapons;
+  if (
+    state === undefined ||
+    weapons === undefined ||
+    state.armor === undefined ||
+    state.helmet === undefined ||
+    state.defusekit === undefined
+  ) return undefined;
   let primary: ItemId | null = null;
   let secondary: ItemId | undefined;
   const grenades: ItemId[] = [];
@@ -40,9 +51,9 @@ export function inventoryFrom(payload: GsiPayload): InventoryState {
   return {
     primary,
     secondary,
-    armor: state?.armor ?? 0,
-    hasHelmet: state?.helmet === true,
-    hasDefuseKit: state?.defusekit === true,
+    armor: state.armor,
+    hasHelmet: state.helmet,
+    hasDefuseKit: state.defusekit,
     grenades,
   };
 }

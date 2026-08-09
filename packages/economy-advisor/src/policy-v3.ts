@@ -2,6 +2,7 @@ import type { ItemId, Side } from "@roundsense/shared-types";
 import { planPurchases, resultingLoadout, rifleFor, smgFor, type PurchasePlan } from "./advisor.js";
 import { projectNextRoundMoney } from "./projection.js";
 import { DEFAULT_RULES, price } from "./rules.js";
+import { inferOpponentEconomy as inferFromCalibration, type OpponentFeatureInput } from "./opponent-economy.js";
 import type { InventoryState, PurchaseItem } from "./types.js";
 
 export type FactStatus = "OBSERVED" | "TRACKED" | "UNKNOWN";
@@ -123,7 +124,8 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
   const initialBudget = budget;
   const desired = [...inventory.grenades];
   const canAdd = (item: ItemId) => desired.length < MAX_GRENADE_SLOTS && (item !== "flash" || count(desired, "flash") < 2);
-  const tryAdd = (item: ItemId) => {
+  const ensure = (item: ItemId) => {
+    if (desired.includes(item)) return;
     if (canAdd(item) && price(DEFAULT_RULES, item) <= budget) {
       desired.push(item);
       budget -= price(DEFAULT_RULES, item);
@@ -131,24 +133,27 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
   };
 
   // Existing utility is respected before any new slot is allocated.
-  if (budget >= 500) {
-    tryAdd("smoke");
-    tryAdd(sideFire(side));
-    tryAdd("flash");
+  if (initialBudget >= 600) {
+    ensure("smoke");
+    ensure(sideFire(side));
+    ensure("flash");
+  } else if (initialBudget >= 500) {
+    ensure("smoke");
+    ensure("flash");
   } else if (budget >= 300) {
-    tryAdd("smoke");
-    tryAdd("flash");
+    ensure("smoke");
+    ensure("flash");
   } else if (budget >= 200) {
-    tryAdd("flash");
+    ensure("flash");
   }
 
   if (initialBudget >= 600) {
     if (side === "CT") {
-      tryAdd("he"); // CT evidence supports HE over a second flash.
-      tryAdd("flash");
+      ensure("he"); // CT evidence supports HE over a second flash.
+      if (canAdd("flash") && price(DEFAULT_RULES, "flash") <= budget) ensure("flash");
     } else {
       // The T fourth slot remains intentionally multimodal; the caller emits both alternatives.
-      tryAdd("he");
+      ensure("he");
     }
   }
   return desired;
@@ -159,6 +164,7 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
   if (mode === "PRESERVE") return items;
   if (mode === "AWP_PATH") {
     add(items, "awp");
+    add(items, "kevlar");
   } else if (mode === "LIGHT") {
     add(items, smgFor(side));
     add(items, "kevlar");
@@ -174,10 +180,7 @@ function targets(side: Side, mode: PolicyMode, inventory: InventoryState, money:
 
   const primaryArmor = planPurchases(inventory, compact(items), DEFAULT_RULES).totalCost;
   const utility = utilityBundle(side, inventory, Math.max(0, money - primaryArmor));
-  for (const grenade of utility) {
-    if (!inventory.grenades.includes(grenade)) add(items, grenade);
-    else if (grenade === "flash" && count(inventory.grenades, "flash") < count(utility, "flash")) add(items, grenade);
-  }
+  items.push(...utility);
   return items;
 }
 
@@ -203,7 +206,9 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
     "current GSI inventory only; projection is a scenario, not a future fact",
   ];
   const lossIndex: Fact<number> = { status: "TRACKED", value: Math.min(4, state.player.lossIndex.value + 1), source: "CS2 loss-bonus rule", asOfSeq: state.player.lossIndex.asOfSeq };
-  const winIndex: Fact<number> = { status: "TRACKED", value: 0, source: "CS2 loss-bonus rule", asOfSeq: state.player.lossIndex.asOfSeq };
+  const winIndex: Fact<number> = state.player.lossIndex.value === 1
+    ? { status: "TRACKED", value: 0, source: "Windows runtime-observed win transition 1→0", asOfSeq: state.player.lossIndex.asOfSeq }
+    : { status: "UNKNOWN", source: "win loss-index transition", asOfSeq: state.player.lossIndex.asOfSeq, reason: "full win-decrement semantics not calibrated" };
   const reach = (money: number): PolicyMode[] => {
     const modes: PolicyMode[] = ["PRESERVE"];
     if (money >= 1200) modes.push("LIGHT");
@@ -213,7 +218,7 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
     return modes;
   };
   const scenarios: TrajectoryScenario[] = [
-    { id: "WIN", assumptions, nextMoney: { min: projected.win, max: projected.win }, nextLossIndex: winIndex, reachableModes: reach(projected.win) },
+    { id: "WIN", assumptions: [...assumptions, "WIN range spans elimination/timeout and bomb win rewards"], nextMoney: { min: projected.win, max: projected.winBomb }, nextLossIndex: winIndex, reachableModes: reach(projected.win) },
     { id: "LOSS_NO_PLANT", assumptions, nextMoney: { min: projected.loss, max: projected.loss }, nextLossIndex: lossIndex, reachableModes: reach(projected.loss) },
   ];
   if (state.round.side.value === "T") {
@@ -225,19 +230,30 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
 function planOption(state: PolicyV3State, mode: PolicyMode, strength: RecommendationOption["adviceStrength"]): RecommendationOption | null {
   if (!known(state.player.inventory) || !known(state.player.money) || !known(state.round.side)) return null;
   const inventory = state.player.inventory.value;
-  const desired = targets(state.round.side.value, mode, inventory, state.player.money.value);
-  const plan: PurchasePlan = planPurchases(inventory, compact(desired), DEFAULT_RULES);
+  let desired = targets(state.round.side.value, mode, inventory, state.player.money.value);
+  let plan: PurchasePlan = planPurchases(inventory, compact(desired), DEFAULT_RULES, state.round.side.value);
+  let helmetAlternative = false;
+  if (plan.totalCost > state.player.money.value && mode === "FULL" && state.round.side.value === "CT") {
+    const kevlarDesired = desired.map((item) => item === "kevlar_helmet" ? "kevlar" : item);
+    const kevlarPlan = planPurchases(inventory, compact(kevlarDesired), DEFAULT_RULES, state.round.side.value);
+    if (kevlarPlan.totalCost <= state.player.money.value) {
+      desired = kevlarDesired;
+      plan = kevlarPlan;
+      helmetAlternative = true;
+    }
+  }
   if (plan.totalCost > state.player.money.value) return null;
   const reasons: PolicyReason[] = [{ code: `MODE_${mode}`, detail: "deterministic, inventory-aware legal purchase bundle" }];
   if (mode === "FULL" && state.round.side.value === "CT") reasons.push({ code: "CT_DEFAULT_VESTHELM", detail: "fresh CT armor defaults to vesthelm; opponent inference does not remove it" });
+  if (helmetAlternative) reasons.push({ code: "CT_KEVLAR_OWN_STATE", detail: "vesthelm incremental $350 blocks the otherwise affordable own-state full bundle" });
   if (state.opponent.status === "INFERRED") reasons.push({ code: "OPPONENT_CONTEXT", detail: "coarse opponent context affects explanation only" });
   const conditionalAlternatives: ConditionalAlternative[] = [];
   if (state.round.side.value === "CT" && mode === "FULL" && !inventory.hasDefuseKit) {
-    const kitPlan = planPurchases(inventory, compact([...desired, "defuse_kit"]), DEFAULT_RULES);
+    const kitPlan = planPurchases(inventory, compact([...desired, "defuse_kit"]), DEFAULT_RULES, state.round.side.value);
     if (kitPlan.totalCost <= state.player.money.value) conditionalAlternatives.push({ condition: "若队友暂无钳子", purchases: kitPlan.purchases, reason: "钳子不占 grenade slot；队友覆盖不可见" });
   }
   if (state.round.side.value === "T" && mode === "FULL") {
-    const alternate = planPurchases(inventory, compact([...desired.filter((item) => item !== "he"), "flash"]), DEFAULT_RULES);
+    const alternate = planPurchases(inventory, compact([...desired.filter((item) => item !== "he"), "flash"]), DEFAULT_RULES, state.round.side.value);
     if (alternate.totalCost <= state.player.money.value && count(resultingLoadout(inventory, alternate.purchases).grenades, "flash") <= 2) conditionalAlternatives.push({ condition: "T fourth utility slot", purchases: alternate.purchases, reason: "HE 与 second flash 均保留为合法 alternative" });
   }
   return {
@@ -261,11 +277,19 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   if (unresolved.length > 0) return { status: "INSUFFICIENT_STATE", options: [], unresolved, opponent: state.opponent };
   const context = state.round.context.value;
   const preference = state.preference ?? DEFAULT_PREFERENCE;
-  const modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]> = context === "POST_PISTOL"
+  let modes: Array<[PolicyMode, RecommendationOption["adviceStrength"]]> = context === "POST_PISTOL"
     ? state.round.side.value === "T"
       ? [["PRESERVE", "SUPPORTED"], ["FORCE", "SUPPORTED"]]
       : [["FORCE", "DOMINANT"], ["PRESERVE", "ALTERNATIVE"]]
     : [["FULL", "SUPPORTED"], ["FORCE", "ALTERNATIVE"], ["LIGHT", "ALTERNATIVE"], ["PRESERVE", "ALTERNATIVE"]];
+  if (context === "NORMAL") {
+    const affordable = modes.filter(([mode]) => planOption(state, mode, "SUPPORTED") !== null).map(([mode]) => mode);
+    modes = affordable.includes("FULL")
+      ? [["FULL", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]]
+      : affordable.includes("FORCE")
+        ? [["FORCE", "SUPPORTED"], ...(affordable.includes("LIGHT") ? [["LIGHT", "ALTERNATIVE"] as [PolicyMode, RecommendationOption["adviceStrength"]]] : []), ["PRESERVE", "ALTERNATIVE"]]
+        : affordable.includes("LIGHT") ? [["LIGHT", "SUPPORTED"], ["PRESERVE", "ALTERNATIVE"]] : [["PRESERVE", "SUPPORTED"]];
+  }
   if (preference.source === "USER_DECLARED" && preference.awpPriority !== "NEUTRAL") modes.unshift(["AWP_PATH", preference.awpPriority === "PREFER" ? "SUPPORTED" : "DOMINANT"]);
   const options = modes.map(([mode, strength]) => planOption(state, mode, strength)).filter((option): option is RecommendationOption => option !== null);
   return {
@@ -282,19 +306,6 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
  * inventing either would turn an evidence gate into a false live capability.
  * The core therefore preserves the explicit UNKNOWN fallback until that
  * already-specified artifact is supplied. */
-export function inferOpponentEconomy(input: {
-  asOfSeq: number;
-  context: Fact<RoundContext>;
-  opponentLossIndex: Fact<number>;
-  ownScore: Fact<{ ct: number; t: number }>;
-}): Inference<OpponentEconomyClass> {
-  const calibrationId = "policy-v3-opponent-direct-gsi-2026-08";
-  return {
-    status: "UNKNOWN",
-    calibrationId,
-    inputsAsOfSeq: input.asOfSeq,
-    reason: !known(input.context) || !known(input.opponentLossIndex) || !known(input.ownScore)
-      ? "required direct-GSI fact missing"
-      : "held-out metrics exist, but deployable model coefficients/constants are not in the authoritative evidence parent",
-  };
+export function inferOpponentEconomy(input: OpponentFeatureInput): Inference<OpponentEconomyClass> {
+  return inferFromCalibration(input);
 }

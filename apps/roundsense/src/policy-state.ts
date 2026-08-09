@@ -2,6 +2,7 @@ import {
   inferOpponentEconomy,
   type Fact,
   type OpponentEconomyClass,
+  type InventoryState,
   type PolicyV3State,
   type RoundContext,
   type RoundHistoryFact,
@@ -14,9 +15,11 @@ import { inventoryFrom } from "./inventory.js";
 const DEFAULT_PREFERENCE: UserPreference = { source: "DEFAULT", awpPriority: "NEUTRAL" };
 
 function observed<T>(value: T | undefined, source: string, seq: number): Fact<T> {
-  return value === undefined
-    ? { status: "UNKNOWN", source, asOfSeq: seq, reason: "missing from normal-player GSI" }
-    : { status: "OBSERVED", value, source, asOfSeq: seq };
+  return value === undefined ? { status: "UNKNOWN", source, asOfSeq: seq, reason: "missing from normal-player GSI" } : { status: "OBSERVED", value, source, asOfSeq: seq };
+}
+
+function tracked<T>(value: T, source: string, seq: number): Fact<T> {
+  return { status: "TRACKED", value, source, asOfSeq: seq };
 }
 
 function unknown<T>(source: string, seq: number, reason: string): Fact<T> {
@@ -24,7 +27,11 @@ function unknown<T>(source: string, seq: number, reason: string): Fact<T> {
 }
 
 function side(value: string | undefined, seq: number): Fact<Side> {
-  return value === "CT" || value === "T" ? observed(value, "player.team", seq) : unknown("player.team", seq, "missing or non-player team");
+  return value === "CT" || value === "T" ? observed<Side>(value, "player.team", seq) : unknown("player.team", seq, "missing or non-player team");
+}
+
+function winner(value: string | null | undefined, seq: number): Fact<Side> {
+  return value === "CT" || value === "T" ? observed<Side>(value, "round.win_team", seq) : unknown("round.win_team", seq, "terminal winner missing");
 }
 
 function roundContext(round: number | undefined, seq: number): Fact<RoundContext> {
@@ -34,77 +41,119 @@ function roundContext(round: number | undefined, seq: number): Fact<RoundContext
   return observed(inHalf === 1 ? "PISTOL" : inHalf === 2 ? "POST_PISTOL" : "NORMAL", "map.round", seq);
 }
 
-/** Owns session history only. It never stores or synthesizes opponent private state. */
+/** Session owner for payload sequence, lifecycle, and fact integrity. */
 export class PolicyStateTracker {
   private lastSeq: number | null = null;
   private mapName: string | undefined;
   private roundNumber: number | undefined;
   private integrity: PolicyV3State["history"]["integrity"] = "COLD_START";
   private previousRounds: RoundHistoryFact[] = [];
-  private lastRoundWinner: Fact<Side> | undefined;
+  private roundBaseline = false;
+  private sawPlanted = false;
+  private terminalRecordedFor: number | undefined;
+  private lastCompleteInventory: Fact<InventoryState> | undefined;
 
   observe(payload: GsiPayload, seq: number, preference: UserPreference = DEFAULT_PREFERENCE): PolicyV3State {
     const map = payload.map;
     const round = payload.round;
-    const playerSide = side(payload.player?.team, seq);
     const currentRound = map?.round;
     const mapChanged = this.mapName !== undefined && map?.name !== this.mapName;
     const sequenceGap = this.lastSeq !== null && seq !== this.lastSeq + 1;
     const restart = currentRound !== undefined && this.roundNumber !== undefined && currentRound < this.roundNumber;
-    if (mapChanged || restart) {
-      this.previousRounds = [];
-      this.lastRoundWinner = undefined;
-      this.integrity = "COLD_START";
-    } else if (sequenceGap) {
-      this.integrity = "PARTIAL";
-    } else if (this.lastSeq !== null && this.integrity === "COLD_START") {
-      this.integrity = "COMPLETE";
+    if (mapChanged || restart || sequenceGap) {
+      this.lastCompleteInventory = undefined;
+      this.roundBaseline = false;
+      this.sawPlanted = false;
+      this.terminalRecordedFor = undefined;
+      if (mapChanged || restart) {
+        this.previousRounds = [];
+        this.integrity = "COLD_START";
+      } else {
+        this.integrity = "PARTIAL";
+      }
     }
 
-    if (round?.phase === "over" && this.roundNumber !== undefined && currentRound !== undefined && currentRound !== this.roundNumber) {
-      // `over` can already carry the next map.round; the terminal winner belongs
-      // to the tracked round and only becomes history when directly observed.
-      const winner = round.win_team === "CT" || round.win_team === "T"
-        ? observed<Side>(round.win_team, "round.win_team", seq)
-        : unknown<Side>("round.win_team", seq, "terminal winner missing");
-      this.previousRounds = [...this.previousRounds.slice(-5), { roundNumber: this.roundNumber, winner, planted: observed(round.bomb === "exploded" || round.bomb === "defused", "round.bomb", seq) }];
-      this.lastRoundWinner = winner;
+    // Terminal `over` can carry the next map.round. Record only a round whose
+    // freezetime baseline and continuous payload stream were actually seen.
+    if (
+      round?.phase === "over" && this.roundNumber !== undefined && currentRound !== undefined &&
+      currentRound !== this.roundNumber && this.roundBaseline && this.terminalRecordedFor !== this.roundNumber && this.integrity !== "PARTIAL"
+    ) {
+      const terminalWinner = winner(round.win_team, seq);
+      const planted = tracked(this.sawPlanted, "continuous normal-player GSI round.bomb", seq);
+      this.previousRounds = [...this.previousRounds.slice(-5), { roundNumber: this.roundNumber, winner: terminalWinner, planted }];
+      this.terminalRecordedFor = this.roundNumber;
+      if (terminalWinner.status !== "UNKNOWN") this.integrity = "COMPLETE";
     }
 
+    if (currentRound !== undefined && round?.phase !== "over") {
+      if (this.roundNumber !== currentRound) {
+        this.roundBaseline = false;
+        this.sawPlanted = false;
+        this.terminalRecordedFor = undefined;
+      }
+      this.roundNumber = currentRound;
+      if (round?.phase === "freezetime") this.roundBaseline = true;
+      if (round?.bomb === "planted") this.sawPlanted = true;
+    }
+
+    const playerSide = side(payload.player?.team, seq);
     const score = map?.team_ct?.score !== undefined && map.team_t?.score !== undefined
       ? observed({ ct: map.team_ct.score, t: map.team_t.score }, "map.team_*.score", seq)
       : unknown<{ ct: number; t: number }>("map.team_*.score", seq, "one or both scores missing");
     const ctLoss = observed(map?.team_ct?.consecutive_round_losses, "map.team_ct.consecutive_round_losses", seq);
     const tLoss = observed(map?.team_t?.consecutive_round_losses, "map.team_t.consecutive_round_losses", seq);
     const ownLoss = playerSide.value === "CT" ? ctLoss : playerSide.value === "T" ? tLoss : unknown<number>("own loss index", seq, "player side unknown");
+    const opponentSide: Fact<Side> = playerSide.value === "CT" ? observed("T", "opponent side inferred from player.team", seq) : playerSide.value === "T" ? observed("CT", "opponent side inferred from player.team", seq) : unknown("opponent side", seq, "player side unknown");
     const opponentLoss = playerSide.value === "CT" ? tLoss : playerSide.value === "T" ? ctLoss : unknown<number>("opponent loss index", seq, "player side unknown");
     const context = roundContext(currentRound, seq);
-    const inventory = payload.player?.state === undefined
-      ? unknown<ReturnType<typeof inventoryFrom>>("player.state/player.weapons", seq, "player inventory missing")
-      : observed(inventoryFrom(payload), "player.state/player.weapons", seq);
-    const opponent = inferOpponentEconomy({ asOfSeq: seq, context, opponentLossIndex: opponentLoss, ownScore: score });
+
+    const directInventory = inventoryFrom(payload);
+    const inventory = directInventory !== undefined
+      ? (() => {
+          const fact = observed(directInventory, "player.state + player.weapons", seq);
+          this.lastCompleteInventory = fact;
+          return fact;
+        })()
+      : this.lastCompleteInventory !== undefined && !sequenceGap && !mapChanged && !restart
+        ? tracked(this.lastCompleteInventory.value!, "last complete normal-player inventory observation", this.lastCompleteInventory.asOfSeq)
+        : unknown<NonNullable<ReturnType<typeof inventoryFrom>>>("player.state + player.weapons", seq, "partial inventory payload without a safe tracked observation");
+
+    const previous = this.previousRounds.at(-1);
+    const previousWinStreak = this.previousWinStreak(opponentSide, seq);
+    const opponent = inferOpponentEconomy({
+      asOfSeq: seq,
+      opponentSide,
+      roundNumber: observed(currentRound, "map.round", seq),
+      score,
+      opponentLossIndex: opponentLoss,
+      context,
+      history: { integrity: this.integrity, previousWinner: previous?.winner, previousPlant: previous?.planted, previousWinStreak },
+    });
 
     this.lastSeq = seq;
     this.mapName = map?.name;
-    if (currentRound !== undefined && round?.phase !== "over") this.roundNumber = currentRound;
     return {
-      round: {
-        number: observed(currentRound, "map.round", seq),
-        phase: observed(round?.phase, "round.phase", seq),
-        side: playerSide,
-        score,
-        context,
-      },
-      player: {
-        money: observed(payload.player?.state?.money, "player.state.money", seq),
-        lossIndex: ownLoss,
-        inventory,
-      },
+      round: { number: observed(currentRound, "map.round", seq), phase: observed(round?.phase, "round.phase", seq), side: playerSide, score, context },
+      player: { money: observed(payload.player?.state?.money, "player.state.money", seq), lossIndex: ownLoss, inventory },
       teamLoss: { ct: ctLoss, t: tLoss },
       history: { integrity: this.integrity, previousRounds: this.previousRounds },
       opponent,
       preference,
     };
+  }
+
+  private previousWinStreak(opponent: Fact<Side>, seq: number): Fact<number> {
+    if (this.integrity !== "COMPLETE" || opponent.status === "UNKNOWN" || opponent.value === undefined || this.previousRounds.length === 0) {
+      return unknown("previous opponent win streak", seq, "complete round history unavailable");
+    }
+    let wins = 0;
+    for (const round of [...this.previousRounds].reverse()) {
+      if (round.winner.status === "UNKNOWN" || round.winner.value === undefined) return unknown("previous opponent win streak", seq, "winner missing in tracked history");
+      if (round.winner.value !== opponent.value) break;
+      wins++;
+    }
+    return tracked(Math.min(wins, 3), "continuous normal-player GSI round history", seq);
   }
 }
 
