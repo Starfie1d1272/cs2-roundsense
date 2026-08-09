@@ -1,7 +1,7 @@
 import type { ItemId, Side } from "@roundsense/shared-types";
 import { planPurchases, resultingLoadout, rifleFor, smgFor, type PurchasePlan } from "./advisor.js";
 import { projectNextRoundMoney } from "./projection.js";
-import { DEFAULT_RULES, price, weaponClassOf } from "./rules.js";
+import { DEFAULT_RULES, price } from "./rules.js";
 import type { InventoryState, PurchaseItem } from "./types.js";
 
 export type FactStatus = "OBSERVED" | "TRACKED" | "UNKNOWN";
@@ -100,7 +100,6 @@ export interface PolicyV3Output {
 }
 
 const DEFAULT_PREFERENCE: UserPreference = { source: "DEFAULT", awpPriority: "NEUTRAL" };
-const GRENADES = new Set<ItemId>(["smoke", "flash", "he", "molotov", "incendiary", "decoy"]);
 const MAX_GRENADE_SLOTS = 4;
 
 function known<T>(fact: Fact<T>): fact is Fact<T> & { value: T } {
@@ -298,15 +297,4 @@ export function inferOpponentEconomy(input: {
       ? "required direct-GSI fact missing"
       : "held-out metrics exist, but deployable model coefficients/constants are not in the authoritative evidence parent",
   };
-}
-
-export function isLegalPurchase(side: Side, item: ItemId): boolean {
-  if (item === "defuse_kit" || item === "incendiary") return side === "CT";
-  if (item === "molotov") return side === "T";
-  return !GRENADES.has(item) || item !== "decoy";
-}
-
-export function isPrimary(item: ItemId): boolean {
-  const family = weaponClassOf(item);
-  return family === "rifle" || family === "smg" || family === "sniper";
 }
