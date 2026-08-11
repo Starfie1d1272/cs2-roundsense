@@ -25,6 +25,7 @@ export interface Inference<T> {
 }
 
 export type PolicyMode = "PRESERVE" | "LIGHT" | "FORCE" | "FULL" | "AWP_PATH";
+export type PlayerLockedMode = "PRESERVE" | "LIGHT" | "FORCE" | "FULL";
 export type RoundContext = "PISTOL" | "POST_PISTOL" | "NORMAL" | "OVERTIME";
 export type OpponentEconomyClass = "LIKELY_ESTABLISHED_RIFLE" | "LIKELY_NOT_ESTABLISHED_RIFLE" | "UNKNOWN";
 export type ProtectedNextBuyCapability = "RIFLE_ARMOR" | "RIFLE_ARMOR_BASIC_UTILITY";
@@ -621,6 +622,23 @@ function previousPistolOutcome(state: PolicyV3State, side: Side): "WIN" | "LOSS"
   const previous = state.history.previousRounds.at(-1);
   if (!previous || previous.roundNumber !== state.round.number.value! - 1 || !known(previous.winner)) return "UNKNOWN";
   return previous.winner.value === side ? "WIN" : "LOSS";
+}
+
+/** Resolve a player-declared buy mode without changing the automatic policy
+ * recommendation set. The result is mechanics-backed player intent, not a
+ * replacement for `defaultOptionId` or automatic advice. */
+export function resolveLockedPolicyMode(state: PolicyV3State, mode: PlayerLockedMode): RecommendationOption | null {
+  const required = [state.round.side, state.round.context, state.player.money, state.player.inventory, state.player.lossIndex];
+  if (required.some((fact) => fact.status === "UNKNOWN" || fact.value === undefined)) return null;
+  if (state.round.context.value === "PISTOL") return null;
+  const affordability = futureAffordability(state);
+  if (mode !== "LIGHT") return planOption(state, mode, "SUPPORTED", affordability);
+  if (state.round.context.value !== "NORMAL" || affordability.status !== "PROJECTED") return null;
+  for (const boundary of [...affordability.boundaries].sort((a, b) => b.targetCash - a.targetCash)) {
+    const option = planLightOption(state, boundary, "SUPPORTED");
+    if (option) return option;
+  }
+  return null;
 }
 
 /** Deterministic Policy V3 core. It never reads an opponent economy value. */

@@ -15,11 +15,11 @@ function withWeapons(weapons: Record<string, Record<string, unknown>>, state: Re
 }
 
 describe("complete normal-player inventory observations", () => {
-  it("maps canonical firearms from real GSI type strings", () => {
+  it("maps canonical firearms and degrades an unknown primary id", () => {
     expect(inventoryFrom(withWeapons({ a: { name: "weapon_mp9", type: "Submachine Gun" } }))?.primary).toBe("mp9");
     expect(inventoryFrom(withWeapons({ a: { name: "weapon_m249", type: "Machine Gun" } }))?.primary).toBe("m249");
     expect(inventoryFrom(withWeapons({ a: { name: "weapon_negev", type: "Machine Gun" } }))?.primary).toBe("negev");
-    expect(inventoryFrom(withWeapons({ a: { name: "weapon_future_rifle", type: "Rifle" } }))?.primary).toBeNull();
+    expect(inventoryFrom(withWeapons({ a: { name: "weapon_future_rifle", type: "Rifle" } }))).toBeUndefined();
   });
 
   it("preserves grenade multiset quantities and missing reserve as one observed grenade", () => {

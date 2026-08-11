@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./engine": "./src/engine.ts",
+    "./observation": "./src/observation.ts",
+    "./policy-state": "./src/policy-state.ts",
+    "./product-view": "./src/product-view.ts"
+  },
   "scripts": {
     "start": "tsx src/index.ts"
   },

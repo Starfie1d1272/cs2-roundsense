@@ -122,6 +122,86 @@ describe("V3 engine integration", () => {
     });
     expect(out?.policy.options[0]?.mode).toBe("AWP_PATH");
   });
+
+  it("keeps automatic advice frozen while resolving a round-scoped player lock separately", () => {
+    const payload = basePayload({
+      map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } },
+      player: { team: "T", state: { armor: 0, helmet: false, defusekit: false, money: 6000 }, weapons: {} },
+    });
+    const automatic = tick(payload, { seq: 1 });
+    const locked = tick(payload, {
+      seq: 1,
+      lockedMode: { mapName: "de_mirage", roundNumber: 5, side: "T", mode: "PRESERVE" },
+    });
+    expect(locked?.policy).toEqual(automatic?.policy);
+    expect(locked?.locked).toMatchObject({ status: "RESOLVED", mode: "PRESERVE", option: { mode: "PRESERVE" } });
+    expect(locked?.policy.options.some((option) => option.mode === "PRESERVE")).toBe(false);
+  });
+
+  it("does not apply a stale round lock or fall back when the locked mode is unavailable", () => {
+    const stale = tick(basePayload(), {
+      seq: 1,
+      lockedMode: { mapName: "de_mirage", roundNumber: 1, side: "T", mode: "PRESERVE" },
+    });
+    expect(stale?.locked).toEqual({ status: "UNAVAILABLE", mode: "PRESERVE", option: null, reason: "ROUND_SCOPE_MISMATCH" });
+
+    const unavailable = tick(basePayload(), {
+      seq: 1,
+      lockedMode: { mapName: "de_mirage", roundNumber: 2, side: "T", mode: "LIGHT" },
+    });
+    expect(unavailable?.policy.status).toBe("READY");
+    expect(unavailable?.locked).toEqual({ status: "UNAVAILABLE", mode: "LIGHT", option: null, reason: "MODE_UNAVAILABLE" });
+  });
+
+  it("keeps unsupported and insufficient evidence distinct from an unavailable locked mode", () => {
+    const pistol = tick(basePayload({
+      map: {
+        name: "de_mirage",
+        round: 1,
+        team_ct: { score: 0, consecutive_round_losses: 0 },
+        team_t: { score: 0, consecutive_round_losses: 0 },
+      },
+    }), {
+      seq: 1,
+      lockedMode: { mapName: "de_mirage", roundNumber: 1, side: "T", mode: "PRESERVE" },
+    });
+    expect(pistol?.locked).toEqual({
+      status: "UNAVAILABLE",
+      mode: "PRESERVE",
+      option: null,
+      reason: "UNSUPPORTED_POLICY_EVIDENCE",
+    });
+
+    const unknownPrimary = tick(basePayload({
+      map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } },
+      player: {
+        team: "T",
+        state: { armor: 0, helmet: false, defusekit: false, money: 3000 },
+        weapons: { rifle: { name: "weapon_future_rifle", type: "Rifle" } },
+      },
+    }), {
+      seq: 1,
+      lockedMode: { mapName: "de_mirage", roundNumber: 5, side: "T", mode: "PRESERVE" },
+    });
+    expect(unknownPrimary?.locked).toEqual({
+      status: "UNAVAILABLE",
+      mode: "PRESERVE",
+      option: null,
+      reason: "INSUFFICIENT_STATE",
+    });
+  });
+
+  it("keeps an unknown primary UNKNOWN until a complete recognized inventory arrives", () => {
+    const tracker = new PolicyStateTracker();
+    const normal = (weapons: NonNullable<GsiPayload["player"]>["weapons"]) => basePayload({
+      map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } },
+      player: { team: "T", state: { armor: 0, helmet: false, defusekit: false, money: 3000 }, weapons },
+    });
+    expect(tick(normal({ rifle: { name: "weapon_ak47", type: "Rifle" } }), { tracker, seq: 1 })?.policy.status).toBe("READY");
+    expect(tick(normal({ rifle: { name: "weapon_future_rifle", type: "Rifle" } }), { tracker, seq: 2 })?.policy.status).toBe("INSUFFICIENT_STATE");
+    expect(tick(normal(undefined), { tracker, seq: 3 })?.policy.status).toBe("INSUFFICIENT_STATE");
+    expect(tick(normal({ rifle: { name: "weapon_ak47", type: "Rifle" } }), { tracker, seq: 4 })?.policy.status).toBe("READY");
+  });
 });
 
 describe("normal-player inventory mapping", () => {
@@ -136,6 +216,6 @@ describe("normal-player inventory mapping", () => {
 
   it("never guesses an unmapped primary", () => {
     const inventory = inventoryFrom(basePayload({ player: { team: "T", state: { armor: 0, helmet: false, defusekit: false, money: 3000 }, weapons: { x: { name: "weapon_future_rifle", type: "Rifle" } } } }));
-    expect(inventory?.primary).toBeNull();
+    expect(inventory).toBeUndefined();
   });
 });

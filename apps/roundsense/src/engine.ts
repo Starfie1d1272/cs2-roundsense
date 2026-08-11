@@ -11,9 +11,16 @@
  * - missing facts remain explicit UNKNOWN in PolicyStateTracker;
  * - OT start money is never inferred; live money comes straight from GSI.
  */
-import { recommendPolicyV3, type PolicyV3Output, type UserPreference } from "@roundsense/economy-advisor";
+import {
+  recommendPolicyV3,
+  resolveLockedPolicyMode,
+  type PlayerLockedMode,
+  type PolicyV3Output,
+  type RecommendationOption,
+  type UserPreference,
+} from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
-import { inventoryFrom } from "./inventory.js";
+import { hasUnknownPrimaryWeapon, inventoryFrom } from "./inventory.js";
 import { PolicyStateTracker } from "./policy-state.js";
 
 export { inventoryFrom } from "./inventory.js";
@@ -22,13 +29,52 @@ export interface EngineOptions {
   preference?: UserPreference;
   tracker?: PolicyStateTracker;
   seq?: number;
+  lockedMode?: RoundScopedLockedMode;
+}
+
+export interface RoundScopedLockedMode {
+  mapName: string;
+  roundNumber: number;
+  side: "CT" | "T";
+  mode: PlayerLockedMode;
+}
+
+export type LockedAdviceResult =
+  | { status: "RESOLVED"; mode: PlayerLockedMode; option: RecommendationOption }
+  | {
+      status: "UNAVAILABLE";
+      mode: PlayerLockedMode;
+      option: null;
+      reason: "ROUND_SCOPE_MISMATCH" | "INSUFFICIENT_STATE" | "UNSUPPORTED_POLICY_EVIDENCE" | "MODE_UNAVAILABLE";
+    };
+
+const trackersWithUnknownPrimary = new WeakSet<PolicyStateTracker>();
+
+function lockedAdvice(
+  lock: RoundScopedLockedMode | undefined,
+  current: { mapName: string | undefined; roundNumber: number; side: "CT" | "T" },
+  policyState: Parameters<typeof resolveLockedPolicyMode>[0],
+  policy: PolicyV3Output,
+): LockedAdviceResult | null {
+  if (!lock) return null;
+  if (lock.mapName !== current.mapName || lock.roundNumber !== current.roundNumber || lock.side !== current.side) {
+    return { status: "UNAVAILABLE", mode: lock.mode, option: null, reason: "ROUND_SCOPE_MISMATCH" };
+  }
+  const option = resolveLockedPolicyMode(policyState, lock.mode);
+  if (option) return { status: "RESOLVED", mode: lock.mode, option };
+  const reason = policy.status === "INSUFFICIENT_STATE" || policy.status === "UNSUPPORTED_POLICY_EVIDENCE"
+    ? policy.status
+    : "MODE_UNAVAILABLE";
+  return { status: "UNAVAILABLE", mode: lock.mode, option: null, reason };
 }
 
 export interface AdviceTick {
+  mapName: string | null;
   side: "CT" | "T";
   roundNumber: number;
   money: number;
   policy: PolicyV3Output;
+  locked: LockedAdviceResult | null;
 }
 
 export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | null {
@@ -36,7 +82,19 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   // before deciding whether it is eligible to emit purchase advice, so live
   // and terminal payloads can maintain lifecycle FACTs.
   const tracker = opts.tracker ?? new PolicyStateTracker();
-  const policyState = tracker.observe(payload, opts.seq ?? 0, opts.preference);
+  const seq = opts.seq ?? 0;
+  const directInventory = inventoryFrom(payload);
+  if (hasUnknownPrimaryWeapon(payload)) trackersWithUnknownPrimary.add(tracker);
+  else if (directInventory !== undefined) trackersWithUnknownPrimary.delete(tracker);
+  const policyState = tracker.observe(payload, seq, opts.preference);
+  if (trackersWithUnknownPrimary.has(tracker)) {
+    policyState.player.inventory = {
+      status: "UNKNOWN",
+      source: "player.weapons",
+      asOfSeq: seq,
+      reason: "unrecognized primary weapon id in the current inventory stream",
+    };
+  }
   const player = payload.player;
   const map = payload.map;
   const state = player?.state;
@@ -51,9 +109,11 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   if (map?.round === undefined) return null;
   const policy = recommendPolicyV3(policyState);
   return {
+    mapName: map.name ?? null,
     side: player.team,
     roundNumber: map.round,
     money: state.money,
     policy,
+    locked: lockedAdvice(opts.lockedMode, { mapName: map.name, roundNumber: map.round, side: player.team }, policyState, policy),
   };
 }

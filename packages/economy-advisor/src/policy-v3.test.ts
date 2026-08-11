@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendPolicyV3, utilityBundle, type PolicyV3State } from "./policy-v3.js";
+import { recommendPolicyV3, resolveLockedPolicyMode, utilityBundle, type PlayerLockedMode, type PolicyV3State } from "./policy-v3.js";
 import { DEFAULT_RULES, lossBonus, price } from "./rules.js";
 import { rifleFor } from "./advisor.js";
 
@@ -508,5 +508,52 @@ describe("Policy V3 deterministic core", () => {
       status: "INSUFFICIENT_STATE",
       futureAffordability: { status: "UNKNOWN", boundaries: [] },
     });
+  });
+});
+
+describe("player-locked mode resolution", () => {
+  it("resolves all four player modes without changing frozen automatic advice", () => {
+    const current = state({ round: { ...state().round, number: observed(5), side: observed("CT"), context: observed("NORMAL") } });
+    current.player.money = observed(6000);
+    const automatic = recommendPolicyV3(current);
+
+    for (const mode of ["PRESERVE", "LIGHT", "FORCE", "FULL"] satisfies PlayerLockedMode[]) {
+      expect(resolveLockedPolicyMode(current, mode)?.mode).toBe(mode);
+    }
+    expect(recommendPolicyV3(current)).toEqual(automatic);
+  });
+
+  it("can resolve a player mode that automatic advice does not offer", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.money = observed(6000);
+    expect(recommendPolicyV3(current).options.some((option) => option.mode === "PRESERVE")).toBe(false);
+    expect(resolveLockedPolicyMode(current, "PRESERVE")).toMatchObject({ mode: "PRESERVE", bundleSpend: 0 });
+  });
+
+  it("keeps LIGHT unavailable outside NORMAL or without a reachable boundary", () => {
+    expect(resolveLockedPolicyMode(state(), "LIGHT")).toBeNull();
+    const overtime = state({ round: { ...state().round, number: observed(25), context: observed("OVERTIME") } });
+    expect(resolveLockedPolicyMode(overtime, "LIGHT")).toBeNull();
+    const poor = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    poor.player.money = observed(0);
+    expect(resolveLockedPolicyMode(poor, "LIGHT")).toBeNull();
+  });
+
+  it("keeps pistol purchase policy unsupported for every player lock", () => {
+    const pistol = state({ round: { ...state().round, number: observed(1), context: observed("PISTOL") } });
+    for (const mode of ["PRESERVE", "LIGHT", "FORCE", "FULL"] satisfies PlayerLockedMode[]) {
+      expect(resolveLockedPolicyMode(pistol, mode)).toBeNull();
+    }
+  });
+
+  it("resolves a post-pistol player FULL lock as a rifle plan, not automatic conversion semantics", () => {
+    const current = state();
+    expect(resolveLockedPolicyMode(current, "FULL")?.resultingInventory.primary).toBe("ak47");
+  });
+
+  it("returns null instead of filling missing required facts", () => {
+    const current = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    current.player.lossIndex = { status: "UNKNOWN", source: "test", asOfSeq: 1, reason: "missing" };
+    expect(resolveLockedPolicyMode(current, "PRESERVE")).toBeNull();
   });
 });
