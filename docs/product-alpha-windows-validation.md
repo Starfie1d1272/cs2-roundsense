@@ -6,9 +6,9 @@ renderer、Electron 启动与 Windows ZIP 产出，但不能替代 Windows + CS2
 ## 已由自动化覆盖
 
 - frozen Policy V3 的默认入口保持不变；round-scoped 玩家 intent 走独立 resolver。
-- intent 在同一回合保留、跨回合清除；不可满足的锁定不会伪造购买方案或回退成自动建议。
+- intent 在同一回合保留、跨回合清除；不可满足的 generic 默认购买组合不会取消已锁定的经济意图，且不会回退成自动建议。
 - 最终配置与还要买是不同字段；未知主武器不会被当成“没有主武器”。
-- 精确本轮消费固定为 UNKNOWN；remaining-spend 来自最新现金下的 future-affordability boundary。
+- 精确本轮消费固定为 UNKNOWN；冻结时间首个现金 receipt 仅作为未校准的 round-start-money anchor diagnostic，不能充当消费账本。
 - receiver 仅绑定 `127.0.0.1`，token 校验、payload schema、body limit 与 health endpoint 复用核心实现。
 - Steam library/manifest 发现、CS2 目录验证、cfg 安装/修复/备份/原子替换使用临时目录测试。
 - dashboard 与 Overlay 共用 serializable presentation model；renderer 无 Node 权限，preload 仅暴露白名单 IPC。
@@ -25,6 +25,7 @@ renderer、Electron 启动与 Windows ZIP 产出，但不能替代 Windows + CS2
 - [ ] 启动 CS2 后正常收到普通玩家 GSI；不消费 spectator-only 对手隐藏经济或装备。
 - [ ] 进入 freezetime 显示 Overlay，进入 live/over 与状态流 stale 后立即隐藏。
 - [ ] 自动建议、ECO/半起/强起/长枪局锁定、清除锁定和下一回合自动清除均与控制台一致。
+- [ ] 记录至少一个完整回合的冻结时间首个现金 anchor、实际回合首现金与购买后的 GSI cash，确认它们的关系前不得启用“本回合已花”。
 - [ ] 简洁/详细模式、六个锚点、75%–140% 缩放、快捷键冲突诊断均工作。
 - [ ] Borderless/windowed 下 always-on-top、click-through、CS2 焦点、Alt-Tab 与输入不受影响。
 - [ ] Exclusive fullscreen 的表现被明确记录；不能工作的组合不得宣称支持。

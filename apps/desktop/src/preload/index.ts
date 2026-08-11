@@ -10,6 +10,7 @@ import type {
 const channels = {
   getState: "roundsense:get-state",
   stateChanged: "roundsense:state-changed",
+  runtimeChanged: "roundsense:runtime-changed",
   updateSettings: "roundsense:update-settings",
   setIntentLock: "roundsense:set-intent-lock",
   installGsi: "roundsense:install-gsi",
@@ -25,6 +26,11 @@ const bridge: DesktopBridge = {
     const handler = (_event: Electron.IpcRendererEvent, state: DesktopState) => listener(state);
     ipcRenderer.on(channels.stateChanged, handler);
     return () => ipcRenderer.removeListener(channels.stateChanged, handler);
+  },
+  subscribeRuntimeState(listener) {
+    const handler = (_event: Electron.IpcRendererEvent, value: Parameters<typeof listener>[0]) => listener(value);
+    ipcRenderer.on(channels.runtimeChanged, handler);
+    return () => ipcRenderer.removeListener(channels.runtimeChanged, handler);
   },
   updateSettings: (patch: DesktopSettingsPatch) => ipcRenderer.invoke(channels.updateSettings, patch) as Promise<DesktopActionResult>,
   setIntentLock: (mode: LockableMode | null) => ipcRenderer.invoke(channels.setIntentLock, mode) as Promise<DesktopActionResult>,

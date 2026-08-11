@@ -13,10 +13,12 @@
  */
 import {
   recommendPolicyV3,
+  lockedPolicyIntent,
   resolveLockedPolicyMode,
   type PlayerLockedMode,
   type PolicyV3Output,
   type RecommendationOption,
+  type SpendingGuidance,
   type UserPreference,
 } from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
@@ -41,6 +43,7 @@ export interface RoundScopedLockedMode {
 
 export type LockedAdviceResult =
   | { status: "RESOLVED"; mode: PlayerLockedMode; option: RecommendationOption }
+  | { status: "INTENT_ONLY"; mode: PlayerLockedMode; option: null; spendingGuidance: SpendingGuidance; reason: "DEFAULT_PLAN_UNAVAILABLE" }
   | {
       status: "UNAVAILABLE";
       mode: PlayerLockedMode;
@@ -62,6 +65,10 @@ function lockedAdvice(
   }
   const option = resolveLockedPolicyMode(policyState, lock.mode);
   if (option) return { status: "RESOLVED", mode: lock.mode, option };
+  const spendingGuidance = lockedPolicyIntent(policyState, lock.mode);
+  if (spendingGuidance) {
+    return { status: "INTENT_ONLY", mode: lock.mode, option: null, spendingGuidance, reason: "DEFAULT_PLAN_UNAVAILABLE" };
+  }
   const reason = policy.status === "INSUFFICIENT_STATE" || policy.status === "UNSUPPORTED_POLICY_EVIDENCE"
     ? policy.status
     : "MODE_UNAVAILABLE";

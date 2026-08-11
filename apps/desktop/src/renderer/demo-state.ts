@@ -3,6 +3,7 @@ import type {
   DesktopBridge,
   DesktopSettingsPatch,
   DesktopState,
+  DesktopRuntimeState,
   LockableMode,
 } from "../shared/contracts.js";
 
@@ -91,6 +92,15 @@ export const DEMO_STATE: DesktopState = {
       { id: "payload", level: "ok", code: "payloadReceived", at: "2026-08-11T00:00:08.000Z" },
       { id: "windows", level: "info", code: "windowsValidationRequired" },
     ],
+    roundStartMoneyAnchor: {
+      status: "candidate",
+      mapName: "de_ancient",
+      roundNumber: 8,
+      side: "CT",
+      money: 2600,
+      receiptSeq: 38,
+      receivedAt: "2026-08-11T00:00:08.000Z",
+    },
   },
 };
 
@@ -105,6 +115,7 @@ export function createDemoBridge(): DesktopBridge {
   return {
     async getState() { return structuredClone(state); },
     subscribeState(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    subscribeRuntimeState(_listener: (value: DesktopRuntimeState) => void) { return () => {}; },
     async updateSettings(patch: DesktopSettingsPatch) {
       state.settings = {
         ...state.settings,

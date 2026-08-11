@@ -54,14 +54,6 @@ export function renderOverlay(state: DesktopState, preview = false): string {
       ? translate(locale, "product.multimodal", { modes: modes.map((mode) => modeLabel(locale, mode)).join(" / ") })
       : translate(locale, "product.suggestion");
   const remaining = product.spending.remainingSpend;
-  const planned = product.spending.plannedBundleSpend;
-  const limit = remaining.status === "known" ? remaining.value : undefined;
-  const plan = planned.status === "known" ? planned.value : undefined;
-  const fill = limit !== undefined && limit > 0 && plan !== undefined ? Math.min(100, Math.round((plan / limit) * 100)) : 0;
-  const loss = product.spending.lossNextMoney;
-  const lossText = loss.status === "known"
-    ? loss.value.min === loss.value.max ? money(loss.value.min) : `${money(loss.value.min)}–${money(loss.value.max)}`
-    : translate(locale, "product.unknown");
   const finalItems = itemChips(locale, product.loadout.finalConfiguration);
   const purchaseItems = itemChips(locale, product.loadout.purchases);
   const primaryNote = product.loadout.primaryDisposition === "notPlanned"
@@ -70,6 +62,30 @@ export function renderOverlay(state: DesktopState, preview = false): string {
       ? `<span class="item-note item-note--warning">${translate(locale, "product.primaryUnknown")}</span>`
       : "";
   const consequence = product.spending.nextSpendConsequence;
+  const hasDefaultPlan = Boolean(finalItems || purchaseItems || primaryNote);
+  const isEco = activeMode === "eco";
+  const isSemi = activeMode === "semi";
+  const isForce = activeMode === "force";
+  const guardrail = isSemi
+    ? `<div class="guardrail-call"><span>${translate(locale, "product.remainingSpend")}</span><strong>${moneyValue(remaining, locale)}</strong>${product.spending.protectedCapability ? `<em>${capabilityLabel(locale, product.spending.protectedCapability)}</em>` : ""}</div>`
+    : "";
+  const strategyCall = isEco
+    ? `<p class="strategy-call">${translate(locale, "product.ecoGuidance")}</p>`
+    : isForce
+      ? `<p class="strategy-call">${translate(locale, "product.forceGuidance")}</p>`
+      : "";
+  const consequenceCall = isSemi && consequence
+    ? `<div class="consequence consequence--guardrail"><p>${translate(locale, "product.consequenceTitle", { amount: money(consequence.thresholdAdditionalSpend) })}</p><strong>${translate(locale, "product.consequence", { before: capabilityLabel(locale, consequence.before), after: capabilityLabel(locale, consequence.after) })}</strong></div>`
+    : "";
+  const defaultLoadout = hasDefaultPlan
+    ? `<div class="loadout-column"><p>${translate(locale, "product.defaultConfiguration")}</p><div class="item-list">${finalItems || primaryNote || `<span class="item-note">${translate(locale, "product.unknown")}</span>`}</div></div>
+      <div class="loadout-column"><p>${translate(locale, "product.defaultPurchases")}</p><div class="item-list">${purchaseItems || `<span class="item-note">${translate(locale, "product.noPurchases")}</span>`}</div>${primaryNote}</div>`
+    : `<div class="default-unavailable">${translate(locale, "product.defaultPlanUnavailable")}</div>`;
+  const details = !activeMode
+    ? ""
+    : isEco
+      ? `<div class="intent-detail">${translate(locale, "product.ecoDetail")}</div>`
+      : `${defaultLoadout}`;
 
   return `<section class="round-overlay ${preview ? "round-overlay--preview" : ""} mode-${settings.displayMode}" aria-label="${translate(locale, "aria.overlayPreview")}">
     <header class="overlay-head">
@@ -77,19 +93,10 @@ export function renderOverlay(state: DesktopState, preview = false): string {
       <span class="phase-mark"><i></i>${translate(locale, "product.freeze")}</span>
     </header>
     <div class="decision-row">
-      <div><p class="eyebrow">${suggestion}</p><h2>${esc(modeText || translate(locale, "product.unknown"))}</h2></div>
-      <div class="guardrail-number"><span>${translate(locale, "product.remainingSpend")}</span><strong>${moneyValue(remaining, locale)}</strong></div>
+      <div><p class="eyebrow">${suggestion}</p><h2>${esc(modeText || translate(locale, "product.unknown"))}</h2>${strategyCall}</div>
+      ${guardrail}
     </div>
-    <div class="spend-track" role="img" aria-label="${translate(locale, "aria.budgetTrack", { planned: plan === undefined ? "–" : money(plan), limit: limit === undefined ? "–" : money(limit) })}">
-      <progress class="track-line" max="100" value="${fill}">${fill}%</progress>
-      <div class="track-labels"><span>${translate(locale, "product.plannedSpend")} <b>${moneyValue(planned, locale)}</b></span><span>${translate(locale, "product.currentMoney")} <b>${moneyValue(product.spending.currentMoney, locale)}</b></span></div>
-    </div>
-    <div class="compact-future"><span>${translate(locale, "product.nextLossMoney")}</span><b>${lossText}</b>${product.spending.protectedCapability ? `<em>${capabilityLabel(locale, product.spending.protectedCapability)}</em>` : ""}</div>
-    <div class="overlay-details">
-      <div class="loadout-column"><p>${translate(locale, "product.finalConfiguration")}</p><div class="item-list">${finalItems || primaryNote || `<span class="item-note">${translate(locale, "product.unknown")}</span>`}</div></div>
-      <div class="loadout-column"><p>${translate(locale, "product.purchases")}</p><div class="item-list">${purchaseItems || `<span class="item-note">${translate(locale, "product.noPurchases")}</span>`}</div>${primaryNote}</div>
-      <div class="fact-row"><span>${translate(locale, "product.spent")}</span><b>${translate(locale, "product.unknown")}</b><small>${translate(locale, "product.spentUnknownHelp")}</small></div>
-      ${consequence ? `<div class="consequence"><p>${translate(locale, "product.consequenceTitle", { amount: money(consequence.thresholdAdditionalSpend) })}</p><strong>${translate(locale, "product.consequence", { before: capabilityLabel(locale, consequence.before), after: capabilityLabel(locale, consequence.after) })}</strong></div>` : ""}
-    </div>
+    ${consequenceCall}
+    ${settings.displayMode === "detailed" ? `<div class="overlay-details">${details}</div>` : ""}
   </section>`;
 }

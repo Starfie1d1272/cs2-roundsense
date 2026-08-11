@@ -176,7 +176,14 @@ export interface DiagnosticsState {
   architecture: string;
   shortcutRegistrations: readonly ShortcutDiagnostic[];
   entries: readonly DiagnosticEntry[];
+  /** First receipt in a verified freeze-time window. This is a diagnostic
+   * candidate, not a validated round-start balance or spend ledger. */
+  roundStartMoneyAnchor: RoundStartMoneyAnchor;
 }
+
+export type RoundStartMoneyAnchor =
+  | { status: "notObserved" }
+  | { status: "candidate"; mapName: string; roundNumber: number; side: "CT" | "T"; money: number; receiptSeq: number; receivedAt: string };
 
 export interface DesktopState {
   revision: number;
@@ -185,6 +192,15 @@ export interface DesktopState {
   gsiSetup: GsiSetupState;
   product: ProductView;
   diagnostics: DiagnosticsState;
+}
+
+/** High-frequency game-state channel. It intentionally excludes settings,
+ * tray/configuration state, and the dashboard's static DOM. */
+export interface DesktopRuntimeState {
+  revision: number;
+  connection: ConnectionState;
+  product: ProductView;
+  roundStartMoneyAnchor: RoundStartMoneyAnchor;
 }
 
 export interface DesktopActionResult {
@@ -196,6 +212,7 @@ export interface DesktopActionResult {
 export interface DesktopBridge {
   getState(): Promise<DesktopState>;
   subscribeState(listener: (state: DesktopState) => void): () => void;
+  subscribeRuntimeState(listener: (state: DesktopRuntimeState) => void): () => void;
   updateSettings(patch: DesktopSettingsPatch): Promise<DesktopActionResult>;
   setIntentLock(mode: LockableMode | null): Promise<DesktopActionResult>;
   installGsiConfig(): Promise<DesktopActionResult>;

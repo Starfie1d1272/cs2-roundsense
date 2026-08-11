@@ -41,6 +41,10 @@ describe("product presentation contract", () => {
     expect(view(payload()).automatic).toMatchObject({ status: "SELECTED", plan: { mode: "FULL" } });
     const postPistol = view(payload({ round: 2, money: 3000 }));
     expect(postPistol.automatic).toMatchObject({ status: "MULTIMODAL", plans: [{ mode: "PRESERVE" }, { mode: "FORCE" }] });
+    const normal = view(payload({ side: "CT", money: 2600 }));
+    expect(normal.automatic).toMatchObject({ status: "MULTIMODAL" });
+    if (normal.automatic.status !== "MULTIMODAL") return;
+    expect(normal.automatic.plans.map((plan) => plan.mode)).toEqual(["FORCE", "LIGHT"]);
   });
 
   it("keeps a player lock separate from automatic advice", () => {
@@ -53,6 +57,17 @@ describe("product presentation contract", () => {
     const result = view(payload({ round: 2, money: 3000 }), "LIGHT");
     expect(result.automatic.status).toBe("MULTIMODAL");
     expect(result.active).toEqual({ source: "PLAYER_LOCKED", status: "UNAVAILABLE", mode: "LIGHT", reason: "MODE_UNAVAILABLE" });
+  });
+
+  it("keeps a player-declared half-buy active when its generic default cannot be built", () => {
+    const result = view(payload({ money: 0 }), "LIGHT");
+    expect(result.active).toMatchObject({
+      source: "PLAYER_LOCKED",
+      status: "INTENT_ONLY",
+      mode: "LIGHT",
+      intent: { guardrail: { kind: "UNKNOWN", reason: "BOUNDARY_UNAVAILABLE" } },
+      reason: "DEFAULT_PLAN_UNAVAILABLE",
+    });
   });
 
   it("preserves unsupported policy evidence instead of presenting it as mode unavailability", () => {
@@ -83,5 +98,12 @@ describe("product presentation contract", () => {
         after: "RIFLE_ARMOR",
       });
     }
+  });
+
+  it("does not attach a NORMAL future boundary to FORCE or FULL plans", () => {
+    const automatic = view(payload({ side: "CT", money: 6000 }));
+    expect(automatic.automatic).toMatchObject({ status: "SELECTED", plan: { mode: "FULL" } });
+    if (automatic.automatic.status !== "SELECTED") return;
+    expect(automatic.automatic.plan.boundaryConsequence).toBeUndefined();
   });
 });

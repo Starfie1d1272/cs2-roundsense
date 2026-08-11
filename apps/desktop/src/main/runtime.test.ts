@@ -40,11 +40,7 @@ describe("desktop product adapter", () => {
     expect(view.loadout.finalConfiguration).toContainEqual({ item: "m4a4", quantity: 1 });
     expect(view.loadout.purchases.some((item) => item.item === "m4a4")).toBe(false);
     expect(view.spending.spentThisRound.status).toBe("unknown");
-    expect(view.spending.nextSpendConsequence).toEqual({
-      thresholdAdditionalSpend: 950,
-      before: "rifleArmorUtility",
-      after: "rifleArmor",
-    });
+    expect(view.spending.nextSpendConsequence).toBeUndefined();
   });
 
   it("does not collapse multimodal automatic advice to a unique mode", () => {
@@ -64,6 +60,7 @@ describe("RoundSense runtime lifecycle", () => {
     const runtime = new RoundSenseRuntime({ token: "test", onUpdate: (update) => updates.push(update) });
     expect(runtime.setIntentLock("semi")).toBe(false);
     runtime.observe(receipt(1, payload()));
+    expect(updates.at(-1)?.roundStartMoneyAnchor).toMatchObject({ status: "candidate", roundNumber: 5, money: 2600, receiptSeq: 1 });
     expect(runtime.setIntentLock("semi")).toBe(true);
     runtime.observe(receipt(2, payload()));
     expect(updates.at(-1)?.product).toMatchObject({ visible: true, phase: "freezetime", lockedMode: "semi" });

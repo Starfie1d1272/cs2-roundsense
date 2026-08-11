@@ -7,6 +7,7 @@ import {
   type DesktopBridge,
   type DesktopSettingsPatch,
   type DesktopState,
+  type DesktopRuntimeState,
   type LockableMode,
   type Locale,
 } from "../shared/contracts.js";
@@ -62,6 +63,12 @@ function connectionCard(): string {
   </section>`;
 }
 
+function roundStartAnchor(): string {
+  const anchor = state.diagnostics.roundStartMoneyAnchor;
+  if (anchor.status === "notObserved") return `<span>${t("diagnostics.roundStartAnchorWaiting")}</span>`;
+  return `<span>${t("diagnostics.roundStartAnchorCandidate", { round: anchor.roundNumber, money: `$${anchor.money.toLocaleString("en-US")}`, seq: anchor.receiptSeq })}</span>`;
+}
+
 function overlaySettings(): string {
   return `<section class="panel" id="overlay-settings">
     <div class="panel-title"><div><p class="eyebrow">OVERLAY</p><h3>${t("overlay.settingsTitle")}</h3></div><label class="switch"><input type="checkbox" data-setting="overlayEnabled" ${state.settings.overlayEnabled ? "checked" : ""}><span></span></label></div>
@@ -95,6 +102,7 @@ function shortcutCard(): string {
 function diagnosticsCard(): string {
   return `<section class="panel wide-panel" id="diagnostics"><div class="panel-title"><div><p class="eyebrow">SYSTEM</p><h3>${t("diagnostics.title")}</h3></div><button class="button button-quiet" data-action="copy-diagnostics">${t("diagnostics.copy")}</button></div><p class="muted">${t("diagnostics.description")}</p>
     <div class="diagnostic-list">${state.diagnostics.entries.map((entry) => `<div class="diagnostic diagnostic-${entry.level}"><i></i><span>${t(`diagnostics.${entry.code}`)}</span>${entry.detail ? `<code>${esc(entry.detail)}</code>` : ""}</div>`).join("")}</div>
+    <p class="runtime-anchor" id="round-start-anchor">${roundStartAnchor()}</p>
     <footer><span>${t("diagnostics.version")} ${esc(state.diagnostics.appVersion)}</span><span>${t("diagnostics.system")} ${esc(state.diagnostics.platform)} · ${esc(state.diagnostics.architecture)}</span></footer>
   </section>`;
 }
@@ -102,8 +110,8 @@ function diagnosticsCard(): string {
 function dashboard(): string {
   const locale = state.settings.locale;
   return `<div class="app-shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">RS</span><div><strong>${t("app.title")}</strong><small>${t("app.alpha")}</small></div></div><nav><a href="#overview">${t("nav.overview")}</a><a href="#overlay-settings">${t("nav.overlay")}</a><a href="#intent">${t("nav.intent")}</a><a href="#shortcuts">${t("nav.shortcuts")}</a><a href="#diagnostics">${t("nav.diagnostics")}</a></nav><div class="local-badge">${t("app.localOnly")}</div></aside>
-    <main><header class="topbar"><div><p>${t("app.tagline")}</p><strong>${state.product.mapName ? esc(state.product.mapName.replace("de_", "").toUpperCase()) : "—"}</strong></div><label class="locale-control"><span>${t("locale.label")}</span><select id="locale"><option value="zh-CN" ${locale === "zh-CN" ? "selected" : ""}>${t("locale.zh")}</option><option value="en" ${locale === "en" ? "selected" : ""}>${t("locale.en")}</option></select></label></header>
-      <section class="hero" id="overview"><div class="hero-copy"><p class="eyebrow">${t("overview.kicker")}</p><h1>${t("overview.title")}</h1><p>${t("overview.description")}</p>${connectionCard()}</div><div class="preview-frame"><div class="preview-label"><span>${t("preview.title")}</span><small>${t("preview.live")}</small></div>${renderOverlay(state, true)}</div></section>
+    <main><header class="topbar"><div><p>${t("app.tagline")}</p><strong id="runtime-map">${state.product.mapName ? esc(state.product.mapName.replace("de_", "").toUpperCase()) : "—"}</strong></div><label class="locale-control"><span>${t("locale.label")}</span><select id="locale"><option value="zh-CN" ${locale === "zh-CN" ? "selected" : ""}>${t("locale.zh")}</option><option value="en" ${locale === "en" ? "selected" : ""}>${t("locale.en")}</option></select></label></header>
+      <section class="hero" id="overview"><div class="hero-copy"><p class="eyebrow">${t("overview.kicker")}</p><h1>${t("overview.title")}</h1><p>${t("overview.description")}</p><div id="runtime-connection">${connectionCard()}</div></div><div class="preview-frame"><div class="preview-label"><span>${t("preview.title")}</span><small>${t("preview.live")}</small></div><div id="runtime-preview">${renderOverlay(state, true)}</div></div></section>
       <div class="dashboard-grid">${setupCard()}${overlaySettings()}${intentCard()}${shortcutCard()}${diagnosticsCard()}</div>
     </main>${toast ? `<div class="toast">${esc(toast)}</div>` : ""}</div>`;
 }
@@ -113,6 +121,21 @@ function render(): void {
   document.body.className = view === "overlay" ? `overlay-page mode-${state.settings.displayMode}` : "dashboard-page";
   root.innerHTML = view === "overlay" ? renderOverlay(state) : dashboard();
   if (view === "dashboard") bindDashboard();
+}
+
+function renderRuntime(): void {
+  if (view === "overlay") {
+    render();
+    return;
+  }
+  const connection = document.querySelector<HTMLDivElement>("#runtime-connection");
+  if (connection) connection.innerHTML = connectionCard();
+  const preview = document.querySelector<HTMLDivElement>("#runtime-preview");
+  if (preview) preview.innerHTML = renderOverlay(state, true);
+  const map = document.querySelector<HTMLElement>("#runtime-map");
+  if (map) map.textContent = state.product.mapName ? state.product.mapName.replace("de_", "").toUpperCase() : "—";
+  const anchor = document.querySelector<HTMLParagraphElement>("#round-start-anchor");
+  if (anchor) anchor.innerHTML = roundStartAnchor();
 }
 
 async function action(promise: Promise<DesktopActionResult>, success = "action.saved"): Promise<void> {
@@ -159,4 +182,11 @@ function bindDashboard(): void {
 }
 
 bridge.subscribeState((next) => { state = next; render(); });
+bridge.subscribeRuntimeState((next: DesktopRuntimeState) => {
+  state.revision = next.revision;
+  state.connection = next.connection;
+  state.product = next.product;
+  state.diagnostics.roundStartMoneyAnchor = next.roundStartMoneyAnchor;
+  renderRuntime();
+});
 render();

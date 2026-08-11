@@ -4,6 +4,7 @@ import type {
   PolicyV3Output,
   ProtectedNextBuyCapability,
   RecommendationOption,
+  SpendingGuidance,
 } from "@roundsense/economy-advisor";
 import type { AdviceTick } from "./engine.js";
 
@@ -40,6 +41,12 @@ export interface ProductPlan {
   };
 }
 
+/** A declared economic commitment with no canonical default bundle. */
+export interface ProductIntent {
+  guardrail: ProductPlan["guardrail"];
+  boundaryConsequence?: ProductPlan["boundaryConsequence"];
+}
+
 export type ProductAutomaticSelection =
   | { status: "SELECTED"; plan: ProductPlan; alternatives: ProductPlan[] }
   | { status: "MULTIMODAL"; plans: ProductPlan[] }
@@ -48,6 +55,7 @@ export type ProductAutomaticSelection =
 export type ProductActiveSelection =
   | { source: "AUTO"; selection: ProductAutomaticSelection }
   | { source: "PLAYER_LOCKED"; status: "SELECTED"; mode: PlayerLockedMode; plan: ProductPlan }
+  | { source: "PLAYER_LOCKED"; status: "INTENT_ONLY"; mode: PlayerLockedMode; intent: ProductIntent; reason: "DEFAULT_PLAN_UNAVAILABLE" }
   | {
       source: "PLAYER_LOCKED";
       status: "UNAVAILABLE";
@@ -63,8 +71,7 @@ export interface ProductView {
   actualSpend: { status: "UNKNOWN"; reason: "ROUND_START_MONEY_UNVERIFIED" };
 }
 
-function guardrailFor(option: RecommendationOption, policy: PolicyV3Output): ProductPlan["guardrail"] {
-  const guidance = option.spendingGuidance;
+function guardrailForGuidance(guidance: SpendingGuidance, policy: PolicyV3Output): ProductPlan["guardrail"] {
   if (guidance.kind === "MINIMIZE") {
     return { kind: "MINIMIZE", protectedCapability: guidance.protectedCapability ?? null };
   }
@@ -84,15 +91,32 @@ function guardrailFor(option: RecommendationOption, policy: PolicyV3Output): Pro
     : { kind: "UNKNOWN", reason: "BOUNDARY_UNAVAILABLE" };
 }
 
+function guardrailFor(option: RecommendationOption, policy: PolicyV3Output): ProductPlan["guardrail"] {
+  return guardrailForGuidance(option.spendingGuidance, policy);
+}
+
+function boundaryConsequenceFor(
+  guardrail: ProductPlan["guardrail"],
+  policy: PolicyV3Output,
+): ProductPlan["boundaryConsequence"] {
+  // Projected NORMAL boundaries are not FORCE/FULL advice. They belong only
+  // to the selected bounded LIGHT guardrail.
+  if (guardrail.kind !== "BOUNDED" || policy.futureAffordability.status !== "PROJECTED") return undefined;
+  const before = policy.futureAffordability.boundaries.find((boundary) => boundary.capability === guardrail.protectedCapability);
+  if (!before?.reachableWithNoSpend) return undefined;
+  const after = policy.futureAffordability.boundaries
+    .filter((boundary) => boundary.reachableWithNoSpend && boundary.maxSpendNow > before.maxSpendNow)
+    .sort((left, right) => left.maxSpendNow - right.maxSpendNow)[0];
+  return {
+    thresholdAdditionalSpend: before.maxSpendNow,
+    before: before.capability,
+    after: after?.capability ?? null,
+  };
+}
+
 function planFor(option: RecommendationOption, policy: PolicyV3Output): ProductPlan {
   const lossNoPlant = option.trajectory.find((scenario) => scenario.id === "LOSS_NO_PLANT");
-  const reachable = policy.futureAffordability.status === "PROJECTED"
-    ? policy.futureAffordability.boundaries.filter((boundary) => boundary.reachableWithNoSpend)
-    : [];
-  const utility = reachable.find((boundary) => boundary.capability === "RIFLE_ARMOR_BASIC_UTILITY");
-  const rifle = reachable.find((boundary) => boundary.capability === "RIFLE_ARMOR");
-  const strongest = utility ?? rifle;
-  const next = strongest && rifle && rifle.maxSpendNow > strongest.maxSpendNow ? rifle : undefined;
+  const guardrail = guardrailFor(option, policy);
   return {
     optionId: option.id,
     mode: option.mode,
@@ -107,17 +131,11 @@ function planFor(option: RecommendationOption, policy: PolicyV3Output): ProductP
       grenades: [...option.resultingInventory.grenades],
     },
     bundleSpend: option.bundleSpend,
-    guardrail: guardrailFor(option, policy),
+    guardrail,
     lossNoPlant: lossNoPlant
       ? { status: "PROJECTED", nextMoney: { ...lossNoPlant.nextMoney }, assumptions: [...lossNoPlant.assumptions] }
       : { status: "UNKNOWN", reason: "SCENARIO_UNAVAILABLE" },
-    boundaryConsequence: strongest
-      ? {
-          thresholdAdditionalSpend: strongest.maxSpendNow,
-          before: strongest.capability,
-          after: next?.capability ?? null,
-        }
-      : undefined,
+    boundaryConsequence: boundaryConsequenceFor(guardrail, policy),
   };
 }
 
@@ -142,7 +160,7 @@ function automaticSelection(policy: PolicyV3Output): ProductAutomaticSelection {
       alternatives: policy.options.filter((option) => option.id !== selected.id).map((option) => planFor(option, policy)),
     };
   }
-  return { status: "MULTIMODAL", plans: policy.options.map((option) => planFor(option, policy)) };
+  return { status: "MULTIMODAL", plans: supported.map((option) => planFor(option, policy)) };
 }
 
 /** Build the IPC/UI contract. Automatic advice remains available for context,
@@ -153,6 +171,17 @@ export function toProductView(tick: AdviceTick): ProductView {
     ? { source: "AUTO", selection: automatic }
     : tick.locked.status === "RESOLVED"
       ? { source: "PLAYER_LOCKED", status: "SELECTED", mode: tick.locked.mode, plan: planFor(tick.locked.option, tick.policy) }
+      : tick.locked.status === "INTENT_ONLY"
+        ? {
+            source: "PLAYER_LOCKED",
+            status: "INTENT_ONLY",
+            mode: tick.locked.mode,
+            intent: (() => {
+              const guardrail = guardrailForGuidance(tick.locked.spendingGuidance, tick.policy);
+              return { guardrail, boundaryConsequence: boundaryConsequenceFor(guardrail, tick.policy) };
+            })(),
+            reason: tick.locked.reason,
+          }
       : { source: "PLAYER_LOCKED", status: "UNAVAILABLE", mode: tick.locked.mode, reason: tick.locked.reason };
   return {
     contractVersion: 1,

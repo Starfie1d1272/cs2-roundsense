@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendPolicyV3, resolveLockedPolicyMode, utilityBundle, type PlayerLockedMode, type PolicyV3State } from "./policy-v3.js";
+import { lockedPolicyIntent, recommendPolicyV3, resolveLockedPolicyMode, utilityBundle, type PlayerLockedMode, type PolicyV3State } from "./policy-v3.js";
 import { DEFAULT_RULES, lossBonus, price } from "./rules.js";
 import { rifleFor } from "./advisor.js";
 
@@ -79,13 +79,15 @@ describe("Policy V3 deterministic core", () => {
     expect(force?.bundleSpend).toBeGreaterThanOrEqual(1650);
   });
 
-  it("offers NORMAL LIGHT as a boundary-bounded secondary bundle rather than fixed SMG plus armor", () => {
+  it("keeps NORMAL FORCE and boundary-bounded LIGHT as co-equal supported commitments", () => {
     const current = state();
     current.round = { ...current.round, number: observed(5), side: observed("CT"), context: observed("NORMAL") };
     current.player.money = observed(2600);
     const out = recommendPolicyV3(current);
+    expect(out.options.some((option) => option.mode === "FULL")).toBe(false);
     const light = out.options.find((option) => option.mode === "LIGHT");
-    expect(light?.adviceStrength).toBe("ALTERNATIVE");
+    expect(out.options.find((option) => option.mode === "FORCE")?.adviceStrength).toBe("SUPPORTED");
+    expect(light?.adviceStrength).toBe("SUPPORTED");
     expect(light?.spendingGuidance).toMatchObject({ layer: "ADVICE", kind: "BOUNDED" });
     expect(light?.purchases.some((purchase) => purchase.item === "mp9" || purchase.item === "mac10")).toBe(false);
     const protectedCapability = light?.spendingGuidance.kind === "BOUNDED" ? light.spendingGuidance.protectedCapability : undefined;
@@ -424,10 +426,28 @@ describe("Policy V3 deterministic core", () => {
     expect(recommendPolicyV3(current)).toMatchObject({ status: "UNSUPPORTED_POLICY_EVIDENCE", futureAffordability: { status: "NOT_APPLICABLE", reason: "PISTOL_UNSUPPORTED" }, options: [] });
   });
 
-  it("keeps overtime outside NORMAL future-affordability semantics", () => {
+  it("keeps overtime outside NORMAL future-affordability semantics and preservation modes", () => {
     const current = state();
     current.round.context = observed("OVERTIME");
-    expect(recommendPolicyV3(current)).toMatchObject({ status: "READY", futureAffordability: { status: "NOT_APPLICABLE", reason: "OVERTIME_UNSUPPORTED" } });
+    const output = recommendPolicyV3(current);
+    expect(output).toMatchObject({ status: "READY", futureAffordability: { status: "NOT_APPLICABLE", reason: "OVERTIME_UNSUPPORTED" } });
+    expect(output.options.every((option) => option.mode === "FULL" || option.mode === "FORCE")).toBe(true);
+  });
+
+  it("does not add an overtime PRESERVE path for a save-for-AWP preference", () => {
+    const current = state({ round: { ...state().round, number: observed(25), context: observed("OVERTIME") } });
+    current.player.money = observed(4000);
+    current.preference = { source: "USER_DECLARED", awpPriority: "SAVE_FOR_AWP" };
+    expect(recommendPolicyV3(current).options.some((option) => option.mode === "PRESERVE" || option.mode === "LIGHT")).toBe(false);
+  });
+
+  it("does not replace post-pistol strategy with a save-for-AWP preservation path", () => {
+    const current = state();
+    current.player.money = observed(4000);
+    current.preference = { source: "USER_DECLARED", awpPriority: "SAVE_FOR_AWP" };
+    const output = recommendPolicyV3(current);
+    expect(output.futureAffordability).toMatchObject({ status: "NOT_APPLICABLE", reason: "POST_PISTOL_STRATEGY" });
+    expect(output.options.map((option) => option.mode)).toEqual(["PRESERVE", "FORCE"]);
   });
 
   it("keeps POST_PISTOL outside NORMAL future-affordability semantics", () => {
@@ -537,6 +557,13 @@ describe("player-locked mode resolution", () => {
     const poor = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
     poor.player.money = observed(0);
     expect(resolveLockedPolicyMode(poor, "LIGHT")).toBeNull();
+  });
+
+  it("retains a declared NORMAL half-buy intent when no generic bundle can be planned", () => {
+    const poor = state({ round: { ...state().round, number: observed(5), context: observed("NORMAL") } });
+    poor.player.money = observed(0);
+    expect(resolveLockedPolicyMode(poor, "LIGHT")).toBeNull();
+    expect(lockedPolicyIntent(poor, "LIGHT")).toMatchObject({ kind: "BOUNDED" });
   });
 
   it("keeps pistol purchase policy unsupported for every player lock", () => {

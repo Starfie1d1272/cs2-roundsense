@@ -23,13 +23,13 @@ loopback GSI receiver、连续状态 tracker 与 Policy V3，renderer 只接收�
 
 1. 启动 RoundSense，应用自动定位 Steam/CS2 并检查自己的 GSI 配置；需要时可一键安装或修复。
 2. 收到普通玩家 GSI 后，控制台显示连接状态；只有可验证的冻结时间会显示 Overlay。
-3. 默认建议保持 frozen Policy V3 行为。玩家也可把本回合锁定为 ECO、半起、强起或长枪局。
-4. Overlay 区分“最终配置”和“还要买”，并展示当前还能花多少及输了下把的可达能力。
+3. 默认建议保持 frozen Policy V3 行为。ECO、半起、强起与长枪局首先是经济 commitment；玩家锁定后仍保留该意图，即使当前 generic default 购买组合不可生成。
+4. Overlay 按意图展示：ECO 强调最小投入；半起显示 guardrail 和越线后果；强起只强调当前回合；长枪局在详细模式才显示 inventory-aware 默认配置和“还要买”。这些组合不是地图、位置或战术条件下的唯一最优解。
 5. 回合进入 live 后自动隐藏；玩家锁定在下一回合自动清除。
 
 ## 核心能力
 
-- **经济策略**：区分 eco、半起、强起与全起，先决定投入程度，再规划购买组合。
+- **经济策略**：区分 eco、半起、强起与全起，先决定投入程度，再提供 inventory-aware 的通用默认购买组合。
 - **可靠边界**：按最新现金重算“从现在起还能花多少”及败后能力；半起不是固定储备或固定模板。
 - **败后经济**：给出输掉当前回合后的现金情景，以及下一局关键购买能力是否仍可达。
 - **装备感知建议**：根据已有主武器、护甲、头盔、钳子和道具，只补真正需要购买的内容。
@@ -101,7 +101,7 @@ pnpm package:win
 - 实时推荐不使用只有 demo 或 spectator 才能看到的对手隐藏经济与装备信息。
 - 信息缺失时保留“未知”，不会为了给出完整答案而伪造确定值。
 - GSI 没有可靠的回合首现金/交易账本，因此 Product Alpha 不计算“本回合已花”精确值；
-  该字段明确显示未知，只展示当前现金、还要买与 future-affordability remaining guardrail。
+  Overlay 不展示这个永久 UNKNOWN。诊断会记录冻结时间首个现金 receipt 候选，供 Windows 实测 round-start-money anchor，但它不是已验证的回合首现金或消费账本。
 - 数值 C4 剩余时间在 Windows controlled calibration 前仍不进入 Product Alpha Overlay。
 
 ## 验证

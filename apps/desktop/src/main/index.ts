@@ -18,6 +18,7 @@ import {
   type DesktopActionResult,
   type DesktopSettingsPatch,
   type DesktopState,
+  type DesktopRuntimeState,
   type DiagnosticEntry,
   type LockableMode,
   type ShortcutAction,
@@ -39,6 +40,7 @@ const STALE_AFTER_MS = 75_000;
 const channels = {
   getState: "roundsense:get-state",
   stateChanged: "roundsense:state-changed",
+  runtimeChanged: "roundsense:runtime-changed",
   updateSettings: "roundsense:update-settings",
   setIntentLock: "roundsense:set-intent-lock",
   installGsi: "roundsense:install-gsi",
@@ -81,6 +83,7 @@ function baseState(settings: PersistedDesktopState["settings"]): DesktopState {
       architecture: process.arch,
       shortcutRegistrations: [],
       entries: [],
+      roundStartMoneyAnchor: { status: "notObserved" },
     },
   };
 }
@@ -122,6 +125,22 @@ function publish(): void {
   }
   syncOverlay();
   rebuildTrayMenu();
+}
+
+function publishRuntime(): void {
+  state.revision += 1;
+  const next: DesktopRuntimeState = {
+    revision: state.revision,
+    connection: structuredClone(state.connection),
+    product: structuredClone(state.product),
+    roundStartMoneyAnchor: structuredClone(state.diagnostics.roundStartMoneyAnchor),
+  };
+  for (const window of [dashboardWindow, overlayWindow]) {
+    if (window && !window.isDestroyed() && !window.webContents.isLoading()) {
+      window.webContents.send(channels.runtimeChanged, next);
+    }
+  }
+  syncOverlay();
 }
 
 function actionResult(ok: boolean, errorCode?: DesktopActionResult["errorCode"]): DesktopActionResult {
@@ -429,7 +448,8 @@ function onRuntimeUpdate(update: RuntimeUpdate): void {
     gameBuild: update.gameBuild,
   };
   state.product = update.product;
-  publish();
+  state.diagnostics = { ...state.diagnostics, roundStartMoneyAnchor: update.roundStartMoneyAnchor };
+  publishRuntime();
 }
 
 async function startRuntime(): Promise<void> {

@@ -2,7 +2,7 @@ import { createGsiReceiver, type GsiReceipt } from "@roundsense/gsi-protocol";
 import type { PlayerLockedMode, ProtectedNextBuyCapability } from "@roundsense/economy-advisor";
 import { tick, type RoundScopedLockedMode } from "@roundsense/roundsense/engine";
 import { PolicyStateTracker } from "@roundsense/roundsense/policy-state";
-import { toProductView, type ProductPlan, type ProductView as CoreProductView } from "@roundsense/roundsense/product-view";
+import { toProductView, type ProductIntent, type ProductPlan, type ProductView as CoreProductView } from "@roundsense/roundsense/product-view";
 import type {
   AvailableValue,
   LoadoutView,
@@ -14,6 +14,7 @@ import type {
   ProtectedCapability,
   SpendingView,
   UnknownReason,
+  RoundStartMoneyAnchor,
 } from "../shared/contracts.js";
 
 export interface RuntimeUpdate {
@@ -22,6 +23,7 @@ export interface RuntimeUpdate {
   acceptedPayloads: number;
   rejectedPayloads: number;
   gameBuild?: number;
+  roundStartMoneyAnchor: RoundStartMoneyAnchor;
 }
 
 export interface RoundSenseRuntimeOptions {
@@ -102,6 +104,28 @@ function capability(value: ProtectedNextBuyCapability): ProtectedCapability {
   return value === "RIFLE_ARMOR_BASIC_UTILITY" ? "rifleArmorUtility" : "rifleArmor";
 }
 
+function applyGuardrail(
+  base: SpendingView,
+  guardrail: ProductPlan["guardrail"],
+): SpendingView {
+  if (guardrail.kind === "BOUNDED") {
+    const protectedCapability = capability(guardrail.protectedCapability);
+    return {
+      ...base,
+      remainingSpend: { status: "known", value: guardrail.maxAdditionalSpend },
+      protectedCapability,
+    };
+  }
+  if (guardrail.kind === "MINIMIZE") {
+    return {
+      ...base,
+      remainingSpend: { status: "known", value: 0 },
+      protectedCapability: guardrail.protectedCapability ? capability(guardrail.protectedCapability) : undefined,
+    };
+  }
+  return base;
+}
+
 function spending(plan: ProductPlan, currentMoney: number): SpendingView {
   const projectedLoss = plan.lossNoPlant.status === "PROJECTED"
     ? { status: "known" as const, value: plan.lossNoPlant.nextMoney }
@@ -120,27 +144,34 @@ function spending(plan: ProductPlan, currentMoney: number): SpendingView {
         }
       : undefined,
   };
-  if (plan.guardrail.kind === "BOUNDED") {
-    const protectedCapability = capability(plan.guardrail.protectedCapability);
-    return {
-      ...base,
-      remainingSpend: { status: "known", value: plan.guardrail.maxAdditionalSpend },
-      protectedCapability,
-    };
-  }
-  if (plan.guardrail.kind === "MINIMIZE") {
-    return {
-      ...base,
-      remainingSpend: { status: "known", value: 0 },
-      protectedCapability: plan.guardrail.protectedCapability ? capability(plan.guardrail.protectedCapability) : undefined,
-    };
-  }
-  return base;
+  return applyGuardrail(base, plan.guardrail);
+}
+
+function spendingForIntent(intent: ProductIntent, currentMoney: number): SpendingView {
+  const base: SpendingView = {
+    currentMoney: { status: "known", value: currentMoney },
+    remainingSpend: unknown("notApplicable"),
+    plannedBundleSpend: unknown("notApplicable"),
+    spentThisRound: unknown("refundOrTransfer"),
+    lossNextMoney: unknown("notApplicable"),
+    nextSpendConsequence: intent.boundaryConsequence
+      ? {
+          thresholdAdditionalSpend: intent.boundaryConsequence.thresholdAdditionalSpend,
+          before: capability(intent.boundaryConsequence.before),
+          after: intent.boundaryConsequence.after ? capability(intent.boundaryConsequence.after) : "none",
+        }
+      : undefined,
+  };
+  return applyGuardrail(base, intent.guardrail);
 }
 
 function selectedPlan(view: CoreProductView): ProductPlan | undefined {
   if (view.active.source === "PLAYER_LOCKED") return view.active.status === "SELECTED" ? view.active.plan : undefined;
   return view.active.selection.status === "SELECTED" ? view.active.selection.plan : undefined;
+}
+
+function selectedIntent(view: CoreProductView): ProductIntent | undefined {
+  return view.active.source === "PLAYER_LOCKED" && view.active.status === "INTENT_ONLY" ? view.active.intent : undefined;
 }
 
 function automaticModes(view: CoreProductView): PlayerVisibleMode[] {
@@ -156,6 +187,7 @@ function automaticModes(view: CoreProductView): PlayerVisibleMode[] {
 
 export function toDesktopProduct(view: CoreProductView, updatedAt: string): ProductView {
   const plan = selectedPlan(view);
+  const intent = selectedIntent(view);
   const modes = automaticModes(view);
   const lockedMode = view.active.source === "PLAYER_LOCKED" ? INTERNAL_TO_VISIBLE[view.active.mode] : undefined;
   const unavailableReason = view.active.source === "PLAYER_LOCKED" && view.active.status === "UNAVAILABLE"
@@ -176,7 +208,7 @@ export function toDesktopProduct(view: CoreProductView, updatedAt: string): Prod
     automaticIsMultimodal: view.automatic.status === "MULTIMODAL",
     lockedMode,
     loadout: plan ? itemList(plan) : emptyLoadout(),
-    spending: plan ? spending(plan, view.round.currentMoney) : {
+    spending: plan ? spending(plan, view.round.currentMoney) : intent ? spendingForIntent(intent, view.round.currentMoney) : {
       ...emptySpending(),
       currentMoney: { status: "known", value: view.round.currentMoney },
       spentThisRound: unknown("refundOrTransfer"),
@@ -203,6 +235,7 @@ export class RoundSenseRuntime {
   private receiver: ReturnType<typeof createGsiReceiver> | null = null;
   private currentRound: Omit<RoundScopedLockedMode, "mode"> | null = null;
   private lockedMode: RoundScopedLockedMode | null = null;
+  private roundStartMoneyAnchor: RoundStartMoneyAnchor = { status: "notObserved" };
 
   constructor(private readonly options: RoundSenseRuntimeOptions) {
     this.port = options.port ?? 3001;
@@ -243,10 +276,23 @@ export class RoundSenseRuntime {
   observe(receipt: GsiReceipt): void {
     const key = roundKey(receipt);
     if (key) {
-      if (this.currentRound && !sameRound(this.currentRound, key)) this.lockedMode = null;
+      if (this.currentRound && !sameRound(this.currentRound, key)) {
+        this.lockedMode = null;
+        this.roundStartMoneyAnchor = { status: "notObserved" };
+      }
       this.currentRound = key;
     }
     const phase = receipt.payload.round?.phase;
+    const money = receipt.payload.player?.state?.money;
+    if (key && phase === "freezetime" && money !== undefined && this.roundStartMoneyAnchor.status === "notObserved") {
+      this.roundStartMoneyAnchor = {
+        status: "candidate",
+        ...key,
+        money,
+        receiptSeq: receipt.seq,
+        receivedAt: receipt.receivedAtWallClock,
+      };
+    }
     const advice = tick(receipt.payload, { tracker: this.tracker, seq: receipt.seq, lockedMode: this.lockedMode ?? undefined });
     const updatedAt = receipt.receivedAtWallClock;
     const product = advice
@@ -258,6 +304,7 @@ export class RoundSenseRuntime {
       acceptedPayloads: this.receiver?.accepted() ?? receipt.seq + 1,
       rejectedPayloads: this.receiver?.rejected() ?? 0,
       gameBuild: receipt.payload.provider?.version,
+      roundStartMoneyAnchor: { ...this.roundStartMoneyAnchor },
     });
   }
 
