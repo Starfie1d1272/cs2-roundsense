@@ -6,8 +6,9 @@ RoundSense 读取 CS2 Game State Integration（GSI），在冻结时间结合你
 败方奖励和回合上下文，帮助你判断这局该 eco、半起、强起还是全起，投入应控制在什么
 范围，以及如果输掉，下一局还能买什么。
 
-当前原型通过本地 CLI 展示结果；策略引擎与 presentation 解耦，后续可以接入更低认知
-负担的展示方式。
+Product Alpha 提供 Windows 桌面控制台与游戏 Overlay：同一个 Electron 主进程承载
+loopback GSI receiver、连续状态 tracker 与 Policy V3，renderer 只接收可序列化的产品视图。
+不需要独立后端、WebSocket、账号或第三方 Overlay 宿主。
 
 ## 为什么需要 RoundSense
 
@@ -18,32 +19,18 @@ RoundSense 读取 CS2 Game State Integration（GSI），在冻结时间结合你
 它按“经济策略 → 投入边界 → 败后影响 → 具体购买”的顺序组织建议。枪械和道具组合很
 重要，但它们服务于回合策略，而不是替代策略本身。
 
-## 目标展示示例
+## Product Alpha 体验
 
-> 以下是 Policy V3 structured output 的目标展示示例，不是当前 CLI 的逐字输出。
-
-```text
-CT · Round 8 · $3,450
-
-半起
-建议投入 ≤ $1,250
-激进上限 $1,750
-
-推荐：
-半甲 + 烟 + 闪
-
-如果输掉：
-下一局预计 $4,200
-✓ 可保持长枪 + 甲
-✗ 长枪 + 甲 + 基础道具
-
-对手经济：未知
-```
+1. 启动 RoundSense，应用自动定位 Steam/CS2 并检查自己的 GSI 配置；需要时可一键安装或修复。
+2. 收到普通玩家 GSI 后，控制台显示连接状态；只有可验证的冻结时间会显示 Overlay。
+3. 默认建议保持 frozen Policy V3 行为。玩家也可把本回合锁定为 ECO、半起、强起或长枪局。
+4. Overlay 区分“最终配置”和“还要买”，并展示当前还能花多少及输了下把的可达能力。
+5. 回合进入 live 后自动隐藏；玩家锁定在下一回合自动清除。
 
 ## 核心能力
 
 - **经济策略**：区分 eco、半起、强起与全起，先决定投入程度，再规划购买组合。
-- **投入边界**：同时表达建议投入和最多投入，半起不是固定的一套枪甲模板。
+- **可靠边界**：按最新现金重算“从现在起还能花多少”及败后能力；半起不是固定储备或固定模板。
 - **败后经济**：给出输掉当前回合后的现金情景，以及下一局关键购买能力是否仍可达。
 - **装备感知建议**：根据已有主武器、护甲、头盔、钳子和道具，只补真正需要购买的内容。
 - **手枪局后策略**：区分手枪局赢家的 conversion 与输家的独立策略，不套用普通回合模板。
@@ -57,11 +44,12 @@ CS2 GSI
   → 当前可见状态与安全连续追踪的历史
   → Policy V3
   → 投入建议 / 未来经济 / 购买组合
-  → 当前 CLI / 未来 presentation
+  → serializable Product View
+  → desktop dashboard / click-through Overlay
 ```
 
 RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从连续 GSI payload 中安全
-追踪得到的上一回合状态。策略引擎输出结构化结果，CLI 只是当前的验证和展示界面。
+追踪得到的上一回合状态。主进程是唯一 session owner；renderer 不重建 tracker 或策略状态。
 
 ## 快速开始
 
@@ -77,31 +65,33 @@ RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从�
 pnpm install
 ```
 
-### 2. 生成并安装 GSI 配置
-
-选择一个本地 token，并生成与 RoundSense 默认端口一致的配置：
+### 2. 启动 Product Alpha 桌面端
 
 ```bash
-pnpm --filter @roundsense/gsi-recorder start --cfg --port 3001 --token roundsense-local
+pnpm desktop
 ```
 
-将命令输出的配置正文保存为 `gamestate_integration_roundsense.cfg`（UTF-8、无 BOM），
-放入 CS2 配置目录：
+Windows 上首次启动会通过 Steam registry、`libraryfolders.vdf` 与 `appmanifest_730.acf`
+定位安装目录，并验证 `game/csgo/cfg` 和 `game/bin/win64/cs2.exe`。应用只管理：
 
 ```text
-<Steam>/steamapps/common/Counter-Strike 2/game/csgo/cfg/
+<CS2>/game/csgo/cfg/gamestate_integration_roundsense.cfg
 ```
 
-### 3. 启动 RoundSense
+已有但内容不同的 RoundSense cfg 会先备份，再原子替换；token 随本地设置生成并只写入本机
+cfg，不会出现在复制出的诊断信息中。若自动定位失败，可从控制台选择 CS2 目录。
 
-使用与 cfg 相同的 token：
+### 3. 构建 Windows x64 ZIP
+
 
 ```bash
-pnpm --filter @roundsense/roundsense start --token roundsense-local --port 3001
+pnpm package:win
 ```
 
-服务默认只监听 [http://127.0.0.1:3001](http://127.0.0.1:3001)。进入游戏后，
-RoundSense 会在可验证的购买窗口（当前为 freezetime）输出经济建议。
+产物位于 `apps/desktop/release/`。Alpha ZIP 尚未签名；Windows SmartScreen 与真实 CS2
+行为仍需按 [Windows Product Alpha 验证清单](docs/product-alpha-windows-validation.md) 实测。
+
+保留的 CLI/recorder 仍可用于协议与策略调试，桌面产品不依赖它们作为后台服务。
 
 ## 数据边界与安全性
 
@@ -110,6 +100,9 @@ RoundSense 会在可验证的购买窗口（当前为 freezetime）输出经济�
 - 不读取游戏内存，不向游戏进程注入代码，也不修改游戏状态。
 - 实时推荐不使用只有 demo 或 spectator 才能看到的对手隐藏经济与装备信息。
 - 信息缺失时保留“未知”，不会为了给出完整答案而伪造确定值。
+- GSI 没有可靠的回合首现金/交易账本，因此 Product Alpha 不计算“本回合已花”精确值；
+  该字段明确显示未知，只展示当前现金、还要买与 future-affordability remaining guardrail。
+- 数值 C4 剩余时间在 Windows controlled calibration 前仍不进入 Product Alpha Overlay。
 
 ## 验证
 
@@ -132,7 +125,8 @@ validation：
 
 ```text
 apps/
-  roundsense/          # 当前 CLI 与 runtime orchestration
+  desktop/             # Electron main/preload/dashboard/overlay 与 Windows packaging
+  roundsense/          # tracker、product presentation contract 与 CLI adapter
   gsi-recorder/        # GSI cfg 生成、录制与调试
 packages/
   economy-advisor/     # Policy V3 与购买 mechanics
@@ -149,8 +143,13 @@ scripts/
 ```bash
 pnpm test
 pnpm typecheck
+pnpm build
+pnpm package:win
 pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip
 ```
+
+当前环境能验证的项目与 Windows/CS2 实机边界见
+[Product Alpha Windows 验证清单](docs/product-alpha-windows-validation.md)。
 
 完整研究资产保留在 frozen research branches；mainline 保留生产代码、权威结论与可复现
 验收入口。
