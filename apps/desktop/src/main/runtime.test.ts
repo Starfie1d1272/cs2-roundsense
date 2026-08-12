@@ -32,6 +32,13 @@ function receipt(seq: number, input: GsiPayload): GsiReceipt {
   };
 }
 
+function purchasePayload(money: number, weapons: NonNullable<GsiPayload["player"]>["weapons"], armor = 0): GsiPayload {
+  return {
+    ...payload(5, "freezetime", money),
+    player: { team: "CT", state: { armor, helmet: armor === 100, defusekit: false, money }, weapons },
+  };
+}
+
 describe("desktop product adapter", () => {
   it("keeps a retained rifle in final configuration but out of purchases", () => {
     const advice = tick(payload(), { seq: 1 });
@@ -55,6 +62,33 @@ describe("desktop product adapter", () => {
 });
 
 describe("RoundSense runtime lifecycle", () => {
+  it("keeps automatic decision modes stable while live execution state follows purchases", () => {
+    const updates: RuntimeUpdate[] = [];
+    const runtime = new RoundSenseRuntime({ token: "test", onUpdate: (update) => updates.push(update) });
+    runtime.observe(receipt(1, purchasePayload(3300, {})));
+    const initial = updates.at(-1)?.product;
+    runtime.observe(receipt(2, purchasePayload(2650, {}, 100)));
+    runtime.observe(receipt(3, purchasePayload(1450, { primary: { name: "weapon_mp9", type: "Submachine Gun" } }, 100)));
+    const current = updates.at(-1)?.product;
+    expect(initial?.automaticModes).toEqual(current?.automaticModes);
+    expect(current?.automaticDecision).toBe("unverifiedFirstFreeze");
+    expect(current?.spending.currentMoney).toEqual({ status: "known", value: 1450 });
+    // The previous full-buy bundle is not replayed after cash changes; the
+    // visible execution state is live rather than a stale decision snapshot.
+    expect(current?.loadout.primaryDisposition).toBe("unknown");
+  });
+
+  it("keeps a round-scoped lock above automatic decision state after purchases", () => {
+    const updates: RuntimeUpdate[] = [];
+    const runtime = new RoundSenseRuntime({ token: "test", onUpdate: (update) => updates.push(update) });
+    runtime.observe(receipt(1, purchasePayload(3300, {})));
+    expect(runtime.setIntentLock("eco")).toBe(true);
+    runtime.observe(receipt(2, purchasePayload(1450, { primary: { name: "weapon_mp9", type: "Submachine Gun" } }, 100)));
+    const current = updates.at(-1)?.product;
+    expect(current?.lockedMode).toBe("eco");
+    expect(current?.spending.currentMoney).toEqual({ status: "known", value: 1450 });
+  });
+
   it("keeps a player intent for the round, hides live, and clears it next round", () => {
     const updates: RuntimeUpdate[] = [];
     const runtime = new RoundSenseRuntime({ token: "test", onUpdate: (update) => updates.push(update) });

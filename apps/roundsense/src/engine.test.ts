@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { inventoryFrom, tick } from "./engine.js";
+import { RoundDecisionState } from "./decision-state.js";
 import { PolicyStateTracker } from "./policy-state.js";
+import { toProductView } from "./product-view.js";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
 
 const basePayload = (over: Partial<GsiPayload> = {}): GsiPayload => ({
@@ -53,6 +55,60 @@ function runPistolLifecycle(side: "CT" | "T", winner: "CT" | "T") {
 }
 
 describe("V3 engine integration", () => {
+  it("freezes automatic intent while live freezetime state continues to execute purchases", () => {
+    const tracker = new PolicyStateTracker();
+    const decisionState = new RoundDecisionState();
+    const receipt = (money: number, weapons: NonNullable<GsiPayload["player"]>["weapons"], armor = 0) => basePayload({
+      map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } },
+      player: { team: "CT", state: { armor, helmet: armor === 100, defusekit: false, money }, weapons },
+    });
+    const first = tick(receipt(3300, {}), { tracker, decisionState, seq: 1 });
+    const afterArmor = tick(receipt(2650, {}, 100), { tracker, decisionState, seq: 2 });
+    const afterPrimary = tick(receipt(1450, { primary: { name: "weapon_mp9", type: "Submachine Gun" } }, 100), { tracker, decisionState, seq: 3 });
+    if (!first || !afterArmor || !afterPrimary) throw new Error("expected freezetime advice");
+    expect(first.automaticDecision).toMatchObject({ status: "FROZEN", snapshot: { status: "UNVERIFIED_FIRST_FREEZE", receiptSeq: 1 } });
+    expect(afterArmor.automaticDecision).toMatchObject({ status: "FROZEN", snapshot: { status: "UNVERIFIED_FIRST_FREEZE", receiptSeq: 1 } });
+    expect(afterPrimary.automaticDecision).toMatchObject({ status: "FROZEN", snapshot: { status: "UNVERIFIED_FIRST_FREEZE", receiptSeq: 1 } });
+    expect(afterPrimary.automaticDecision.status === "FROZEN" && first.automaticDecision.status === "FROZEN"
+      ? afterPrimary.automaticDecision.policy.options.map((option) => option.mode)
+      : []).toEqual(first.automaticDecision.status === "FROZEN" ? first.automaticDecision.policy.options.map((option) => option.mode) : []);
+    expect(afterPrimary.money).toBe(1450);
+    expect(afterPrimary.policy.options.map((option) => option.resultingInventory.primary)).toContain("mp9");
+    const view = toProductView(afterPrimary);
+    expect(view.round.currentMoney).toBe(1450);
+    expect(view.automaticDecision).toBe("UNVERIFIED_FIRST_FREEZE");
+  });
+
+  it("abandons automatic lead after a same-round receipt gap but keeps mechanics available", () => {
+    const tracker = new PolicyStateTracker();
+    const decisionState = new RoundDecisionState();
+    const first = tick(basePayload({ map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } } }), { tracker, decisionState, seq: 1 });
+    const gap = tick(basePayload({ map: { name: "de_mirage", round: 5, team_ct: { score: 2, consecutive_round_losses: 2 }, team_t: { score: 3, consecutive_round_losses: 1 } } }), { tracker, decisionState, seq: 3 });
+    if (!first || !gap) throw new Error("expected freezetime advice");
+    expect(first.automaticDecision.status).toBe("FROZEN");
+    expect(gap.automaticDecision).toEqual({ status: "ABSTAINED", snapshot: { status: "UNAVAILABLE", key: { mapName: "de_mirage", roundNumber: 5, side: "T" }, reason: "SEQUENCE_GAP" } });
+    expect(toProductView(gap).automatic).toMatchObject({ status: "MULTIMODAL" });
+  });
+
+  it("does not synthesize a decision snapshot from a mid-round cold start and re-establishes on the next round", () => {
+    const tracker = new PolicyStateTracker();
+    const decisionState = new RoundDecisionState();
+    const live = tick(lifecyclePayload({ side: "CT", roundNumber: 5, phase: "live" }), { tracker, decisionState, seq: 1 });
+    const nextFreeze = tick(lifecyclePayload({ side: "CT", roundNumber: 6, phase: "freezetime" }), { tracker, decisionState, seq: 2 });
+    expect(live).toBeNull();
+    expect(nextFreeze?.automaticDecision).toMatchObject({ status: "FROZEN", snapshot: { status: "UNVERIFIED_FIRST_FREEZE", key: { roundNumber: 6 } } });
+  });
+
+  it("invalidates automatic decision state on a round restart", () => {
+    const tracker = new PolicyStateTracker();
+    const decisionState = new RoundDecisionState();
+    const beforeRestart = tick(lifecyclePayload({ side: "CT", roundNumber: 6, phase: "freezetime" }), { tracker, decisionState, seq: 1 });
+    const restarted = tick(lifecyclePayload({ side: "CT", roundNumber: 5, phase: "freezetime" }), { tracker, decisionState, seq: 2 });
+    expect(beforeRestart?.automaticDecision.status).toBe("FROZEN");
+    expect(restarted?.automaticDecision).toEqual({ status: "ABSTAINED", snapshot: { status: "UNAVAILABLE", key: { mapName: "de_mirage", roundNumber: 5, side: "CT" }, reason: "ROUND_RESTART" } });
+    expect(toProductView(restarted!).automatic).toMatchObject({ status: "MULTIMODAL" });
+  });
+
   it("only advises during verified buy phase", () => {
     expect(tick(basePayload(), { seq: 1 })).not.toBeNull();
     expect(tick(basePayload({ round: { phase: "live", bomb: null, win_team: null } }), { seq: 1 })).toBeNull();

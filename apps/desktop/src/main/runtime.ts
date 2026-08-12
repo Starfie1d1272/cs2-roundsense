@@ -2,6 +2,7 @@ import { createGsiReceiver, type GsiReceipt } from "@roundsense/gsi-protocol";
 import type { PlayerLockedMode, ProtectedNextBuyCapability } from "@roundsense/economy-advisor";
 import { tick, type RoundScopedLockedMode } from "@roundsense/roundsense/engine";
 import { PolicyStateTracker } from "@roundsense/roundsense/policy-state";
+import { RoundDecisionState } from "@roundsense/roundsense/decision-state";
 import { toProductView, type ProductIntent, type ProductPlan, type ProductView as CoreProductView } from "@roundsense/roundsense/product-view";
 import type {
   AvailableValue,
@@ -176,13 +177,20 @@ function selectedIntent(view: CoreProductView): ProductIntent | undefined {
 
 function automaticModes(view: CoreProductView): PlayerVisibleMode[] {
   if (view.automatic.status === "SELECTED") {
-    const mode = visibleMode(view.automatic.plan.mode);
-    return mode ? [mode] : [];
+    return view.automatic.decisionModes.map(visibleMode).filter((mode): mode is PlayerVisibleMode => mode !== undefined);
   }
   if (view.automatic.status === "MULTIMODAL") {
-    return [...new Set(view.automatic.plans.map((plan) => visibleMode(plan.mode)).filter((mode): mode is PlayerVisibleMode => mode !== undefined))];
+    return [...new Set(view.automatic.decisionModes.map(visibleMode).filter((mode): mode is PlayerVisibleMode => mode !== undefined))];
   }
   return [];
+}
+
+function automaticDecision(view: CoreProductView): NonNullable<ProductView["automaticDecision"]> {
+  return view.automaticDecision === "VERIFIED_PREDECISION"
+    ? "verifiedPreDecision"
+    : view.automaticDecision === "UNVERIFIED_FIRST_FREEZE"
+      ? "unverifiedFirstFreeze"
+      : "unavailable";
 }
 
 export function toDesktopProduct(view: CoreProductView, updatedAt: string): ProductView {
@@ -203,9 +211,12 @@ export function toDesktopProduct(view: CoreProductView, updatedAt: string): Prod
     mapName: view.round.mapName ?? undefined,
     side: view.round.side,
     roundNumber: view.round.number,
-    automaticMode: modes.length === 1 ? modes[0] : undefined,
+    // A conservative-abstained automatic decision can carry a single
+    // mechanics candidate without claiming it is an automatic lead.
+    automaticMode: view.automatic.status === "SELECTED" && modes.length === 1 ? modes[0] : undefined,
     automaticModes: modes,
     automaticIsMultimodal: view.automatic.status === "MULTIMODAL",
+    automaticDecision: automaticDecision(view),
     lockedMode,
     loadout: plan ? itemList(plan) : emptyLoadout(),
     spending: plan ? spending(plan, view.round.currentMoney) : intent ? spendingForIntent(intent, view.round.currentMoney) : {
@@ -231,6 +242,7 @@ function sameRound(a: Omit<RoundScopedLockedMode, "mode">, b: Omit<RoundScopedLo
 
 export class RoundSenseRuntime {
   private readonly tracker = new PolicyStateTracker();
+  private readonly decisionState = new RoundDecisionState();
   private readonly port: number;
   private receiver: ReturnType<typeof createGsiReceiver> | null = null;
   private currentRound: Omit<RoundScopedLockedMode, "mode"> | null = null;
@@ -293,7 +305,12 @@ export class RoundSenseRuntime {
         receivedAt: receipt.receivedAtWallClock,
       };
     }
-    const advice = tick(receipt.payload, { tracker: this.tracker, seq: receipt.seq, lockedMode: this.lockedMode ?? undefined });
+    const advice = tick(receipt.payload, {
+      tracker: this.tracker,
+      decisionState: this.decisionState,
+      seq: receipt.seq,
+      lockedMode: this.lockedMode ?? undefined,
+    });
     const updatedAt = receipt.receivedAtWallClock;
     const product = advice
       ? toDesktopProduct(toProductView(advice), updatedAt)

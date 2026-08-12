@@ -48,8 +48,8 @@ export interface ProductIntent {
 }
 
 export type ProductAutomaticSelection =
-  | { status: "SELECTED"; plan: ProductPlan; alternatives: ProductPlan[] }
-  | { status: "MULTIMODAL"; plans: ProductPlan[] }
+  | { status: "SELECTED"; decisionModes: PolicyMode[]; plan: ProductPlan; alternatives: ProductPlan[] }
+  | { status: "MULTIMODAL"; decisionModes: PolicyMode[]; plans: ProductPlan[] }
   | { status: "UNAVAILABLE"; reason: string; plans: [] };
 
 export type ProductActiveSelection =
@@ -69,6 +69,7 @@ export interface ProductView {
   automatic: ProductAutomaticSelection;
   active: ProductActiveSelection;
   actualSpend: { status: "UNKNOWN"; reason: "ROUND_START_MONEY_UNVERIFIED" };
+  automaticDecision: "VERIFIED_PREDECISION" | "UNVERIFIED_FIRST_FREEZE" | "UNAVAILABLE";
 }
 
 function guardrailForGuidance(guidance: SpendingGuidance, policy: PolicyV3Output): ProductPlan["guardrail"] {
@@ -139,34 +140,67 @@ function planFor(option: RecommendationOption, policy: PolicyV3Output): ProductP
   };
 }
 
-function automaticSelection(policy: PolicyV3Output): ProductAutomaticSelection {
+function automaticSelection(tick: AdviceTick): ProductAutomaticSelection {
+  const policy = tick.automaticDecision.status === "FROZEN" ? tick.automaticDecision.policy : tick.policy;
+  const forceMultimodal = tick.automaticDecision.status === "ABSTAINED";
   if (policy.status !== "READY") return { status: "UNAVAILABLE", reason: policy.status, plans: [] };
   if (policy.options.length === 0) return { status: "UNAVAILABLE", reason: "NO_OPTIONS", plans: [] };
-  if (policy.defaultOptionId !== undefined) {
+  if (!forceMultimodal && policy.defaultOptionId !== undefined) {
     const selected = policy.options.find((option) => option.id === policy.defaultOptionId);
     if (!selected) return { status: "UNAVAILABLE", reason: "DEFAULT_OPTION_MISSING", plans: [] };
+    const liveSelected = tick.policy.options.find((option) => option.mode === selected.mode);
+    if (!liveSelected) return {
+      status: "MULTIMODAL",
+      decisionModes: [selected.mode],
+      plans: [],
+    };
     return {
       status: "SELECTED",
-      plan: planFor(selected, policy),
-      alternatives: policy.options.filter((option) => option.id !== selected.id).map((option) => planFor(option, policy)),
+      decisionModes: [selected.mode],
+      plan: planFor(liveSelected, tick.policy),
+      alternatives: policy.options.filter((option) => option.id !== selected.id)
+        .flatMap((option) => {
+          const live = tick.policy.options.find((candidate) => candidate.mode === option.mode);
+          return live ? [planFor(live, tick.policy)] : [];
+        }),
     };
   }
   const supported = policy.options.filter((option) => option.adviceStrength === "SUPPORTED");
-  if (supported.length === 1) {
+  if (!forceMultimodal && supported.length === 1) {
     const selected = supported[0]!;
+    const liveSelected = tick.policy.options.find((option) => option.mode === selected.mode);
+    if (!liveSelected) return {
+      status: "MULTIMODAL",
+      decisionModes: [selected.mode],
+      plans: [],
+    };
     return {
       status: "SELECTED",
-      plan: planFor(selected, policy),
-      alternatives: policy.options.filter((option) => option.id !== selected.id).map((option) => planFor(option, policy)),
+      decisionModes: [selected.mode],
+      plan: planFor(liveSelected, tick.policy),
+      alternatives: policy.options.filter((option) => option.id !== selected.id)
+        .flatMap((option) => {
+          const live = tick.policy.options.find((candidate) => candidate.mode === option.mode);
+          return live ? [planFor(live, tick.policy)] : [];
+        }),
     };
   }
-  return { status: "MULTIMODAL", plans: supported.map((option) => planFor(option, policy)) };
+  const candidates = forceMultimodal ? policy.options : supported;
+  return {
+    status: "MULTIMODAL",
+    decisionModes: candidates.map((option) => option.mode),
+    plans: candidates
+      .flatMap((option) => {
+        const live = tick.policy.options.find((candidate) => candidate.mode === option.mode);
+        return live ? [planFor(live, tick.policy)] : [];
+      }),
+  };
 }
 
 /** Build the IPC/UI contract. Automatic advice remains available for context,
  * while an unavailable player lock remains active and never falls back. */
 export function toProductView(tick: AdviceTick): ProductView {
-  const automatic = automaticSelection(tick.policy);
+  const automatic = automaticSelection(tick);
   const active: ProductActiveSelection = tick.locked === null
     ? { source: "AUTO", selection: automatic }
     : tick.locked.status === "RESOLVED"
@@ -189,5 +223,8 @@ export function toProductView(tick: AdviceTick): ProductView {
     automatic,
     active,
     actualSpend: { status: "UNKNOWN", reason: "ROUND_START_MONEY_UNVERIFIED" },
+    automaticDecision: tick.automaticDecision.status === "ABSTAINED"
+      ? "UNAVAILABLE"
+      : tick.automaticDecision.snapshot.status,
   };
 }

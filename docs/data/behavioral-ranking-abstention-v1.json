@@ -1,0 +1,49 @@
+{
+  "schema": "roundsense-behavioral-ranking-abstention-v1",
+  "status": "research-only",
+  "policy_head": "7f420f8a0b9cfcb695ab392604c1d41caa1b938d",
+  "evaluation": {
+    "context": "NORMAL non-post-pistol; mechanics candidate set has at least two modes",
+    "features": ["candidate set", "side", "money", "loss", "retained primary", "retained armor"],
+    "forbidden_features": ["map", "role", "position", "team spend", "opponent private state", "additional trajectory history"],
+    "split": "5-fold sha256(match-series) mod 5",
+    "match_series": 106,
+    "ranking_label_in_candidate_n": 22708,
+    "interpretation": "behavioral-reference likelihood conditional on an already mechanically valid candidate set; never optimality, affordability, or legality"
+  },
+  "models": {
+    "conditional_frequency_nested_backoff": {
+      "production_status": "preferred future alpha ranking source if productized",
+      "overall_top1": 0.9084,
+      "overall_log_loss_bits": 0.3481,
+      "probability_status": "empirical frequency, not player-facing calibrated probability"
+    },
+    "compact_tree_24_leaves": {
+      "production_status": "offline reference only",
+      "overall_top1": 0.9198,
+      "overall_log_loss_bits": 0.3014,
+      "probability_status": "uncalibrated; must not set an automatic lead threshold"
+    }
+  },
+  "candidate_sets": {
+    "FORCE+FULL": { "n": 17363, "candidate_coverage": 0.9164, "conditional_frequency_top1": 0.9767, "compact_tree_top1": 0.9835, "contract": "RANK_ONLY" },
+    "FORCE+LIGHT+PRESERVE": {
+      "n": 5037,
+      "candidate_coverage": 0.9917,
+      "conditional_frequency_top1": 0.6768,
+      "compact_tree_top1": 0.7016,
+      "compact_tree_selective": {
+        "top_score_at_least_0.7": { "coverage": 0.4443, "behavioral_top1": 0.8181 },
+        "top_score_at_least_0.8": { "coverage": 0.3099, "behavioral_top1": 0.8834 },
+        "top_score_at_least_0.9": { "coverage": 0.1011, "behavioral_top1": 0.9037 }
+      },
+      "contract": "RANK_ONLY"
+    },
+    "FORCE+PRESERVE": { "n": 308, "candidate_coverage": 0.9059, "conditional_frequency_top1": 0.8442, "compact_tree_top1": 0.8961, "contract": "RANK_ONLY_LOW_SUPPORT" },
+    "LIGHT+PRESERVE": { "n": 5, "candidate_coverage": 0.0262, "contract": "ABSTAIN" }
+  },
+  "auto_lead": {
+    "enabled": false,
+    "reason": "no calibrated probability or audited lead threshold; normal-player first-freeze receipt is not verified pre-decision provenance"
+  }
+}

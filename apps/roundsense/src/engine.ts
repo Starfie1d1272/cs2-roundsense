@@ -22,6 +22,7 @@ import {
   type UserPreference,
 } from "@roundsense/economy-advisor";
 import type { GsiPayload } from "@roundsense/gsi-protocol";
+import { RoundDecisionState, type DecisionSnapshot } from "./decision-state.js";
 import { hasUnknownPrimaryWeapon, inventoryFrom } from "./inventory.js";
 import { PolicyStateTracker } from "./policy-state.js";
 
@@ -30,6 +31,7 @@ export { inventoryFrom } from "./inventory.js";
 export interface EngineOptions {
   preference?: UserPreference;
   tracker?: PolicyStateTracker;
+  decisionState?: RoundDecisionState;
   seq?: number;
   lockedMode?: RoundScopedLockedMode;
 }
@@ -81,14 +83,20 @@ export interface AdviceTick {
   roundNumber: number;
   money: number;
   policy: PolicyV3Output;
+  automaticDecision: AutomaticDecision;
   locked: LockedAdviceResult | null;
 }
+
+export type AutomaticDecision =
+  | { status: "FROZEN"; snapshot: Exclude<DecisionSnapshot, { status: "UNAVAILABLE" }>; policy: PolicyV3Output }
+  | { status: "ABSTAINED"; snapshot: Extract<DecisionSnapshot, { status: "UNAVAILABLE" }> };
 
 export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | null {
   // The CLI owns one persistent tracker. Observe every normal-player receipt
   // before deciding whether it is eligible to emit purchase advice, so live
   // and terminal payloads can maintain lifecycle FACTs.
   const tracker = opts.tracker ?? new PolicyStateTracker();
+  const decisionState = opts.decisionState ?? new RoundDecisionState();
   const seq = opts.seq ?? 0;
   const directInventory = inventoryFrom(payload);
   if (hasUnknownPrimaryWeapon(payload)) trackersWithUnknownPrimary.add(tracker);
@@ -102,6 +110,7 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
       reason: "unrecognized primary weapon id in the current inventory stream",
     };
   }
+  const decisionSnapshot = decisionState.observe(payload, seq, policyState);
   const player = payload.player;
   const map = payload.map;
   const state = player?.state;
@@ -115,12 +124,16 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   // map.round must be present — no silent round-1 guess.
   if (map?.round === undefined) return null;
   const policy = recommendPolicyV3(policyState);
+  const automaticDecision: AutomaticDecision = decisionSnapshot.status === "UNAVAILABLE"
+    ? { status: "ABSTAINED", snapshot: decisionSnapshot }
+    : { status: "FROZEN", snapshot: decisionSnapshot, policy: recommendPolicyV3(decisionSnapshot.state) };
   return {
     mapName: map.name ?? null,
     side: player.team,
     roundNumber: map.round,
     money: state.money,
     policy,
+    automaticDecision,
     locked: lockedAdvice(opts.lockedMode, { mapName: map.name, roundNumber: map.round, side: player.team }, policyState, policy),
   };
 }

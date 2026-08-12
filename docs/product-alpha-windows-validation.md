@@ -26,6 +26,9 @@ renderer、Electron 启动与 Windows ZIP 产出，但不能替代 Windows + CS2
 - [ ] 进入 freezetime 显示 Overlay，进入 live/over 与状态流 stale 后立即隐藏。
 - [ ] 自动建议、ECO/半起/强起/长枪局锁定、清除锁定和下一回合自动清除均与控制台一致。
 - [ ] 记录至少一个完整回合的冻结时间首个现金 anchor、实际回合首现金与购买后的 GSI cash，确认它们的关系前不得启用“本回合已花”。
+- [ ] 连续运行时记录首个 freezetime receipt 是否稳定早于玩家第一次购买；在此得到
+  Windows + CS2 证据前，它只能是 `UNVERIFIED_FIRST_FREEZE` decision candidate，
+  不得升级为 `VERIFIED_PREDECISION`，更不得启用 behavioral automatic lead。
 - [ ] 简洁/详细模式、六个锚点、75%–140% 缩放、快捷键冲突诊断均工作。
 - [ ] Borderless/windowed 下 always-on-top、click-through、CS2 焦点、Alt-Tab 与输入不受影响。
 - [ ] Exclusive fullscreen 的表现被明确记录；不能工作的组合不得宣称支持。

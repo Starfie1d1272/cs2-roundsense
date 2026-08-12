@@ -139,6 +139,7 @@ export interface ProductView {
   automaticMode?: PlayerVisibleMode;
   automaticModes?: readonly PlayerVisibleMode[];
   automaticIsMultimodal?: boolean;
+  automaticDecision?: "verifiedPreDecision" | "unverifiedFirstFreeze" | "unavailable";
   lockedMode?: LockableMode;
   loadout: LoadoutView;
   spending: SpendingView;
