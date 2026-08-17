@@ -1,0 +1,51 @@
+{
+  "name": "@roundsense/desktop",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "description": "RoundSense local, read-only CS2 round decision companion",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "pnpm build && electron .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src",
+    "package:win": "pnpm build && electron-builder --win zip --x64"
+  },
+  "dependencies": {
+    "@roundsense/economy-advisor": "workspace:*",
+    "@roundsense/gsi-protocol": "workspace:*",
+    "@roundsense/roundsense": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "electron": "43.3.0",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
+    "typescript": "^5.9.0",
+    "vite": "8.2.1",
+    "vitest": "^4.1.8"
+  },
+  "build": {
+    "appId": "top.starfie1d.roundsense",
+    "productName": "RoundSense",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "RoundSense-Product-Alpha-${version}-${arch}.${ext}"
+    }
+  }
+}

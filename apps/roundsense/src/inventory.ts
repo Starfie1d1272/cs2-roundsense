@@ -14,6 +14,19 @@ const GSI_NON_WEAPON: Record<string, ItemId> = {
 const GSI_NAME_ALIASES: Record<string, ItemId> = { weapon_m4a4: "m4a4" };
 const PRIMARY_TYPE_HINTS = ["Rifle", "Submachine Gun", "Shotgun", "Machine Gun", "SniperRifle"];
 
+function itemFromWeaponName(name: string | undefined): ItemId | undefined {
+  return name ? GSI_NON_WEAPON[name] ?? GSI_NAME_ALIASES[name] ?? weaponIdToItem(name) : undefined;
+}
+
+/** A primary-typed weapon that is absent from the pinned weapon artifact is
+ * UNKNOWN, not evidence that the player has no primary. */
+export function hasUnknownPrimaryWeapon(payload: GsiPayload): boolean {
+  return Object.values(payload.player?.weapons ?? {}).some((weapon) => {
+    const type = weapon?.type ?? "";
+    return PRIMARY_TYPE_HINTS.some((hint) => type.includes(hint)) && itemFromWeaponName(weapon?.name) === undefined;
+  });
+}
+
 /**
  * Decode only a complete normal-player inventory observation. GSI payloads
  * are partial; omitted fields are not evidence of an empty slot or false
@@ -30,13 +43,14 @@ export function inventoryFrom(payload: GsiPayload): InventoryState | undefined {
     state.helmet === undefined ||
     state.defusekit === undefined
   ) return undefined;
+  if (hasUnknownPrimaryWeapon(payload)) return undefined;
   let primary: ItemId | null = null;
   let secondary: ItemId | undefined;
   const grenades: ItemId[] = [];
   for (const weapon of Object.values(weapons)) {
     const name = weapon?.name;
     if (!name) continue;
-    const item = GSI_NON_WEAPON[name] ?? GSI_NAME_ALIASES[name] ?? weaponIdToItem(name);
+    const item = itemFromWeaponName(name);
     if (!item) continue;
     if (["smoke", "flash", "he", "molotov", "incendiary", "decoy"].includes(item)) {
       const quantity = weapon?.ammo_reserve !== undefined && weapon.ammo_reserve >= 0 ? weapon.ammo_reserve : 1;

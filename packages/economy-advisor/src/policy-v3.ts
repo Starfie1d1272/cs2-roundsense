@@ -25,6 +25,7 @@ export interface Inference<T> {
 }
 
 export type PolicyMode = "PRESERVE" | "LIGHT" | "FORCE" | "FULL" | "AWP_PATH";
+export type PlayerLockedMode = "PRESERVE" | "LIGHT" | "FORCE" | "FULL";
 export type RoundContext = "PISTOL" | "POST_PISTOL" | "NORMAL" | "OVERTIME";
 export type OpponentEconomyClass = "LIKELY_ESTABLISHED_RIFLE" | "LIKELY_NOT_ESTABLISHED_RIFLE" | "UNKNOWN";
 export type ProtectedNextBuyCapability = "RIFLE_ARMOR" | "RIFLE_ARMOR_BASIC_UTILITY";
@@ -616,11 +617,63 @@ function genericOptions(
   return preserve ? [preserve] : [];
 }
 
+/** Overtime has no meaningful regulation-loss preservation horizon. Keep the
+ * automatic set on the current round instead of manufacturing ECO/LIGHT. */
+function overtimeOptions(
+  state: PolicyV3State,
+  boundaries: FutureAffordabilitySet,
+): RecommendationOption[] {
+  const full = planOption(state, "FULL", "SUPPORTED", boundaries);
+  if (full) return [full];
+  const force = planOption(state, "FORCE", "SUPPORTED", boundaries);
+  return force ? [force] : [];
+}
+
 function previousPistolOutcome(state: PolicyV3State, side: Side): "WIN" | "LOSS" | "UNKNOWN" {
   if (state.history.integrity !== "COMPLETE") return "UNKNOWN";
   const previous = state.history.previousRounds.at(-1);
   if (!previous || previous.roundNumber !== state.round.number.value! - 1 || !known(previous.winner)) return "UNKNOWN";
   return previous.winner.value === side ? "WIN" : "LOSS";
+}
+
+/** Resolve a player-declared buy mode without changing the automatic policy
+ * recommendation set. The result is mechanics-backed player intent, not a
+ * replacement for `defaultOptionId` or automatic advice. */
+export function resolveLockedPolicyMode(state: PolicyV3State, mode: PlayerLockedMode): RecommendationOption | null {
+  const required = [state.round.side, state.round.context, state.player.money, state.player.inventory, state.player.lossIndex];
+  if (required.some((fact) => fact.status === "UNKNOWN" || fact.value === undefined)) return null;
+  if (state.round.context.value === "PISTOL") return null;
+  const affordability = futureAffordability(state);
+  if (mode !== "LIGHT") return planOption(state, mode, "SUPPORTED", affordability);
+  if (state.round.context.value !== "NORMAL" || affordability.status !== "PROJECTED") return null;
+  for (const boundary of [...affordability.boundaries].sort((a, b) => b.targetCash - a.targetCash)) {
+    const option = planLightOption(state, boundary, "SUPPORTED");
+    if (option) return option;
+  }
+  return null;
+}
+
+/**
+ * A player lock is first an economic commitment. A canonical purchase bundle
+ * is useful default material, but a missing canned bundle must not erase the
+ * declared intent. This deliberately keeps PISTOL outside the frozen scope
+ * and keeps LIGHT's future guardrail confined to NORMAL regulation rounds.
+ */
+export function lockedPolicyIntent(state: PolicyV3State, mode: PlayerLockedMode): SpendingGuidance | null {
+  const required = [state.round.side, state.round.context, state.player.money, state.player.inventory, state.player.lossIndex];
+  if (required.some((fact) => fact.status === "UNKNOWN" || fact.value === undefined)) return null;
+  if (state.round.context.value === "PISTOL") return null;
+  const affordability = futureAffordability(state);
+  if (mode === "PRESERVE") return preserveGuidance(affordability);
+  if (mode === "FORCE") return { layer: "ADVICE", kind: "CURRENT_ROUND_PRIORITY" };
+  if (mode === "FULL") return { layer: "ADVICE", kind: "COMPLETE_CURRENT_BUY" };
+  if (state.round.context.value !== "NORMAL") return null;
+  const protectedCapability = affordability.status === "PROJECTED"
+    ? affordability.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR_BASIC_UTILITY")?.capability
+      ?? affordability.boundaries.find((boundary) => boundary.capability === "RIFLE_ARMOR")?.capability
+      ?? "RIFLE_ARMOR_BASIC_UTILITY"
+    : "RIFLE_ARMOR_BASIC_UTILITY";
+  return { layer: "ADVICE", kind: "BOUNDED", protectedCapability };
 }
 
 /** Deterministic Policy V3 core. It never reads an opponent economy value. */
@@ -662,13 +715,13 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
       ].filter((option): option is RecommendationOption => option !== null);
     }
   } else {
-    options = genericOptions(state, affordability);
+    options = context === "OVERTIME" ? overtimeOptions(state, affordability) : genericOptions(state, affordability);
   }
   const awp = preference.source === "USER_DECLARED" ? planOption(state, "AWP_PATH", "SUPPORTED", affordability) : null;
   let saveForAwp = false;
   if (preference.source === "USER_DECLARED" && preference.awpPriority === "PREFER" && awp) {
     options = [{ ...awp, adviceStrength: "DOMINANT" }, ...options.filter((option) => option.mode !== "AWP_PATH")];
-  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && !awp) {
+  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && !awp && context === "NORMAL") {
     const awpWithArmor = planPurchases({ ...inventory, primary: null, armor: 0, hasHelmet: false, hasDefuseKit: inventory.hasDefuseKit, grenades: inventory.grenades }, compact(["awp", "kevlar"]), DEFAULT_RULES, side);
     const noSpend = projectNextRoundMoney({ money, spendNow: 0, side, lossStreak: lossIndex, kills: [], rules: DEFAULT_RULES });
     // The preserved current inventory is not asserted as a future fact. This
@@ -678,11 +731,14 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
       const preserve = planOption(state, "PRESERVE", "ALTERNATIVE", affordability);
       if (preserve) options.push(preserve);
     }
-  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp) {
+  } else if (preference.source === "USER_DECLARED" && preference.awpPriority === "SAVE_FOR_AWP" && awp && context === "NORMAL") {
     options = [{ ...awp, adviceStrength: "DOMINANT" }, ...options.filter((option) => option.mode !== "AWP_PATH")];
   }
   if (context === "NORMAL" && affordability.status === "PROJECTED" && !options.some((option) => option.mode === "FULL")) {
-    const lightStrength: RecommendationOption["adviceStrength"] = options.some((option) => option.mode === "FORCE") ? "ALTERNATIVE" : "SUPPORTED";
+    // A legal FORCE bundle does not make the preservation-aware LIGHT intent
+    // inferior by definition. When both are available, keep both supported so
+    // presentation can honestly expose a choice rather than inventing a Top-1.
+    const lightStrength: RecommendationOption["adviceStrength"] = "SUPPORTED";
     const lightOptions = affordability.boundaries
       .filter((boundary) => boundary.reachableWithNoSpend)
       .sort((a, b) => b.targetCash - a.targetCash)

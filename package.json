@@ -7,9 +7,12 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && pnpm --filter @roundsense/desktop typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
+    "build": "pnpm --filter @roundsense/desktop build",
+    "desktop": "pnpm --filter @roundsense/desktop start",
+    "package:win": "pnpm --filter @roundsense/desktop package:win",
     "recorder": "pnpm --filter @roundsense/gsi-recorder start",
     "validate": "pnpm --filter @roundsense/tools validate"
   },

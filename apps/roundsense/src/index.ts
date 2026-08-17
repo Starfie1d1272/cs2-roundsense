@@ -14,6 +14,7 @@ import { tick } from "./engine.js";
 import { toC4Observation } from "./observation.js";
 import { C4Presenter } from "./presenter.js";
 import { PolicyStateTracker } from "./policy-state.js";
+import { RoundDecisionState } from "./decision-state.js";
 
 const args = process.argv.slice(2);
 const token = args.includes("--token") ? args[args.indexOf("--token") + 1] : undefined;
@@ -41,6 +42,7 @@ function purchaseText(items: readonly { item: string; quantity: number }[], armo
 const presenter = new C4Presenter({ onOutput: (line) => console.log(`[${new Date().toLocaleTimeString()}] ${line}`) });
 const machine = new C4StateMachine((e) => presenter.handleEvent(e));
 const policyTracker = new PolicyStateTracker();
+const decisionState = new RoundDecisionState();
 let lastAdviceAtNs: bigint | null = null;
 
 const receiver = createGsiReceiver({
@@ -50,7 +52,7 @@ const receiver = createGsiReceiver({
 
     // Advice line: payload-driven throttle, at most every 5s measured on the
     // receipt's monotonic clock (wall clock is only for display).
-    const advice = tick(receipt.payload, { tracker: policyTracker, seq: receipt.seq });
+    const advice = tick(receipt.payload, { tracker: policyTracker, decisionState, seq: receipt.seq });
     if (
       advice &&
       (lastAdviceAtNs === null || receipt.receivedAtMonotonicNs - lastAdviceAtNs >= 5_000_000_000n)
