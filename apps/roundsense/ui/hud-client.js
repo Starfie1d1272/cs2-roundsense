@@ -74,7 +74,9 @@
         purchase.className = "purchase";
         purchase.textContent =
           card.purchases +
-          (card.spend === null ? "" : " · " + money(card.spend));
+          (card.spend === null || card.budgetLabel === "花费"
+            ? ""
+            : " · " + money(card.spend));
         details.append(purchase);
         const capability = document.createElement("span");
         capability.className = "hud-capability";

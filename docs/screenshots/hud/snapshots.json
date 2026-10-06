@@ -1,7 +1,7 @@
 {
   "ct-mid": {
     "version": 1,
-    "revision": 159,
+    "revision": 2,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -73,7 +73,7 @@
   },
   "t-rich": {
     "version": 1,
-    "revision": 162,
+    "revision": 5,
     "visible": true,
     "hiddenReason": null,
     "side": "T",
@@ -129,7 +129,7 @@
   },
   "ct-low": {
     "version": 1,
-    "revision": 164,
+    "revision": 7,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -185,7 +185,7 @@
   },
   "retained-rifle": {
     "version": 1,
-    "revision": 166,
+    "revision": 9,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -241,7 +241,7 @@
   },
   "awp": {
     "version": 1,
-    "revision": 169,
+    "revision": 12,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -308,12 +308,12 @@
       "x": 48,
       "y": 356,
       "width": 248,
-      "height": 174
+      "height": 160
     }
   },
   "save-awp": {
     "version": 1,
-    "revision": 171,
+    "revision": 14,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -385,7 +385,7 @@
   },
   "pistol-winner": {
     "version": 1,
-    "revision": 177,
+    "revision": 20,
     "visible": true,
     "hiddenReason": null,
     "side": "T",
@@ -420,12 +420,12 @@
       "x": 48,
       "y": 356,
       "width": 248,
-      "height": 94
+      "height": 80
     }
   },
   "pistol-loser": {
     "version": 1,
-    "revision": 182,
+    "revision": 25,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -481,7 +481,7 @@
   },
   "missing-loss": {
     "version": 1,
-    "revision": 184,
+    "revision": 27,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -515,7 +515,7 @@
   },
   "missing-inventory": {
     "version": 1,
-    "revision": 186,
+    "revision": 29,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -549,7 +549,7 @@
   },
   "pistol": {
     "version": 1,
-    "revision": 188,
+    "revision": 32,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -583,7 +583,7 @@
   },
   "overtime": {
     "version": 1,
-    "revision": 191,
+    "revision": 34,
     "visible": true,
     "hiddenReason": null,
     "side": "CT",
@@ -634,12 +634,12 @@
       "x": 48,
       "y": 356,
       "width": 248,
-      "height": 133
+      "height": 119
     }
   },
   "live": {
     "version": 1,
-    "revision": 193,
+    "revision": 36,
     "visible": false,
     "hiddenReason": "outside-freezetime",
     "side": "CT",
@@ -656,7 +656,7 @@
   },
   "stale": {
     "version": 1,
-    "revision": 195,
+    "revision": 38,
     "visible": false,
     "hiddenReason": "stale",
     "side": "CT",
@@ -673,7 +673,7 @@
   },
   "spectator": {
     "version": 1,
-    "revision": 197,
+    "revision": 40,
     "visible": false,
     "hiddenReason": "not-self",
     "side": "CT",
