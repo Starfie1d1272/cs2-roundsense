@@ -2,7 +2,8 @@
 param(
   [ValidateSet('Status', 'Install', 'Restore')][string]$Action = 'Status',
   [string]$CfgDirectory,
-  [string]$Source
+  [string]$Source,
+  [string]$SteamDirectory
 )
 $ErrorActionPreference = 'Stop'
 # Only this basename is owned by RoundSense. Other GSI files are read for
@@ -17,10 +18,15 @@ function Get-CfgDirectories {
     return @($resolved)
   }
   $roots = @()
-  foreach ($key in @('HKCU:\Software\Valve\Steam', 'HKLM:\SOFTWARE\WOW6432Node\Valve\Steam')) {
-    if (Test-Path $key) {
-      $entry = Get-ItemProperty $key
-      foreach ($value in @($entry.SteamPath, $entry.InstallPath)) { if ($value) { $roots += $value } }
+  if ($SteamDirectory) {
+    if (-not (Test-Path -LiteralPath $SteamDirectory -PathType Container)) { throw 'SteamDirectory does not exist.' }
+    $roots += [IO.Path]::GetFullPath($SteamDirectory)
+  } else {
+    foreach ($key in @('HKCU:\Software\Valve\Steam', 'HKLM:\SOFTWARE\WOW6432Node\Valve\Steam')) {
+      if (Test-Path $key) {
+        $entry = Get-ItemProperty $key
+        foreach ($value in @($entry.SteamPath, $entry.InstallPath)) { if ($value) { $roots += $value } }
+      }
     }
   }
   $libraries = @($roots)
@@ -33,8 +39,17 @@ function Get-CfgDirectories {
   }
   $directories = @()
   foreach ($library in ($libraries | Select-Object -Unique)) {
-    $path = Join-Path $library 'steamapps\common\Counter-Strike 2\game\csgo\cfg'
-    if (Test-Path -LiteralPath $path -PathType Container) { $directories += [IO.Path]::GetFullPath($path) }
+    $names = @('Counter-Strike 2', 'Counter-Strike Global Offensive')
+    $manifest = Join-Path $library 'steamapps\appmanifest_730.acf'
+    if (Test-Path -LiteralPath $manifest) {
+      $match = [regex]::Match([IO.File]::ReadAllText($manifest), '"installdir"\s+"([^"\r\n]+)"')
+      # Steam installdir is one folder name, never an arbitrary path.
+      if ($match.Success -and $match.Groups[1].Value -notmatch '[/\\:]' -and $match.Groups[1].Value -notin @('.', '..')) { $names = @($match.Groups[1].Value) }
+    }
+    foreach ($name in $names) {
+      $path = Join-Path (Join-Path $library ('steamapps\common\' + $name)) 'game\csgo\cfg'
+      if (Test-Path -LiteralPath $path -PathType Container) { $directories += [IO.Path]::GetFullPath($path) }
+    }
   }
   return @($directories | Select-Object -Unique)
 }

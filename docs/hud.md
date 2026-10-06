@@ -38,9 +38,9 @@ pnpm hud
 
 ## 原来残留的 GSI
 
-工具从 Steam 注册表与 `libraryfolders.vdf` 查找 CS2 安装位置，列出各个 `gamestate_integration_*.cfg` 的文件名和脱敏 endpoint。只有 `gamestate_integration_roundsense.cfg` 属于本工具：安装前备份旧内容，以 UTF-8 无 BOM 写入 1 秒心跳版本。重复安装仍保留第一次安装前的原文件。其他工具（包括 Mizar）的文件保留；若也指向 RoundSense 端口，会提示重复来源。
+工具从 Steam 注册表与 `libraryfolders.vdf` 查找 CS2 安装位置，优先使用 `appmanifest_730.acf` 的安装目录，并兼容 `Counter-Strike Global Offensive` 旧目录名，列出各个 `gamestate_integration_*.cfg` 的文件名和脱敏 endpoint。只有 `gamestate_integration_roundsense.cfg` 属于本工具：安装前备份旧内容，以 UTF-8 无 BOM 写入 1 秒心跳版本。重复安装仍保留第一次安装前的原文件。其他工具（包括 Mizar）的文件保留；若也指向 RoundSense 端口，会提示重复来源。
 
-多个安装目录或自动发现失败时，给每个命令增加 `-CfgDirectory 'D:\SteamLibrary\steamapps\common\Counter-Strike 2\game\csgo\cfg'`。恢复命令：
+也可通过 `-SteamDirectory` 指定 Steam 主目录。多个安装目录或自动发现失败时，给每个命令增加 `-CfgDirectory 'D:\SteamLibrary\steamapps\common\Counter-Strike 2\game\csgo\cfg'`。恢复命令：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/windows/gsi-config.ps1 -Action Restore

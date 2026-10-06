@@ -16,6 +16,15 @@ try {
   [IO.File]::WriteAllText($other, $otherText, $utf8)
   [IO.File]::WriteAllText($source, '"RoundSense v.0.1" { "uri" "http://127.0.0.1:3001/" "heartbeat" "1.0" "auth" { "token" "test-only-token" } }', $utf8)
   $tool = Join-Path $PSScriptRoot 'gsi-config.ps1'
+  $steam = Join-Path $root 'steam'
+  $library = Join-Path $root 'extra-library'
+  $legacyCfg = Join-Path $steam 'steamapps\common\Counter-Strike Global Offensive\game\csgo\cfg'
+  $customCfg = Join-Path $library 'steamapps\common\Custom CS2\game\csgo\cfg'
+  New-Item -ItemType Directory -Force -Path $legacyCfg, $customCfg | Out-Null
+  [IO.File]::WriteAllText((Join-Path $steam 'steamapps\libraryfolders.vdf'), ('"libraryfolders" { "1" { "path" "' + $library.Replace('\', '\\') + '" } }'), $utf8)
+  [IO.File]::WriteAllText((Join-Path $library 'steamapps\appmanifest_730.acf'), '"AppState" { "installdir" "Custom CS2" }', $utf8)
+  $discovery = & $tool -Action Status -SteamDirectory $steam 6>&1 | Out-String
+  if (-not $discovery.Contains([IO.Path]::GetFullPath($legacyCfg)) -or -not $discovery.Contains([IO.Path]::GetFullPath($customCfg))) { throw 'Steam library / legacy directory / appmanifest discovery failed.' }
   $output = & $tool -Action Status -CfgDirectory $cfg 6>&1 | Out-String
   if ($output -match 'secret-other-token') { throw 'Status exposed a token.' }
   & $tool -Action Install -CfgDirectory $cfg -Source $source
