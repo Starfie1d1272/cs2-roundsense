@@ -2,7 +2,7 @@
   "name": "cs2-roundsense",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@11.20.0",
+  "packageManager": "pnpm@12.9.1",
   "description": "RoundSense — read-only real-time decision-assist research for CS2: C4 time estimation and personal economy advisor",
   "license": "MIT",
   "type": "module",
@@ -14,10 +14,14 @@
     "validate": "pnpm --filter @roundsense/tools validate"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
-    "jszip": "^3.10.1",
-    "tsx": "^4.20.0",
-    "typescript": "^5.9.0",
-    "vitest": "^4.1.8"
+    "@types/node": "^24.19.1",
+    "jszip": "^3.10.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=24.21.0 <25",
+    "pnpm": "12.9.1"
   }
 }
