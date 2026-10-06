@@ -18,7 +18,7 @@
           "remote": {
             "urls": ["http://127.0.0.1:3100/overlay"]
           },
-          "permissions": []
+          "permissions": ["allow-set-overlay-state"]
         }
       ]
     }

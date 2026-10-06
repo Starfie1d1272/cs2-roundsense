@@ -59,7 +59,7 @@ export async function startHudService(options: HudServiceOptions) {
     response.setHeader("X-Content-Type-Options", "nosniff");
     response.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://ipc.localhost; frame-ancestors 'none'; base-uri 'none'",
     );
     const path = new URL(request.url ?? "/", `http://${expectedHost}`).pathname;
     if (request.method === "GET" && path === "/events") {

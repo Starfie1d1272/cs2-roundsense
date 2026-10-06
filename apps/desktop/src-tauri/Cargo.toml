@@ -11,5 +11,5 @@ serde = { version = "1", features = ["derive"] }
 [target.'cfg(windows)'.dependencies]
 tauri = { version = "2", features = [] }
 
-[target.'cfg(windows)'.build-dependencies]
+[build-dependencies]
 tauri-build = { version = "2", features = [] }
