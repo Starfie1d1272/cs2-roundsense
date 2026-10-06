@@ -67,8 +67,8 @@ RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从�
 
 ### 前置要求
 
-- Node.js 22
-- pnpm 11.20.0
+- Node.js 24.21.0（24 LTS 系列）
+- pnpm 12.9.1
 - CS2 与 RoundSense 运行在同一台电脑上
 
 ### 1. 安装依赖
@@ -151,6 +151,12 @@ pnpm test
 pnpm typecheck
 pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip
 ```
+
+云环境新任务开始时，在修改代码前执行 `bash scripts/cloud-start.sh`：先用
+`git pull --ff-only origin main` 同步当前任务分支，再按锁文件安装依赖。脚本使用
+环境安装阶段保留在 `/workspace/.roundsense-tools` 的工具链；发现本地改动、分支
+分叉或工具链版本不匹配时停止，不重置或覆盖已有工作。环境快照本身不会自动拉取
+Git 更新，需要在环境的启动说明中要求每个新任务执行此脚本。
 
 完整研究资产保留在 frozen research branches；mainline 保留生产代码、权威结论与可复现
 验收入口。

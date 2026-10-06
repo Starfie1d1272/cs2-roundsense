@@ -4,9 +4,9 @@
 - 背景：用户已有 cs2-demo-format 与 cs2-demo-analysis-kit，均使用 pnpm workspace + TypeScript 5 + vitest + zod。要求"能够复用时保持一致，不要为了个人偏好引入新的工具链"。
 - 决策：
   - 包管理器 pnpm（workspace `apps/*` + `packages/*`）；
-  - TypeScript 5.9 strict，`moduleResolution: Bundler`，`noEmit`，单根 tsconfig 覆盖全部包（cs2-demo-format 同款做法）；
-  - 测试 vitest 4（node 环境，`**/*.test.ts` 与源码同目录）；
-  - schema zod 3；v3 ZIP 解析直接复用 `cs2-demo-format@3.1.0`（npm 已发布），不 fork 不重写；
+  - TypeScript 7 strict，`moduleResolution: Bundler`，`noEmit`，单根 tsconfig 覆盖全部包（cs2-demo-format 同款做法）；
+  - 测试 vitest 5（node 环境，`**/*.test.ts` 与源码同目录）；
+  - schema zod 4；v3 ZIP 解析直接复用 `cs2-demo-format@3.1.0`（npm 已发布），不 fork 不重写；
   - 无 eslint/prettier（与现有两个仓库一致），静态检查 = `tsc --noEmit`；
   - CLI 运行用 tsx（两个现有仓库均用）。
 - 备选：Python 侧（cs2df 是 Python）——不选：实时 GSI 接收与状态机在 Node 端与既有 TS 分析栈对齐更顺；Python 仅用于 demo 导出（已在 cs2-demo-format 仓库内）。
