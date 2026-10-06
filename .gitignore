@@ -25,3 +25,8 @@ __pycache__/
 .codegraph/
 .claude/
 .codex/
+
+# Native build outputs and generated Tauri schemas
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+roundsense.cfg
