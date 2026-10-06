@@ -6,8 +6,8 @@ RoundSense 读取 CS2 Game State Integration（GSI），在冻结时间结合你
 败方奖励和回合上下文，帮助你判断这局该 eco、半起、强起还是全起，投入应控制在什么
 范围，以及如果输掉，下一局还能买什么。
 
-当前原型通过本地 CLI 展示结果；策略引擎与 presentation 解耦，后续可以接入更低认知
-负担的展示方式。
+支持本地 CLI，以及仅在冻结时间出现的 Windows HUD：窄条同时展示所有可选方案，
+鼠标穿透、不抢焦点。安装与旧 GSI 配置处理见 [HUD 使用说明](docs/hud.md)。
 
 ## 为什么需要 RoundSense
 
@@ -57,11 +57,11 @@ CS2 GSI
   → 当前可见状态与安全连续追踪的历史
   → Policy V3
   → 投入建议 / 未来经济 / 购买组合
-  → 当前 CLI / 未来 presentation
+  → 本地 CLI / Windows 冻结时间 HUD
 ```
 
 RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从连续 GSI payload 中安全
-追踪得到的上一回合状态。策略引擎输出结构化结果，CLI 只是当前的验证和展示界面。
+追踪得到的上一回合状态。策略引擎输出结构化结果，CLI 和 HUD 共用现有策略引擎。
 
 ## 快速开始
 

@@ -1,0 +1,691 @@
+{
+  "ct-mid": {
+    "version": 1,
+    "revision": 2,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 3200,
+        "purchases": "MP9 · 半甲 · 烟 · 火 · 闪 · 雷",
+        "spend": 3200,
+        "nextMoney": 2150,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "半起",
+        "qualifier": "可选",
+        "budgetLabel": "投入 ≤",
+        "budget": 1300,
+        "purchases": "FN57 · 半甲",
+        "spend": 1150,
+        "nextMoney": 4200,
+        "capability": "长枪甲道具",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "ECO",
+        "qualifier": "可选",
+        "budgetLabel": "投入 ≤",
+        "budget": 1300,
+        "purchases": "无需购买",
+        "spend": 0,
+        "nextMoney": 5350,
+        "capability": "长枪甲道具",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FORCE",
+        "spend": 3200,
+        "selected": false
+      },
+      {
+        "mode": "LIGHT",
+        "spend": 1150,
+        "selected": false
+      },
+      {
+        "mode": "PRESERVE",
+        "spend": 0,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 158
+    }
+  },
+  "t-rich": {
+    "version": 1,
+    "revision": 5,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "T",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 4900,
+        "purchases": "AK · 甲头 · 烟 · 火 · 闪 · 雷",
+        "spend": 4900,
+        "nextMoney": 5000,
+        "capability": "长枪甲道具",
+        "assumption": "T 未下包；无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 4550,
+        "purchases": "AK · 半甲 · 烟 · 火 · 闪 · 雷",
+        "spend": 4550,
+        "nextMoney": 5350,
+        "capability": "长枪甲道具",
+        "assumption": "T 未下包；无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FULL",
+        "spend": 4900,
+        "selected": false
+      },
+      {
+        "mode": "FORCE",
+        "spend": 4550,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 119
+    }
+  },
+  "ct-low": {
+    "version": 1,
+    "revision": 7,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 1150,
+        "purchases": "FN57 · 半甲",
+        "spend": 1150,
+        "nextMoney": 1950,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "ECO",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 0,
+        "purchases": "无需购买",
+        "spend": 0,
+        "nextMoney": 3100,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FORCE",
+        "spend": 1150,
+        "selected": false
+      },
+      {
+        "mode": "PRESERVE",
+        "spend": 0,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 119
+    }
+  },
+  "retained-rifle": {
+    "version": 1,
+    "revision": 9,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 1350,
+        "purchases": "头盔 · 火 · 闪 · 雷",
+        "spend": 1350,
+        "nextMoney": 4750,
+        "capability": "长枪甲道具",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 1350,
+        "purchases": "火 · 闪 · 雷 · 头盔",
+        "spend": 1350,
+        "nextMoney": 4750,
+        "capability": "长枪甲道具",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FULL",
+        "spend": 1350,
+        "selected": false
+      },
+      {
+        "mode": "FORCE",
+        "spend": 1350,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 119
+    }
+  },
+  "awp": {
+    "version": 1,
+    "revision": 12,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "PREFER",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "起 AWP",
+        "qualifier": "优先",
+        "budgetLabel": "花费",
+        "budget": 6700,
+        "purchases": "AWP · 半甲 · 烟 · 火 · 闪 · 雷",
+        "spend": 6700,
+        "nextMoney": 2200,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 5200,
+        "purchases": "M4A4 · 甲头 · 烟 · 火 · 闪 · 雷",
+        "spend": 5200,
+        "nextMoney": 3700,
+        "capability": "长枪甲",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 5850,
+        "purchases": "M4A4 · 半甲 · 烟 · 火 · 闪 · 雷 · 甲头",
+        "spend": 5850,
+        "nextMoney": 3050,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "AWP_PATH",
+        "spend": 6700,
+        "selected": true
+      },
+      {
+        "mode": "FULL",
+        "spend": 5200,
+        "selected": false
+      },
+      {
+        "mode": "FORCE",
+        "spend": 5850,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 160
+    }
+  },
+  "save-awp": {
+    "version": 1,
+    "revision": 14,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "SAVE_FOR_AWP",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 4200,
+        "purchases": "M4A4 · 甲头 · 烟",
+        "spend": 4200,
+        "nextMoney": 1900,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 4050,
+        "purchases": "M4A4 · 半甲 · 烟 · 闪",
+        "spend": 4050,
+        "nextMoney": 2050,
+        "capability": "长枪钱不足",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "ECO",
+        "qualifier": "可选",
+        "budgetLabel": "投入 ≤",
+        "budget": 2050,
+        "purchases": "无需购买",
+        "spend": 0,
+        "nextMoney": 6100,
+        "capability": "长枪甲道具",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FULL",
+        "spend": 4200,
+        "selected": false
+      },
+      {
+        "mode": "FORCE",
+        "spend": 4050,
+        "selected": false
+      },
+      {
+        "mode": "PRESERVE",
+        "spend": 0,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 158
+    }
+  },
+  "pistol-winner": {
+    "version": 1,
+    "revision": 20,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "T",
+    "round": 2,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 3250,
+        "purchases": "MAC-10 · 甲头 · 烟 · 火 · 闪 · 雷",
+        "spend": 3250,
+        "nextMoney": 1900,
+        "capability": "能力未评估",
+        "assumption": "T 未下包；无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FULL",
+        "spend": 3250,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 80
+    }
+  },
+  "pistol-loser": {
+    "version": 1,
+    "revision": 25,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 2,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "强起",
+        "qualifier": "优先",
+        "budgetLabel": "花费",
+        "budget": 1900,
+        "purchases": "MP9 · 半甲",
+        "spend": 1900,
+        "nextMoney": 1900,
+        "capability": "能力未评估",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "ECO",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 0,
+        "purchases": "无需购买",
+        "spend": 0,
+        "nextMoney": 3800,
+        "capability": "能力未评估",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FORCE",
+        "spend": 1900,
+        "selected": true
+      },
+      {
+        "mode": "PRESERVE",
+        "spend": 0,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 121
+    }
+  },
+  "missing-loss": {
+    "version": 1,
+    "revision": 27,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "信息不足",
+        "qualifier": "暂无建议",
+        "budgetLabel": "",
+        "budget": null,
+        "purchases": "等待完整状态",
+        "spend": null,
+        "nextMoney": null,
+        "capability": "暂不预测",
+        "assumption": "缺失信息不补造数值。"
+      }
+    ],
+    "options": [],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 65
+    }
+  },
+  "missing-inventory": {
+    "version": 1,
+    "revision": 29,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "信息不足",
+        "qualifier": "暂无建议",
+        "budgetLabel": "",
+        "budget": null,
+        "purchases": "等待完整状态",
+        "spend": null,
+        "nextMoney": null,
+        "capability": "暂不预测",
+        "assumption": "缺失信息不补造数值。"
+      }
+    ],
+    "options": [],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 65
+    }
+  },
+  "pistol": {
+    "version": 1,
+    "revision": 32,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 1,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "手枪局",
+        "qualifier": "暂无建议",
+        "budgetLabel": "",
+        "budget": null,
+        "purchases": "暂不提供购买建议",
+        "spend": null,
+        "nextMoney": null,
+        "capability": "暂不预测",
+        "assumption": "缺失信息不补造数值。"
+      }
+    ],
+    "options": [],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 65
+    }
+  },
+  "overtime": {
+    "version": 1,
+    "revision": 34,
+    "visible": true,
+    "hiddenReason": null,
+    "side": "CT",
+    "round": 25,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [
+      {
+        "title": "全起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 5200,
+        "purchases": "M4A4 · 甲头 · 烟 · 火 · 闪 · 雷",
+        "spend": 5200,
+        "nextMoney": 6700,
+        "capability": "能力未评估",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      },
+      {
+        "title": "强起",
+        "qualifier": "可选",
+        "budgetLabel": "花费",
+        "budget": 5850,
+        "purchases": "M4A4 · 半甲 · 烟 · 火 · 闪 · 雷 · 甲头",
+        "spend": 5850,
+        "nextMoney": 6050,
+        "capability": "能力未评估",
+        "assumption": "无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。"
+      }
+    ],
+    "options": [
+      {
+        "mode": "FULL",
+        "spend": 5200,
+        "selected": false
+      },
+      {
+        "mode": "FORCE",
+        "spend": 5850,
+        "selected": false
+      }
+    ],
+    "dimensions": {
+      "x": 48,
+      "y": 356,
+      "width": 248,
+      "height": 119
+    }
+  },
+  "live": {
+    "version": 1,
+    "revision": 36,
+    "visible": false,
+    "hiddenReason": "outside-freezetime",
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [],
+    "options": [],
+    "dimensions": null
+  },
+  "stale": {
+    "version": 1,
+    "revision": 38,
+    "visible": false,
+    "hiddenReason": "stale",
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [],
+    "options": [],
+    "dimensions": null
+  },
+  "spectator": {
+    "version": 1,
+    "revision": 40,
+    "visible": false,
+    "hiddenReason": "not-self",
+    "side": "CT",
+    "round": 8,
+    "settings": {
+      "awpPriority": "NEUTRAL",
+      "position": "below-radar",
+      "scale": 1,
+      "opacity": 0.84
+    },
+    "cards": [],
+    "options": [],
+    "dimensions": null
+  }
+}

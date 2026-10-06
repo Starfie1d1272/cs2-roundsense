@@ -11,7 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "recorder": "pnpm --filter @roundsense/gsi-recorder start",
-    "validate": "pnpm --filter @roundsense/tools validate"
+    "validate": "pnpm --filter @roundsense/tools validate",
+    "panel:preview": "node apps/panel-preview/serve.mjs",
+    "hud": "pnpm --filter @roundsense/roundsense hud",
+    "desktop:build": "pnpm --filter @roundsense/desktop build"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
