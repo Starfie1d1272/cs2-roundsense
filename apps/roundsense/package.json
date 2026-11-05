@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "hud": "tsx src/hud/index.ts"
   },
   "dependencies": {
     "@roundsense/c4-estimator": "workspace:*",
