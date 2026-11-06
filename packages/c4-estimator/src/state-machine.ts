@@ -1,4 +1,4 @@
-import type { C4EventType, C4State, GsiBombState } from "@roundsense/shared-types";
+import type { C4EventType, C4State, GsiBombState } from '@roundsense/shared-types';
 
 /**
  * Normalized observation extracted from a GSI payload (by replay-harness).
@@ -52,7 +52,7 @@ export interface C4MachineState {
  */
 export class C4StateMachine {
   private st: C4MachineState = {
-    state: "idle",
+    state: 'idle',
     roundNumber: null,
     hasRoundBaseline: false,
     observedExplosionSignal: false,
@@ -70,8 +70,8 @@ export class C4StateMachine {
 
   observe(obs: C4Observation): void {
     // ── 1. Round lifecycle / reset detection ────────────────────────────────
-    if (obs.mapPhase === "gameover") {
-      this.reset("map gameover", obs);
+    if (obs.mapPhase === 'gameover') {
+      this.reset('map gameover', obs);
       return;
     }
     const roundChanged =
@@ -84,7 +84,7 @@ export class C4StateMachine {
     // `over` with a new number must NOT reset nor adopt the new identity —
     // terminal processing below comes first. The new round identity is
     // adopted only by the next non-over observation (freezetime/live).
-    if (roundChanged && obs.roundPhase !== "over") {
+    if (roundChanged && obs.roundPhase !== 'over') {
       this.reset(`round ${this.st.roundNumber} -> ${obs.roundNumber}`, obs);
       this.st.roundNumber = obs.roundNumber ?? null;
       // Do NOT return here: this same observation is the first evidence of
@@ -93,7 +93,8 @@ export class C4StateMachine {
       // live/planted with no prior observation of the round stays guarded
       // and yields baseline_only (mid-round protection preserved).
     }
-    if (obs.roundNumber !== undefined && obs.roundPhase !== "over") this.st.roundNumber = obs.roundNumber;
+    if (obs.roundNumber !== undefined && obs.roundPhase !== 'over')
+      this.st.roundNumber = obs.roundNumber;
 
     // ── 2. Baseline establishment ───────────────────────────────────────────
     // A planted signal is only trusted if we have independent proof the round
@@ -110,10 +111,10 @@ export class C4StateMachine {
     ) {
       this.st.hasRoundBaseline = true;
     }
-    if (obs.roundPhase === "freezetime") {
+    if (obs.roundPhase === 'freezetime') {
       this.st.hasRoundBaseline = true;
     }
-    if (obs.bomb && obs.bomb !== "planted") {
+    if (obs.bomb && obs.bomb !== 'planted') {
       this.st.hasRoundBaseline = true;
     }
     if (obs.roundNumber !== undefined && this.st.roundNumber === obs.roundNumber) {
@@ -121,9 +122,13 @@ export class C4StateMachine {
     }
 
     // ── 3. Terminal-state no-ops ────────────────────────────────────────────
-    if (this.st.state === "defused" || this.st.state === "exploded" || this.st.state === "round_over") {
-      if (obs.roundPhase === "freezetime") {
-        this.reset("freezetime after terminal state", obs);
+    if (
+      this.st.state === 'defused' ||
+      this.st.state === 'exploded' ||
+      this.st.state === 'round_over'
+    ) {
+      if (obs.roundPhase === 'freezetime') {
+        this.reset('freezetime after terminal state', obs);
       }
       return;
     }
@@ -131,16 +136,23 @@ export class C4StateMachine {
     const bomb = obs.bomb;
 
     // ── 4. Bomb-state transitions ───────────────────────────────────────────
-    if (this.st.state === "idle") {
-      if (bomb === "planted") {
+    if (this.st.state === 'idle') {
+      if (bomb === 'planted') {
         if (this.st.hasRoundBaseline) {
           this.enterPlanted(obs);
         } else {
           // Receiver started mid-round: baseline only, no synthetic event.
-          this.st.state = "planted_unknown";
-          this.emit({ type: "baseline_only", note: "planted observed without round baseline — suppressed", ...at(obs) }, obs);
+          this.st.state = 'planted_unknown';
+          this.emit(
+            {
+              type: 'baseline_only',
+              note: 'planted observed without round baseline — suppressed',
+              ...at(obs),
+            },
+            obs,
+          );
         }
-      } else if (bomb === "exploding" || bomb === "exploded") {
+      } else if (bomb === 'exploding' || bomb === 'exploded') {
         // Explosion signal without a tracked plant: cannot reconstruct a
         // planted time; stay idle and record the observation only.
         this.st.observedExplosionSignal = true;
@@ -148,56 +160,64 @@ export class C4StateMachine {
       return;
     }
 
-    if (this.st.state === "planted" || this.st.state === "planted_unknown") {
-      if (bomb === "planted") return; // dedupe
-      if (bomb === "defused") {
-        this.st.state = "defused";
-        this.emit(
-          { type: "defused", detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs, ...at(obs) },
-          obs,
-        );
-        return;
-      }
-      if (bomb === "exploding" || bomb === "exploded") {
-        this.st.observedExplosionSignal = true;
-        if (bomb === "exploded") {
-          this.st.state = "exploded";
-          this.emit(
-            { type: "exploded", detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs, ...at(obs) },
-            obs,
-          );
-          return;
-        }
-        return; // "exploding" = imminent, keep waiting for round end
-      }
-      if (obs.roundPhase === "over") {
-        this.st.state = "round_over";
+    if (this.st.state === 'planted' || this.st.state === 'planted_unknown') {
+      if (bomb === 'planted') return; // dedupe
+      if (bomb === 'defused') {
+        this.st.state = 'defused';
         this.emit(
           {
-            type: "round_over",
+            type: 'defused',
             detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs,
-            note: this.st.observedExplosionSignal
-              ? "round ended; explosion signal observed earlier"
-              : "round ended without observed explosion/defuse — no explosion fabricated",
             ...at(obs),
           },
           obs,
         );
         return;
       }
-      if (obs.roundPhase === "freezetime") {
-        this.reset("freezetime during planted state", obs);
+      if (bomb === 'exploding' || bomb === 'exploded') {
+        this.st.observedExplosionSignal = true;
+        if (bomb === 'exploded') {
+          this.st.state = 'exploded';
+          this.emit(
+            {
+              type: 'exploded',
+              detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs,
+              ...at(obs),
+            },
+            obs,
+          );
+          return;
+        }
+        return; // "exploding" = imminent, keep waiting for round end
+      }
+      if (obs.roundPhase === 'over') {
+        this.st.state = 'round_over';
+        this.emit(
+          {
+            type: 'round_over',
+            detectedPlantedAtMonotonicNs: this.st.detectedPlantedAtMonotonicNs,
+            note: this.st.observedExplosionSignal
+              ? 'round ended; explosion signal observed earlier'
+              : 'round ended without observed explosion/defuse — no explosion fabricated',
+            ...at(obs),
+          },
+          obs,
+        );
+        return;
+      }
+      if (obs.roundPhase === 'freezetime') {
+        this.reset('freezetime during planted state', obs);
       }
     }
   }
 
   private enterPlanted(obs: C4Observation): void {
-    this.st.state = "planted";
+    this.st.state = 'planted';
     this.st.detectedPlantedAtMonotonicNs = obs.receivedAtMonotonicNs;
     this.st.detectedPlantedAtWallClock = obs.receivedAtWallClock;
     this.emit(
       {
-        type: "planted",
+        type: 'planted',
         detectedPlantedAtMonotonicNs: obs.receivedAtMonotonicNs,
         ...at(obs),
       },
@@ -206,20 +226,20 @@ export class C4StateMachine {
   }
 
   private reset(reason: string, obs: C4Observation): void {
-    const wasActive = this.st.state !== "idle";
+    const wasActive = this.st.state !== 'idle';
     this.st = {
-      state: "idle",
+      state: 'idle',
       roundNumber: obs.roundNumber ?? this.st.roundNumber,
       hasRoundBaseline: false,
       observedExplosionSignal: false,
       observationsInRound: 0,
     };
     if (wasActive) {
-      this.emit({ type: "reset", note: reason, ...at(obs) }, obs);
+      this.emit({ type: 'reset', note: reason, ...at(obs) }, obs);
     }
   }
 
-  private emit(e: Omit<C4Event, "roundNumber">, obs: C4Observation): void {
+  private emit(e: Omit<C4Event, 'roundNumber'>, obs: C4Observation): void {
     const event: C4Event = {
       ...e,
       // The tracked round identity wins over obs.roundNumber: on an `over`
@@ -234,6 +254,6 @@ export class C4StateMachine {
   }
 }
 
-function at(obs: C4Observation): Pick<C4Event, "atMonotonicNs" | "atWallClock"> {
+function at(obs: C4Observation): Pick<C4Event, 'atMonotonicNs' | 'atWallClock'> {
   return { atMonotonicNs: obs.receivedAtMonotonicNs, atWallClock: obs.receivedAtWallClock };
 }

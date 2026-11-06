@@ -11,12 +11,16 @@
  * - missing facts remain explicit UNKNOWN in PolicyStateTracker;
  * - OT start money is never inferred; live money comes straight from GSI.
  */
-import { recommendPolicyV3, type PolicyV3Output, type UserPreference } from "@roundsense/economy-advisor";
-import type { GsiPayload } from "@roundsense/gsi-protocol";
-import { inventoryFrom } from "./inventory.js";
-import { PolicyStateTracker } from "./policy-state.js";
+import {
+  recommendPolicyV3,
+  type PolicyV3Output,
+  type UserPreference,
+} from '@roundsense/economy-advisor';
+import type { GsiPayload } from '@roundsense/gsi-protocol';
+import { inventoryFrom } from './inventory.js';
+import { PolicyStateTracker } from './policy-state.js';
 
-export { inventoryFrom } from "./inventory.js";
+export { inventoryFrom } from './inventory.js';
 
 export interface EngineOptions {
   preference?: UserPreference;
@@ -25,7 +29,7 @@ export interface EngineOptions {
 }
 
 export interface AdviceTick {
-  side: "CT" | "T";
+  side: 'CT' | 'T';
   roundNumber: number;
   money: number;
   policy: PolicyV3Output;
@@ -43,9 +47,9 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   // C1: advice only during freezetime — the only verified buy window in
   // normal-player GSI (no buytime countdown contract observed yet). live /
   // planted / over / undefined phases get no purchase advice.
-  if (payload.round?.phase !== "freezetime") return null;
+  if (payload.round?.phase !== 'freezetime') return null;
   // C2: only explicit CT/T teams (observed as "CT"/"T" strings).
-  if (!player?.team || (player.team !== "CT" && player.team !== "T")) return null;
+  if (!player?.team || (player.team !== 'CT' && player.team !== 'T')) return null;
   if (state?.money === undefined) return null;
   // map.round must be present — no silent round-1 guess.
   if (map?.round === undefined) return null;

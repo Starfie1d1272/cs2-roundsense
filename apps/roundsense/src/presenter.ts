@@ -1,4 +1,4 @@
-import { unknownTiming, type C4Event } from "@roundsense/c4-estimator";
+import { unknownTiming, type C4Event } from '@roundsense/c4-estimator';
 
 /**
  * C4 presentation layer: turns state-machine events into console lines and
@@ -27,18 +27,23 @@ export class C4Presenter {
   constructor(private readonly opts: C4PresenterOptions) {}
 
   handleEvent(e: C4Event): void {
-    if (e.type === "planted" && e.detectedPlantedAtMonotonicNs !== undefined) {
+    if (e.type === 'planted' && e.detectedPlantedAtMonotonicNs !== undefined) {
       this.stopTimer(); // clear any previous timer
       const detectedAtNs = e.detectedPlantedAtMonotonicNs;
       this.render(detectedAtNs);
       const schedule = this.opts.schedule ?? ((fn: () => void, ms: number) => setInterval(fn, ms));
       this.timer = schedule(() => this.tick(detectedAtNs), 500);
-    } else if (e.type === "baseline_only") {
+    } else if (e.type === 'baseline_only') {
       this.stopTimer(); // defensive: never keep a timer while joined mid-round
-      this.opts.onOutput("C4 PLANTED — remaining time unknown (joined mid-round)");
-    } else if (e.type === "defused" || e.type === "exploded" || e.type === "round_over" || e.type === "reset") {
+      this.opts.onOutput('C4 PLANTED — remaining time unknown (joined mid-round)');
+    } else if (
+      e.type === 'defused' ||
+      e.type === 'exploded' ||
+      e.type === 'round_over' ||
+      e.type === 'reset'
+    ) {
       this.stopTimer();
-      if (e.type === "defused" || e.type === "exploded") {
+      if (e.type === 'defused' || e.type === 'exploded') {
         this.opts.onOutput(`C4 ${e.type.toUpperCase()}`);
       }
     }
@@ -63,7 +68,9 @@ export class C4Presenter {
 
   private render(detectedAtNs: bigint): void {
     const out = unknownTiming(detectedAtNs, this.nowNs());
-    this.opts.onOutput(`C4 PLANTED — ${((out.elapsedSinceDetectionMs ?? 0) / 1000).toFixed(1)}s since detection; remaining time unknown`);
+    this.opts.onOutput(
+      `C4 PLANTED — ${((out.elapsedSinceDetectionMs ?? 0) / 1000).toFixed(1)}s since detection; remaining time unknown`,
+    );
   }
 
   private tick(detectedAtNs: bigint): void {
