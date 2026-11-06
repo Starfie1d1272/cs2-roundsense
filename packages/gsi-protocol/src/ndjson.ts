@@ -1,5 +1,5 @@
-import { createWriteStream, type WriteStream } from "node:fs";
-import type { GsiPayload } from "./payload.js";
+import { createWriteStream, type WriteStream } from 'node:fs';
+import type { GsiPayload } from './payload.js';
 
 /**
  * NDJSON record envelope — one line per received payload.
@@ -41,11 +41,11 @@ export class NdjsonWriter {
     readonly gsiParams: { bufferMs?: number; throttleMs?: number; tokenConfigured: boolean },
     private readonly emitError?: (err: Error) => void,
   ) {
-    this.stream = createWriteStream(path, { flags: "a" });
-    this.stream.on("error", (err) => this.emitError?.(err));
+    this.stream = createWriteStream(path, { flags: 'a' });
+    this.stream.on('error', (err) => this.emitError?.(err));
   }
 
-  write(record: Omit<RecordEnvelope, "seq" | "gsi">): number {
+  write(record: Omit<RecordEnvelope, 'seq' | 'gsi'>): number {
     if (this.closed) throw new Error(`NDJSON writer closed: ${this.path}`);
     const seq = this.seq++;
     const envelope: RecordEnvelope = {
@@ -53,7 +53,7 @@ export class NdjsonWriter {
       seq,
       gsi: { ...this.gsiParams },
     };
-    this.stream.write(JSON.stringify(envelope) + "\n");
+    this.stream.write(JSON.stringify(envelope) + '\n');
     return seq;
   }
 

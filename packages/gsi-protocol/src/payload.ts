@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Zod schema for the GSI payload subset RoundSense relies on.
@@ -131,5 +131,5 @@ export type GsiPlayerState = z.infer<typeof playerStateSchema>;
 
 /** True iff the payload carries a planted bomb signal (round.bomb === "planted"). */
 export function isBombPlanted(payload: GsiPayload): boolean {
-  return payload.round?.bomb === "planted";
+  return payload.round?.bomb === 'planted';
 }

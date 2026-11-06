@@ -1,31 +1,38 @@
-import type { ItemId, NextRoundGoal, Side } from "@roundsense/shared-types";
-import { DEFAULT_RULES, grenadeCarryCap, isItemLegalForSide, type EconomyRules, price, weaponClassOf } from "./rules.js";
-import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from "./projection.js";
-import { classifyPurchase } from "./round-type.js";
-import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from "./types.js";
+import type { ItemId, NextRoundGoal, Side } from '@roundsense/shared-types';
+import {
+  DEFAULT_RULES,
+  grenadeCarryCap,
+  isItemLegalForSide,
+  type EconomyRules,
+  price,
+  weaponClassOf,
+} from './rules.js';
+import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from './projection.js';
+import { classifyPurchase } from './round-type.js';
+import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from './types.js';
 
 export function rifleFor(side: Side): ItemId {
-  return side === "T" ? "ak47" : "m4a4";
+  return side === 'T' ? 'ak47' : 'm4a4';
 }
 
 export function smgFor(side: Side): ItemId {
-  return side === "T" ? "mac10" : "mp9";
+  return side === 'T' ? 'mac10' : 'mp9';
 }
 
 /** Same rifle family definition as goal semantics (not re-invented here). */
-const GRENADES = ["smoke", "flash", "he", "molotov", "incendiary", "decoy"] as const;
-export const PAID_PISTOLS = ["p250", "dual", "tec9", "cz75", "fiveseven", "deagle", "r8"] as const;
+const GRENADES = ['smoke', 'flash', 'he', 'molotov', 'incendiary', 'decoy'] as const;
+export const PAID_PISTOLS = ['p250', 'dual', 'tec9', 'cz75', 'fiveseven', 'deagle', 'r8'] as const;
 
 function isRifle(item: ItemId): boolean {
-  return weaponClassOf(item) === "rifle";
+  return weaponClassOf(item) === 'rifle';
 }
 
 function isSmg(item: ItemId): boolean {
-  return weaponClassOf(item) === "smg";
+  return weaponClassOf(item) === 'smg';
 }
 
 function isSniper(item: ItemId): boolean {
-  return weaponClassOf(item) === "sniper";
+  return weaponClassOf(item) === 'sniper';
 }
 
 function isPaidPistol(item: ItemId): boolean {
@@ -41,9 +48,9 @@ function isGrenade(item: ItemId): boolean {
  * anti-downgrade rule, not a global weapon-value ranking. */
 function retainedPrimarySatisfies(item: ItemId, primary: ItemId | null | undefined): boolean {
   if (!primary) return false;
-  if (isSmg(item)) return isSmg(primary) || isRifle(primary) || primary === "awp";
-  if (isRifle(item)) return isRifle(primary) || primary === "awp";
-  return item === "awp" && primary === "awp";
+  if (isSmg(item)) return isSmg(primary) || isRifle(primary) || primary === 'awp';
+  if (isRifle(item)) return isRifle(primary) || primary === 'awp';
+  return item === 'awp' && primary === 'awp';
 }
 
 /** Post-purchase loadout = current inventory + planned purchases. */
@@ -60,7 +67,10 @@ export interface PostLoadout {
  * Resulting loadout after applying the purchases to the current inventory.
  * Goal fulfillment is judged on THIS, never on the purchase list alone.
  */
-export function resultingLoadout(inventory: InventoryState, purchases: PurchaseItem[]): PostLoadout {
+export function resultingLoadout(
+  inventory: InventoryState,
+  purchases: PurchaseItem[],
+): PostLoadout {
   const loadout: PostLoadout = {
     primary: inventory.primary ?? null,
     secondary: inventory.secondary,
@@ -72,10 +82,10 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
   for (const p of purchases) {
     if (isRifle(p.item) || isSmg(p.item) || isSniper(p.item)) loadout.primary = p.item;
     else if (isPaidPistol(p.item)) loadout.secondary = p.item;
-    else if (p.item === "kevlar" || p.item === "kevlar_helmet") {
+    else if (p.item === 'kevlar' || p.item === 'kevlar_helmet') {
       loadout.armor = 100;
-      if (p.item === "kevlar_helmet") loadout.hasHelmet = true;
-    } else if (p.item === "defuse_kit") {
+      if (p.item === 'kevlar_helmet') loadout.hasHelmet = true;
+    } else if (p.item === 'defuse_kit') {
       loadout.hasDefuseKit = true;
     } else if (isGrenade(p.item)) {
       for (let i = 0; i < p.quantity; i++) loadout.grenades.push(p.item);
@@ -91,23 +101,23 @@ export function resultingLoadout(inventory: InventoryState, purchases: PurchaseI
  */
 export function fulfillsLoadoutGoal(goal: NextRoundGoal, loadout: PostLoadout): boolean {
   switch (goal) {
-    case "awp":
+    case 'awp':
       // cost definition is AWP + kevlar → armor is part of the goal
-      return loadout.primary === "awp" && loadout.armor > 0;
-    case "rifle_armor":
+      return loadout.primary === 'awp' && loadout.armor > 0;
+    case 'rifle_armor':
       return loadout.primary !== null && isRifle(loadout.primary) && loadout.armor > 0;
-    case "rifle_util": {
+    case 'rifle_util': {
       // cost definition is rifle + armor + smoke + flash
       if (loadout.primary === null || !isRifle(loadout.primary) || loadout.armor <= 0) return false;
       let smoke = 0;
       let flash = 0;
       for (const g of loadout.grenades) {
-        if (g === "smoke") smoke++;
-        else if (g === "flash") flash++;
+        if (g === 'smoke') smoke++;
+        else if (g === 'flash') flash++;
       }
       return smoke >= 1 && flash >= 1;
     }
-    case "max_combat_now":
+    case 'max_combat_now':
       return false;
   }
 }
@@ -117,9 +127,13 @@ export function fulfillsLoadoutGoal(goal: NextRoundGoal, loadout: PostLoadout): 
  * price(helmet) - price(vest) = $350 (Windows build 14174: armor=100,
  * helmet=false → vesthelm → money delta −350). Damaged/no armor pays the
  * full $1000 — the observed $350 case must NOT be extended to any armor. */
-function armorIncrementalUnit(rules: EconomyRules, inventory: InventoryState, item: ItemId): number {
-  if (item === "kevlar_helmet" && inventory.armor === 100 && !inventory.hasHelmet) {
-    return price(rules, "kevlar_helmet") - price(rules, "kevlar");
+function armorIncrementalUnit(
+  rules: EconomyRules,
+  inventory: InventoryState,
+  item: ItemId,
+): number {
+  if (item === 'kevlar_helmet' && inventory.armor === 100 && !inventory.hasHelmet) {
+    return price(rules, 'kevlar_helmet') - price(rules, 'kevlar');
   }
   return price(rules, item);
 }
@@ -148,14 +162,26 @@ export interface PurchasePlan {
  * - kevlar/kevlar_helmet: armor/helmet state with incremental upgrade cost
  * - grenades: multiset subtraction (quantity matters, no set dedupe)
  */
-export function planPurchases(inventory: InventoryState, targetItems: PurchaseItem[], rules: EconomyRules, side: Side): PurchasePlan {
+export function planPurchases(
+  inventory: InventoryState,
+  targetItems: PurchaseItem[],
+  rules: EconomyRules,
+  side: Side,
+): PurchasePlan {
   const rejectedItems: ItemId[] = [];
   const grenadeCounts = new Map<ItemId, number>();
   const targetGrenadeCounts = new Map<ItemId, number>();
-  for (const grenade of inventory.grenades) grenadeCounts.set(grenade, (grenadeCounts.get(grenade) ?? 0) + 1);
-  const inventoryGrenadesValid = inventory.grenades.length <= 4 && [...grenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  for (const grenade of inventory.grenades)
+    grenadeCounts.set(grenade, (grenadeCounts.get(grenade) ?? 0) + 1);
+  const inventoryGrenadesValid =
+    inventory.grenades.length <= 4 &&
+    [...grenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
   for (const target of targetItems) {
-    if (target.quantity <= 0 || !Number.isInteger(target.quantity) || !isItemLegalForSide(target.item, side)) {
+    if (
+      target.quantity <= 0 ||
+      !Number.isInteger(target.quantity) ||
+      !isItemLegalForSide(target.item, side)
+    ) {
       rejectedItems.push(target.item);
       continue;
     }
@@ -166,9 +192,18 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
       if (requested > cap) rejectedItems.push(target.item);
     }
   }
-  const requestedGrenades = targetItems.reduce((sum, target) => sum + (grenadeCarryCap(target.item) === undefined ? 0 : target.quantity), 0);
+  const requestedGrenades = targetItems.reduce(
+    (sum, target) => sum + (grenadeCarryCap(target.item) === undefined ? 0 : target.quantity),
+    0,
+  );
   if (!inventoryGrenadesValid || requestedGrenades > 4 || rejectedItems.length > 0) {
-    return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [...new Set(rejectedItems)] };
+    return {
+      purchases: [],
+      totalCost: 0,
+      targetCost: 0,
+      isComplete: false,
+      rejectedItems: [...new Set(rejectedItems)],
+    };
   }
   const purchases = new Map<ItemId, number>();
   let targetCost = 0;
@@ -186,24 +221,27 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     } else if (isSmg(item)) {
       if (!retainedPrimarySatisfies(item, inventory.primary)) add(item);
       targetCost += price(rules, item);
-    } else if (item === "awp") {
-      if (inventory.primary !== "awp") add("awp");
-      targetCost += price(rules, "awp");
+    } else if (item === 'awp') {
+      if (inventory.primary !== 'awp') add('awp');
+      targetCost += price(rules, 'awp');
     } else if (isSniper(item)) {
-      const hasSniper = inventory.primary !== null && inventory.primary !== undefined && isSniper(inventory.primary);
+      const hasSniper =
+        inventory.primary !== null &&
+        inventory.primary !== undefined &&
+        isSniper(inventory.primary);
       if (!hasSniper) add(item);
       targetCost += price(rules, item);
     } else if (isPaidPistol(item)) {
-      if (!isPaidPistol(inventory.secondary ?? "zeus")) add(item);
+      if (!isPaidPistol(inventory.secondary ?? 'zeus')) add(item);
       targetCost += price(rules, item);
-    } else if (item === "kevlar") {
+    } else if (item === 'kevlar') {
       // "具有护甲" — not a forced 100-armor refill; any armor satisfies it
-      if (!hasArmor) add("kevlar");
-      targetCost += price(rules, "kevlar");
-    } else if (item === "kevlar_helmet") {
-      if (!(inventory.armor > 0 && inventory.hasHelmet)) add("kevlar_helmet");
-      targetCost += price(rules, "kevlar_helmet");
-    } else if (item === "defuse_kit") {
+      if (!hasArmor) add('kevlar');
+      targetCost += price(rules, 'kevlar');
+    } else if (item === 'kevlar_helmet') {
+      if (!(inventory.armor > 0 && inventory.hasHelmet)) add('kevlar_helmet');
+      targetCost += price(rules, 'kevlar_helmet');
+    } else if (item === 'defuse_kit') {
       if (!inventory.hasDefuseKit) add(item);
       targetCost += price(rules, item);
     } else if (isGrenade(item)) {
@@ -224,11 +262,20 @@ export function planPurchases(inventory: InventoryState, targetItems: PurchaseIt
     totalCost += armorIncrementalUnit(rules, inventory, item) * qty;
   }
 
-  const resulting = resultingLoadout(inventory, [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })));
+  const resulting = resultingLoadout(
+    inventory,
+    [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
+  );
   const resultingGrenadeCounts = new Map<ItemId, number>();
-  for (const grenade of resulting.grenades) resultingGrenadeCounts.set(grenade, (resultingGrenadeCounts.get(grenade) ?? 0) + 1);
-  const resultingValid = resulting.grenades.length <= 4 && [...resultingGrenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
-  if (!resultingValid) return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [] };
+  for (const grenade of resulting.grenades)
+    resultingGrenadeCounts.set(grenade, (resultingGrenadeCounts.get(grenade) ?? 0) + 1);
+  const resultingValid =
+    resulting.grenades.length <= 4 &&
+    [...resultingGrenadeCounts].every(
+      ([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0),
+    );
+  if (!resultingValid)
+    return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [] };
   return {
     purchases: [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
     totalCost,
@@ -246,32 +293,52 @@ interface BundleTemplate {
 
 const BUNDLES: Record<NextRoundGoal, BundleTemplate[]> = {
   rifle_armor: [
-    { id: "rifle-helmet", label: "长枪 + 全甲", items: ["ak47", "kevlar_helmet"] },
-    { id: "rifle-kevlar", label: "长枪 + 半甲", items: ["ak47", "kevlar"] },
-    { id: "rifle-helmet-util", label: "长枪 + 全甲 + 基础道具", items: ["ak47", "kevlar_helmet", "smoke", "flash"] },
-    { id: "force-deagle", label: "强起（沙鹰 + 甲 + 闪）", items: ["deagle", "kevlar", "flash"] },
-    { id: "half-smg", label: "半起（冲锋枪 + 甲）", items: ["mac10", "kevlar"] },
-    { id: "save", label: "全保存（只买手枪/不买）", items: [] },
+    { id: 'rifle-helmet', label: '长枪 + 全甲', items: ['ak47', 'kevlar_helmet'] },
+    { id: 'rifle-kevlar', label: '长枪 + 半甲', items: ['ak47', 'kevlar'] },
+    {
+      id: 'rifle-helmet-util',
+      label: '长枪 + 全甲 + 基础道具',
+      items: ['ak47', 'kevlar_helmet', 'smoke', 'flash'],
+    },
+    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
+    { id: 'half-smg', label: '半起（冲锋枪 + 甲）', items: ['mac10', 'kevlar'] },
+    { id: 'save', label: '全保存（只买手枪/不买）', items: [] },
   ],
   awp: [
-    { id: "awp-helmet", label: "AWP + 全甲（目标提前达成）", items: ["awp", "kevlar_helmet"] },
-    { id: "awp-kevlar", label: "AWP + 半甲", items: ["awp", "kevlar"] },
-    { id: "force-deagle", label: "强起（沙鹰 + 甲 + 闪）", items: ["deagle", "kevlar", "flash"] },
-    { id: "rifle-bridge", label: "过渡步枪 + 甲（推迟 AWP）", items: ["ak47", "kevlar"] },
-    { id: "save", label: "节省（保证下回合 AWP）", items: [] },
+    { id: 'awp-helmet', label: 'AWP + 全甲（目标提前达成）', items: ['awp', 'kevlar_helmet'] },
+    { id: 'awp-kevlar', label: 'AWP + 半甲', items: ['awp', 'kevlar'] },
+    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
+    { id: 'rifle-bridge', label: '过渡步枪 + 甲（推迟 AWP）', items: ['ak47', 'kevlar'] },
+    { id: 'save', label: '节省（保证下回合 AWP）', items: [] },
   ],
   rifle_util: [
-    { id: "rifle-util-basic", label: "长枪 + 甲 + 烟 + 闪", items: ["ak47", "kevlar", "smoke", "flash"] },
-    { id: "rifle-util-full", label: "长枪 + 全甲 + 烟闪雷", items: ["ak47", "kevlar_helmet", "smoke", "flash", "he"] },
-    { id: "rifle-kevlar", label: "长枪 + 甲（无道具）", items: ["ak47", "kevlar"] },
-    { id: "force-deagle", label: "强起（沙鹰 + 甲 + 闪）", items: ["deagle", "kevlar", "flash"] },
-    { id: "save", label: "全保存", items: [] },
+    {
+      id: 'rifle-util-basic',
+      label: '长枪 + 甲 + 烟 + 闪',
+      items: ['ak47', 'kevlar', 'smoke', 'flash'],
+    },
+    {
+      id: 'rifle-util-full',
+      label: '长枪 + 全甲 + 烟闪雷',
+      items: ['ak47', 'kevlar_helmet', 'smoke', 'flash', 'he'],
+    },
+    { id: 'rifle-kevlar', label: '长枪 + 甲（无道具）', items: ['ak47', 'kevlar'] },
+    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
+    { id: 'save', label: '全保存', items: [] },
   ],
   max_combat_now: [
-    { id: "max-full", label: "满配长枪 + 全道具", items: ["ak47", "kevlar_helmet", "smoke", "flash", "he"] },
-    { id: "max-util", label: "长枪 + 甲 + 烟 + 闪", items: ["ak47", "kevlar", "smoke", "flash"] },
-    { id: "force-deagle", label: "强起（沙鹰 + 甲 + 闪 + 烟）", items: ["deagle", "kevlar", "flash", "smoke"] },
-    { id: "save", label: "全保存", items: [] },
+    {
+      id: 'max-full',
+      label: '满配长枪 + 全道具',
+      items: ['ak47', 'kevlar_helmet', 'smoke', 'flash', 'he'],
+    },
+    { id: 'max-util', label: '长枪 + 甲 + 烟 + 闪', items: ['ak47', 'kevlar', 'smoke', 'flash'] },
+    {
+      id: 'force-deagle',
+      label: '强起（沙鹰 + 甲 + 闪 + 烟）',
+      items: ['deagle', 'kevlar', 'flash', 'smoke'],
+    },
+    { id: 'save', label: '全保存', items: [] },
   ],
 };
 
@@ -279,7 +346,7 @@ const BUNDLES: Record<NextRoundGoal, BundleTemplate[]> = {
 function resolveItems(rules: EconomyRules, side: Side, items: ItemId[]): PurchaseItem[] {
   const count = new Map<ItemId, number>();
   for (const item of items) {
-    const resolved = item === "ak47" ? rifleFor(side) : item === "mac10" ? smgFor(side) : item;
+    const resolved = item === 'ak47' ? rifleFor(side) : item === 'mac10' ? smgFor(side) : item;
     count.set(resolved, (count.get(resolved) ?? 0) + 1);
   }
   return [...count.entries()].map(([item, quantity]) => ({ item, quantity }));
@@ -311,12 +378,16 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       rules,
     };
     const projections = projectNextRoundMoney(projectionInput);
-    const roundType = classifyPurchase(rules, purchases.map((p) => p.item), totalCost);
+    const roundType = classifyPurchase(
+      rules,
+      purchases.map((p) => p.item),
+      totalCost,
+    );
     const goal = input.nextRoundGoal;
 
     let breaksGoal = false;
     let breaksGoalReason: string | undefined;
-    if (goal !== "max_combat_now" && totalCost > 0) {
+    if (goal !== 'max_combat_now' && totalCost > 0) {
       const target = goalTargetCost(rules, goal, input.side);
       // goal fulfillment is judged on the POST-PURCHASE loadout (existing
       // inventory counts), never on the purchase list alone
@@ -327,9 +398,10 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       }
     }
 
-    const goalTarget = input.nextRoundGoal === "max_combat_now"
-      ? null
-      : goalTargetCost(rules, input.nextRoundGoal, input.side);
+    const goalTarget =
+      input.nextRoundGoal === 'max_combat_now'
+        ? null
+        : goalTargetCost(rules, input.nextRoundGoal, input.side);
     const basis = [
       `${template.label} 目标价值 $${targetCost}（本次需买 $${totalCost}，当前 $${input.money}）`,
       `本次购买类型: ${roundType}`,
@@ -340,16 +412,16 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
           : `不破坏目标（失败分支下回合 $${projections.loss} ≥ 目标成本）`,
     ];
     const assumptions = [
-      "投影按 0 额外击杀；每步枪击杀 +$300、每 AWP 击杀 +$100（规则文件）",
-      "未计下包/拆包个人 +$300 奖励、未计短员/惩罚",
-      "当前已持有装备按 inventory 快照参与本次购买差额计算",
-      "数值规则（回合奖励/连败奖金/价格）已通过语料整数账本验证（rules.status=verified, statusScope=numeric-rules）；lossStreak 实时来源（GSI consecutive_round_losses）Windows build 14174 runtime-observed（index 1→$1900、index 2→$2400，win transitions 3→1/1→0 已观测）；index 0/3/4 未在受控 runtime 直接验证 payout；win transition 未决不影响本投影",
+      '投影按 0 额外击杀；每步枪击杀 +$300、每 AWP 击杀 +$100（规则文件）',
+      '未计下包/拆包个人 +$300 奖励、未计短员/惩罚',
+      '当前已持有装备按 inventory 快照参与本次购买差额计算',
+      '数值规则（回合奖励/连败奖金/价格）已通过语料整数账本验证（rules.status=verified, statusScope=numeric-rules）；lossStreak 实时来源（GSI consecutive_round_losses）Windows build 14174 runtime-observed（index 1→$1900、index 2→$2400，win transitions 3→1/1→0 已观测）；index 0/3/4 未在受控 runtime 直接验证 payout；win transition 未决不影响本投影',
     ];
 
     return {
       id: template.id,
       label: template.label,
-      character: "recommended", // reassigned below
+      character: 'recommended', // reassigned below
       purchases,
       totalCost,
       targetCost,
@@ -376,25 +448,27 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
   // - other goals → most combat-valuable affordable bundle (max targetCost),
   //   falling back to the cheapest (usually save) when nothing is affordable.
   let recommended: Scheme | null;
-  const awpAffordable = affordableSchemes.some((s) => s.id.startsWith("awp-"));
-  if (input.nextRoundGoal === "awp" && !awpAffordable) {
-    recommended = affordableSchemes.find((s) => s.id === "save") ?? nonSave[0] ?? null;
+  const awpAffordable = affordableSchemes.some((s) => s.id.startsWith('awp-'));
+  if (input.nextRoundGoal === 'awp' && !awpAffordable) {
+    recommended = affordableSchemes.find((s) => s.id === 'save') ?? nonSave[0] ?? null;
   } else {
     recommended =
       nonSave.length > 0
         ? [...nonSave].sort((a, b) => b.targetCost - a.targetCost)[0]!
-        : affordableSchemes[0] ?? null;
+        : (affordableSchemes[0] ?? null);
   }
 
   const rest = affordableSchemes.filter((s) => s !== recommended);
   const aggressive = [...rest].sort((a, b) => b.targetCost - a.targetCost)[0] ?? null;
   const conservative = [...rest].sort((a, b) => a.targetCost - b.targetCost)[0] ?? null;
 
-  if (recommended) recommended.character = "recommended";
-  if (aggressive) aggressive.character = "aggressive";
-  if (conservative) conservative.character = "conservative";
+  if (recommended) recommended.character = 'recommended';
+  if (aggressive) aggressive.character = 'aggressive';
+  if (conservative) conservative.character = 'conservative';
 
-  const alternatives = [aggressive, conservative].filter((s): s is Scheme => s !== null && s !== recommended);
+  const alternatives = [aggressive, conservative].filter(
+    (s): s is Scheme => s !== null && s !== recommended,
+  );
   // de-duplicate (aggressive may equal conservative when only one alternative)
   const seen = new Set<string>();
   const uniqueAlternatives: Scheme[] = [];
@@ -413,7 +487,12 @@ export function recommend(input: AdvisorInput, rules: EconomyRules = DEFAULT_RUL
       ruleSetId: rules.ruleSetId,
       status: rules.status,
       verifiedAt: rules.verifiedAt,
-      sources: rules.sources.map((s) => ({ name: s.name, url: s.url, revision: s.revision, accessed: s.accessed })),
+      sources: rules.sources.map((s) => ({
+        name: s.name,
+        url: s.url,
+        revision: s.revision,
+        accessed: s.accessed,
+      })),
     },
   };
 }

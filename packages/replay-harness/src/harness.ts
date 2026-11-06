@@ -1,7 +1,7 @@
-import { readFile } from "node:fs/promises";
-import { C4StateMachine, type C4Event, type C4MachineState } from "@roundsense/c4-estimator";
-import type { RecordEnvelope } from "@roundsense/gsi-protocol";
-import { normalizeRecord } from "./normalize.js";
+import { readFile } from 'node:fs/promises';
+import { C4StateMachine, type C4Event, type C4MachineState } from '@roundsense/c4-estimator';
+import type { RecordEnvelope } from '@roundsense/gsi-protocol';
+import { normalizeRecord } from './normalize.js';
 
 export interface HarnessResult {
   events: C4Event[];
@@ -36,9 +36,9 @@ export function parseNdjsonLine(line: string): RecordEnvelope | null {
 }
 
 export async function replayNdjsonFile(path: string): Promise<HarnessResult> {
-  const text = await readFile(path, "utf8");
+  const text = await readFile(path, 'utf8');
   const records: RecordEnvelope[] = [];
-  for (const line of text.split("\n")) {
+  for (const line of text.split('\n')) {
     const record = parseNdjsonLine(line);
     if (record) records.push(record);
   }

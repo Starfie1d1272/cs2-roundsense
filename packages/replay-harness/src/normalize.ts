@@ -1,6 +1,6 @@
-import type { GsiBombState } from "@roundsense/shared-types";
-import type { C4Observation } from "@roundsense/c4-estimator";
-import type { RecordEnvelope } from "@roundsense/gsi-protocol";
+import type { GsiBombState } from '@roundsense/shared-types';
+import type { C4Observation } from '@roundsense/c4-estimator';
+import type { RecordEnvelope } from '@roundsense/gsi-protocol';
 
 /**
  * Normalize one recorded NDJSON envelope into the observation shape consumed

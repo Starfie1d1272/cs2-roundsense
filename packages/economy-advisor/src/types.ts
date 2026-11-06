@@ -1,9 +1,9 @@
-import type { ItemId, NextRoundGoal, RoundType, Side, WeaponClass } from "@roundsense/shared-types";
+import type { ItemId, NextRoundGoal, RoundType, Side, WeaponClass } from '@roundsense/shared-types';
 
 /** Kill attribution input — GSI cannot report kill weapons live (assumption A10);
  * weaponId is optional (available from demo path only). */
 export interface KillAttribution {
-  weaponClass: WeaponClass | "unknown";
+  weaponClass: WeaponClass | 'unknown';
   weaponId?: string;
   count: number;
 }
@@ -54,7 +54,7 @@ export interface ProjectionBranches {
 export interface Scheme {
   id: string;
   label: string;
-  character: "recommended" | "aggressive" | "conservative";
+  character: 'recommended' | 'aggressive' | 'conservative';
   /** what must ACTUALLY be bought from the current inventory */
   purchases: PurchaseItem[];
   /** incremental spend (actual money needed now) */

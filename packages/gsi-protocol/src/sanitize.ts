@@ -1,4 +1,4 @@
-import type { GsiPayload } from "./payload.js";
+import type { GsiPayload } from './payload.js';
 
 /**
  * Sanitize a raw GSI payload for local NDJSON recording.

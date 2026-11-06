@@ -1,7 +1,7 @@
-import { createServer, type Server } from "node:http";
-import { captureTimestamps } from "./clock.js";
-import { gsiPayloadSchema, type GsiPayload } from "./payload.js";
-import { tokenMatches } from "./token.js";
+import { createServer, type Server } from 'node:http';
+import { captureTimestamps } from './clock.js';
+import { gsiPayloadSchema, type GsiPayload } from './payload.js';
+import { tokenMatches } from './token.js';
 
 /** One accepted GSI payload with dual-clock receive times. */
 export interface GsiReceipt {
@@ -51,12 +51,12 @@ export function createGsiReceiver(options: GsiReceiverOptions): GsiReceiverHandl
   const max = options.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
 
   const server = createServer((req, res) => {
-    if (req.method === "GET" && req.url === "/health") {
-      res.writeHead(200, { "content-type": "application/json" });
+    if (req.method === 'GET' && req.url === '/health') {
+      res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true, accepted: acceptedCount, rejected: rejectedCount }));
       return;
     }
-    if (req.method !== "POST") {
+    if (req.method !== 'POST') {
       rejectedCount++;
       options.onReject?.(405, `method ${req.method}`);
       res.writeHead(405).end();
@@ -66,37 +66,40 @@ export function createGsiReceiver(options: GsiReceiverOptions): GsiReceiverHandl
     const chunks: Buffer[] = [];
     let size = 0;
     let aborted = false;
-    req.on("data", (chunk: Buffer) => {
+    req.on('data', (chunk: Buffer) => {
       if (aborted) return;
       size += chunk.length;
       if (size > max) {
         aborted = true;
         rejectedCount++;
-        options.onReject?.(413, "body too large");
+        options.onReject?.(413, 'body too large');
         res.writeHead(413).end();
         req.destroy();
         return;
       }
       chunks.push(chunk);
     });
-    req.on("end", () => {
+    req.on('end', () => {
       if (aborted) return; // oversized body was already rejected
 
       let raw: unknown;
       try {
-        raw = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        raw = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       } catch {
         rejectedCount++;
-        options.onReject?.(400, "invalid JSON");
+        options.onReject?.(400, 'invalid JSON');
         res.writeHead(400).end();
         return;
       }
 
       // token check — against payload auth.token, never the raw body
       const authToken = (raw as { auth?: { token?: unknown } })?.auth?.token;
-      if (options.token && (typeof authToken !== "string" || !tokenMatches(authToken, options.token))) {
+      if (
+        options.token &&
+        (typeof authToken !== 'string' || !tokenMatches(authToken, options.token))
+      ) {
         rejectedCount++;
-        options.onReject?.(401, "token mismatch");
+        options.onReject?.(401, 'token mismatch');
         res.writeHead(401).end();
         return;
       }
@@ -104,7 +107,7 @@ export function createGsiReceiver(options: GsiReceiverOptions): GsiReceiverHandl
       const parsed = gsiPayloadSchema.safeParse(raw);
       if (!parsed.success) {
         rejectedCount++;
-        options.onReject?.(400, "schema violation");
+        options.onReject?.(400, 'schema violation');
         res.writeHead(400).end();
         return;
       }

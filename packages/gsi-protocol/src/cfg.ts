@@ -34,18 +34,18 @@ export interface GsiCfgOptions {
  * `allgrenades`, `player_position`) are intentionally NOT requested.
  */
 export const NORMAL_PLAYER_COMPONENTS = [
-  "provider",
-  "map",
-  "map_round_wins",
-  "round",
-  "player_id",
-  "player_state",
-  "player_weapons",
-  "player_match_stats",
+  'provider',
+  'map',
+  'map_round_wins',
+  'round',
+  'player_id',
+  'player_state',
+  'player_weapons',
+  'player_match_stats',
 ] as const;
 
 export const DEFAULT_GSI_CFG: Required<
-  Pick<GsiCfgOptions, "buffer" | "throttle" | "timeout" | "heartbeat">
+  Pick<GsiCfgOptions, 'buffer' | 'throttle' | 'timeout' | 'heartbeat'>
 > = {
   buffer: 0.1,
   throttle: 1.0,
@@ -65,30 +65,30 @@ export function renderGsiCfg(options: GsiCfgOptions): string {
   const timeout = options.timeout ?? DEFAULT_GSI_CFG.timeout;
   const heartbeat = options.heartbeat ?? DEFAULT_GSI_CFG.heartbeat;
 
-  const lines: string[] = ['"RoundSense v.0.1"', "{"];
-  lines.push(LINE("uri", options.uri));
-  lines.push(LINE("timeout", timeout.toFixed(1)));
-  lines.push(LINE("buffer", buffer.toFixed(1)));
-  lines.push(LINE("throttle", throttle.toFixed(1)));
-  lines.push(LINE("heartbeat", heartbeat.toFixed(1)));
+  const lines: string[] = ['"RoundSense v.0.1"', '{'];
+  lines.push(LINE('uri', options.uri));
+  lines.push(LINE('timeout', timeout.toFixed(1)));
+  lines.push(LINE('buffer', buffer.toFixed(1)));
+  lines.push(LINE('throttle', throttle.toFixed(1)));
+  lines.push(LINE('heartbeat', heartbeat.toFixed(1)));
   if (options.token) {
-    lines.push("  \"auth\"", "  {", LINE("token", options.token), "  }");
+    lines.push('  "auth"', '  {', LINE('token', options.token), '  }');
   }
-  lines.push("  \"output\"", "  {");
-  lines.push(LINE("precision_time", (options.precisionTime ?? 3).toString()));
-  lines.push(LINE("precision_position", (options.precisionPosition ?? 1).toString()));
-  lines.push(LINE("precision_vector", (options.precisionVector ?? 3).toString()));
-  lines.push("  }");
-  lines.push("  \"data\"", "  {");
+  lines.push('  "output"', '  {');
+  lines.push(LINE('precision_time', (options.precisionTime ?? 3).toString()));
+  lines.push(LINE('precision_position', (options.precisionPosition ?? 1).toString()));
+  lines.push(LINE('precision_vector', (options.precisionVector ?? 3).toString()));
+  lines.push('  }');
+  lines.push('  "data"', '  {');
   for (const component of NORMAL_PLAYER_COMPONENTS) {
     lines.push(`    "${component}"            "1"`);
   }
-  lines.push("  }");
-  lines.push("}");
-  return lines.join("\n") + "\n";
+  lines.push('  }');
+  lines.push('}');
+  return lines.join('\n') + '\n';
 }
 
 /** File name to place in the game's `csgo/cfg` directory (A8/A9). */
 export function gsiCfgFileName(): string {
-  return "gamestate_integration_roundsense.cfg";
+  return 'gamestate_integration_roundsense.cfg';
 }

@@ -1,6 +1,6 @@
-import type { C4Observation } from "@roundsense/c4-estimator";
-import type { GsiBombState } from "@roundsense/shared-types";
-import type { GsiReceipt } from "@roundsense/gsi-protocol";
+import type { C4Observation } from '@roundsense/c4-estimator';
+import type { GsiBombState } from '@roundsense/shared-types';
+import type { GsiReceipt } from '@roundsense/gsi-protocol';
 
 /**
  * Live GSI receipt → C4Observation. Pure mapping of exactly the fields the

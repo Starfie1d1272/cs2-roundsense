@@ -1,7 +1,7 @@
-import type { Side } from "@roundsense/shared-types";
-import type { EconomyRules } from "./rules.js";
-import { killReward, lossBonus, price } from "./rules.js";
-import type { KillAttribution, ProjectionBranches } from "./types.js";
+import type { Side } from '@roundsense/shared-types';
+import type { EconomyRules } from './rules.js';
+import { killReward, lossBonus, price } from './rules.js';
+import type { KillAttribution, ProjectionBranches } from './types.js';
 
 /**
  * Pure next-round money projection (C1-C3, C5, C8-C10).
@@ -38,15 +38,18 @@ export interface ProjectionInput {
 export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranches {
   const { rules } = input;
   const teamAward =
-    input.side === "CT" ? rules.roundRewards.ctTeamKillReward * (input.ctTeamKillsOnTs ?? 0) : 0;
+    input.side === 'CT' ? rules.roundRewards.ctTeamKillReward * (input.ctTeamKillsOnTs ?? 0) : 0;
   const base = (reward: number) =>
-    Math.min(rules.maxMoney, Math.max(0, input.money - input.spendNow + reward + teamAward + killRewardsTotal(input)));
+    Math.min(
+      rules.maxMoney,
+      Math.max(0, input.money - input.spendNow + reward + teamAward + killRewardsTotal(input)),
+    );
   const lossReward = lossBonus(rules, input.lossStreak);
   const loss = base(lossReward);
   // hypothetical T loss-with-plant branch — always available to T, whether or
   // not a plant is actually in progress (freezetime advice has no bomb yet)
   const lossWithPlant =
-    input.side === "T" ? base(lossReward + rules.roundRewards.plantBonusT) : loss;
+    input.side === 'T' ? base(lossReward + rules.roundRewards.plantBonusT) : loss;
   return {
     win: base(rules.roundRewards.winByElimination),
     winBomb: base(rules.roundRewards.winByBombDetonation),
@@ -55,10 +58,13 @@ export function projectNextRoundMoney(input: ProjectionInput): ProjectionBranche
   };
 }
 
-export function killRewardsTotal(input: Pick<ProjectionInput, "kills" | "rules">): number {
+export function killRewardsTotal(input: Pick<ProjectionInput, 'kills' | 'rules'>): number {
   return input.kills.reduce((sum, k) => {
     try {
-      return sum + killReward(input.rules, { weaponId: k.weaponId, fallbackClass: k.weaponClass }) * k.count;
+      return (
+        sum +
+        killReward(input.rules, { weaponId: k.weaponId, fallbackClass: k.weaponClass }) * k.count
+      );
     } catch {
       // GSI path: weapon class is unknown (assumption A10) — reward unknown,
       // do NOT guess; project 0 (conservative)
@@ -68,14 +74,18 @@ export function killRewardsTotal(input: Pick<ProjectionInput, "kills" | "rules">
 }
 
 /** Cost of a goal for the NEXT round (used by breaksGoal). Side-aware rifle price. */
-export function goalTargetCost(rules: EconomyRules, goal: "awp" | "rifle_armor" | "rifle_util", side: Side): number {
-  const rifle = side === "T" ? price(rules, "ak47") : price(rules, "m4a4");
+export function goalTargetCost(
+  rules: EconomyRules,
+  goal: 'awp' | 'rifle_armor' | 'rifle_util',
+  side: Side,
+): number {
+  const rifle = side === 'T' ? price(rules, 'ak47') : price(rules, 'm4a4');
   switch (goal) {
-    case "awp":
-      return price(rules, "awp") + price(rules, "kevlar");
-    case "rifle_armor":
-      return rifle + price(rules, "kevlar_helmet");
-    case "rifle_util":
-      return rifle + price(rules, "kevlar") + price(rules, "smoke") + price(rules, "flash");
+    case 'awp':
+      return price(rules, 'awp') + price(rules, 'kevlar');
+    case 'rifle_armor':
+      return rifle + price(rules, 'kevlar_helmet');
+    case 'rifle_util':
+      return rifle + price(rules, 'kevlar') + price(rules, 'smoke') + price(rules, 'flash');
   }
 }

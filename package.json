@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@12.9.1",
-  "description": "RoundSense — read-only real-time decision-assist research for CS2: C4 time estimation and personal economy advisor",
+  "description": "RoundSense \u2014 read-only real-time decision-assist research for CS2: C4 time estimation and personal economy advisor",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -11,11 +11,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "recorder": "pnpm --filter @roundsense/gsi-recorder start",
-    "validate": "pnpm --filter @roundsense/tools validate"
+    "validate": "pnpm --filter @roundsense/tools validate",
+    "format": "prettier --write \"{apps,packages,scripts,tools}/**/*.{ts,tsx,js,mjs,cjs}\" --ignore-unknown",
+    "format:check": "prettier --check \"{apps,packages,scripts,tools}/**/*.{ts,tsx,js,mjs,cjs}\" --ignore-unknown",
+    "lint": "biome lint apps packages scripts tools --diagnostic-level=error"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.6.5",
     "@types/node": "^24.19.1",
     "jszip": "^3.10.2",
+    "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
