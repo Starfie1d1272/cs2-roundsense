@@ -7,6 +7,6 @@
   "types": "src/index.ts",
   "license": "MIT",
   "dependencies": {
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   }
 }
