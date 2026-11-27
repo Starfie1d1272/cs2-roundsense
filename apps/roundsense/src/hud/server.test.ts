@@ -207,8 +207,32 @@ describe('HUD real HTTP pipeline', () => {
       expect(restored.restore.mode).toBe('REMOVED');
       expect(restored.status.cfgStatus).toBe('NEEDS_INSTALL');
       expect(restored.status.canRestore).toBe(false);
+      // Explicit invalid installPath must return 404 instead of falling back to existing Steam install
+      const badPathRes = await fetch(base + '/gsi/install', {
+        method: 'POST',
+        headers: { Origin: base, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ installPath: join(root, 'DoesNotExist') }),
+      });
+      expect(badPathRes.status).toBe(404);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+
+  it('serves CS2 SVG icons safely and rejects path traversal', async () => {
+    const s = await startHudService({ token: 'tok-assets' });
+    services.push(s);
+    const base = `http://127.0.0.1:${s.webPort}`;
+
+    const okRes = await fetch(base + '/assets/cs2/ak47.svg');
+    expect(okRes.status).toBe(200);
+    expect(okRes.headers.get('content-type')).toContain('image/svg+xml');
+    expect(await okRes.text()).toContain('<svg');
+
+    const missingRes = await fetch(base + '/assets/cs2/nonexistent.svg');
+    expect(missingRes.status).toBe(404);
+
+    const traversalRes = await fetch(base + '/assets/cs2/../../package.json');
+    expect(traversalRes.status).toBe(404);
   });
 });

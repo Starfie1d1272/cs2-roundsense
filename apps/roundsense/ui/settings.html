@@ -3,98 +3,199 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>RoundSense · HUD 设置</title>
+    <title>RoundSense · 设置与预览</title>
     <link rel="stylesheet" href="/hud.css" />
   </head>
   <body class="settings-page">
-    <h1>RoundSense · 冻结时间 HUD</h1>
-    <p>所有可选方案一起展示。回合开始后自动隐藏，设置在局外完成。</p>
-    <section>
-      <h2>当前连接与输出</h2>
-      <div id="connection-status" class="status">等待本地服务…</div>
-      <div class="hud-preview">
-        <article id="hud" class="hud" hidden></article>
-        <span id="empty-preview" class="status">暂无购买建议</span>
-      </div>
-      <p id="assumption" class="help-note"></p>
-      <ul id="options" class="option-list"></ul>
-      <a href="/overlay" target="_blank" rel="noopener" id="live-hud-link"
-        >打开浏览器 HUD 视图 ↗</a
-      >
-      <p class="help-note">
-        浏览器视图用于调试；局内屏幕覆盖需要 Windows 桌面程序。桌面程序仅在 CS2
-        前台时显示，不抢焦点，鼠标穿透。
-      </p>
-    </section>
-    <section>
-      <h2>展示偏好</h2>
-      <form id="settings-form">
-        <div class="settings-form">
-          <label
-            >AWP 偏好<select name="awpPriority">
-              <option value="NEUTRAL">中性</option>
-              <option value="PREFER">优先 AWP</option>
-              <option value="SAVE_FOR_AWP">为 AWP 留钱</option>
-            </select></label
-          ><label
-            >位置<select name="position">
-              <option value="below-radar">雷达下方</option>
-              <option value="lower-left">左下方</option>
-              <option value="lower-right">右下方</option>
-            </select></label
-          ><label
-            >缩放 <output id="scale-label">100%</output
-            ><input
-              name="scale"
-              type="range"
-              min="0.8"
-              max="1.5"
-              step="0.05"
-              value="1" /></label
-          ><label
-            >背景不透明度 <output id="opacity-label">84%</output
-            ><input
-              name="opacity"
-              type="range"
-              min="0.45"
-              max="0.95"
-              step="0.01"
-              value="0.84"
-          /></label>
+    <div class="rs-workbench">
+      <main class="rs-stage-col">
+        <header class="rs-topbar">
+          <div class="rs-brand">
+            <span class="rs-brand-mark" aria-hidden="true"></span>
+            <h1>RoundSense</h1>
+            <span class="rs-brand-sub">CS2 冻结时间经济决策助手</span>
+          </div>
+          <div class="rs-topbar-meta">
+            <span id="preview-source-badge" class="rs-source-badge">离线示例预览</span>
+            <a href="/overlay" target="_blank" rel="noopener" class="rs-link-subtle">独立叠层视图</a>
+          </div>
+        </header>
+
+        <div class="rs-stage-toolbar" role="toolbar" aria-label="预览场景与地图光线">
+          <div class="rs-toolbar-group" id="scenario-tabs">
+            <button type="button" class="rs-chip is-active" data-scenario="ct-mid">CT 半起 · $3,450</button>
+            <button type="button" class="rs-chip" data-scenario="retained-rifle">保留长枪升头</button>
+            <button type="button" class="rs-chip" data-scenario="t-rich">T 富裕 · $8,000</button>
+            <button type="button" class="rs-chip" data-scenario="ct-low">CT 低经济</button>
+            <button type="button" class="rs-chip" data-scenario="pistol">手枪局</button>
+            <button type="button" class="rs-chip" data-scenario="live" id="scenario-live-btn" hidden>实时对局</button>
+          </div>
+          <div class="rs-toolbar-group">
+            <div class="rs-toolbar-group" id="aspect-tabs">
+              <button type="button" class="rs-chip is-active" data-aspect="4-3">4:3</button>
+              <button type="button" class="rs-chip" data-aspect="16-10">16:10</button>
+              <button type="button" class="rs-chip" data-aspect="16-9">16:9</button>
+            </div>
+            <div class="rs-toolbar-group" id="backdrop-tabs">
+              <button type="button" class="rs-chip is-active" data-backdrop="bright">亮图 Dust2</button>
+              <button type="button" class="rs-chip" data-backdrop="dark">暗图 Ancient</button>
+            </div>
+          </div>
         </div>
-        <div class="form-footer">
-          <button type="submit">保存设置</button
-          ><span id="save-result" role="status"></span>
-        </div>
-      </form>
-      <p class="help-note">
-        显示全部可选方案，不替你选定某一项；只有引擎明确给出唯一优先方案时才标注“优先”。
-      </p>
-    </section>
-    <section>
-      <h2>GSI 配置与旧配置</h2>
-      <details>
-        <summary>查看连接方式及残留配置处理</summary>
-        <p>
-          在 CS2 电脑上运行
-          <code>pnpm hud --cfg --cfg-out roundsense.cfg &gt; $null</code
-          >，再运行配置工具安装。HUD 使用 1 秒心跳；旧配置的 60
-          秒心跳不适用于及时失效检测。
-        </p>
-        <pre>
-powershell -ExecutionPolicy Bypass -File scripts/windows/gsi-config.ps1 -Action Status
-powershell -ExecutionPolicy Bypass -File scripts/windows/gsi-config.ps1 -Action Install -Source roundsense.cfg</pre>
-        <p>
-          只更新 RoundSense
-          的文件，先备份再写入。其他工具的配置仅列出，不删除。文件检查不会打印
-          token。
-        </p>
-      </details>
-    </section>
-    <footer>
-      本地、只读、普通玩家 GSI · 不读取对手精确现金 · 不提供未校准倒计时
-    </footer>
-    <script src="/hud-client.js"></script>
+
+        <section class="rs-stage-wrap" aria-label="局内 HUD 实景预览">
+          <div id="cs2-stage" class="rs-cs2-stage map-bright">
+            <div class="rs-cs2-top" aria-hidden="true">
+              <div class="rs-cs2-strip">
+                <span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span>
+              </div>
+              <div class="rs-cs2-clock">
+                <span class="rs-cs2-time">0:12</span>
+                <span class="rs-cs2-scores"><b class="ct">4</b><b class="t">3</b></span>
+              </div>
+              <div class="rs-cs2-strip">
+                <span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span>
+              </div>
+            </div>
+
+            <div class="rs-cs2-radar" aria-hidden="true">
+              <div class="rs-cs2-radar-cap">
+                <span id="stage-map-label">DE_DUST2</span>
+                <span>FREEZETIME</span>
+              </div>
+            </div>
+
+            <div id="hud-anchor" class="rs-hud-anchor pos-below-radar">
+              <article id="hud-preview" class="rs-hud" aria-live="polite"></article>
+            </div>
+
+            <div class="rs-cs2-bl" aria-hidden="true">
+              <span class="rs-cs2-hp">100</span>
+              <span id="stage-cash" class="rs-cs2-cash">$3,450</span>
+            </div>
+
+            <div class="rs-cs2-br" aria-hidden="true">
+              <img id="stage-weapon-img" src="/assets/cs2/m4a1s.svg" alt="" />
+              <span class="rs-cs2-ammo">20 / 80</span>
+            </div>
+          </div>
+        </section>
+
+        <footer class="rs-stage-footer">
+          <span>本地只读普通玩家 GSI · 仅竞技冻结时间显现 · 不读取对手精确现金 · 不提供未校准倒计时</span>
+          <span id="save-status" class="rs-save-status" role="status" aria-live="polite">自动保存已开启</span>
+        </footer>
+      </main>
+
+      <aside class="rs-rail" aria-label="配置与偏好">
+        <section class="rs-rail-sec">
+          <div class="rs-sec-head">
+            <h2>游戏集成与连接</h2>
+          </div>
+          <div class="rs-status-panel">
+            <div class="rs-status-row">
+              <span class="rs-status-key"><i id="gsi-dot" class="rs-dot idle"></i>GSI 配置</span>
+              <strong id="gsi-state-label" class="rs-status-val">检测中…</strong>
+            </div>
+            <div class="rs-status-row">
+              <span class="rs-status-key"><i id="live-dot" class="rs-dot idle"></i>CS2 对局</span>
+              <span id="live-state-label" class="rs-status-val muted">连接本地服务…</span>
+            </div>
+            <p id="gsi-summary" class="rs-status-note">正在检查 CS2 安装目录与配置文件…</p>
+            <p id="gsi-other-files" class="rs-status-note" hidden></p>
+
+            <div id="gsi-manual-box" class="rs-manual-box" hidden>
+              <label for="manual-install-path">CS2 安装根目录</label>
+              <div class="rs-manual-row">
+                <input
+                  id="manual-install-path"
+                  type="text"
+                  placeholder="例如 C:\Program Files (x86)\Steam\steamapps\common\Counter-Strike Global Offensive"
+                  autocomplete="off"
+                />
+                <button type="button" id="gsi-manual-apply" class="rs-btn rs-btn-primary">验证并安装</button>
+              </div>
+              <p id="gsi-manual-error" class="rs-error-text" hidden></p>
+            </div>
+
+            <div class="rs-action-stack">
+              <button type="button" id="gsi-primary-btn" class="rs-btn rs-btn-primary" hidden>一键安装 GSI 配置</button>
+              <div class="rs-action-row">
+                <button type="button" id="gsi-redetect-btn" class="rs-btn rs-btn-ghost">重新检测</button>
+                <button type="button" id="gsi-manual-toggle" class="rs-btn rs-btn-ghost">指定目录</button>
+                <button type="button" id="gsi-restore-btn" class="rs-btn rs-btn-ghost" hidden>恢复备份</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rs-rail-sec">
+          <div class="rs-sec-head">
+            <h2>局内 HUD 呈现</h2>
+          </div>
+
+          <div class="rs-ctrl">
+            <div class="rs-ctrl-head">
+              <span>显示位置</span>
+            </div>
+            <fieldset class="rs-seg" aria-label="HUD 显示位置" id="pos-seg">
+              <button type="button" data-position="below-radar" aria-pressed="true">雷达下方</button>
+              <button type="button" data-position="lower-left" aria-pressed="false">左下角</button>
+              <button type="button" data-position="lower-right" aria-pressed="false">右下角</button>
+            </fieldset>
+          </div>
+
+          <div class="rs-ctrl">
+            <div class="rs-ctrl-head">
+              <label for="scale-range">缩放比例</label>
+              <output id="scale-output" for="scale-range">100%</output>
+            </div>
+            <input id="scale-range" type="range" min="0.8" max="1.5" step="0.05" value="1" />
+          </div>
+
+          <div class="rs-ctrl">
+            <div class="rs-ctrl-head">
+              <label for="opacity-range">背景不透明度</label>
+              <output id="opacity-output" for="opacity-range">84%</output>
+            </div>
+            <input id="opacity-range" type="range" min="0.45" max="0.95" step="0.01" value="0.84" />
+          </div>
+        </section>
+
+        <section class="rs-rail-sec">
+          <div class="rs-sec-head">
+            <h2>经济策略偏好</h2>
+          </div>
+
+          <div class="rs-ctrl">
+            <div class="rs-ctrl-head">
+              <span>AWP 偏好</span>
+            </div>
+            <fieldset class="rs-seg" aria-label="AWP 经济偏好" id="awp-seg">
+              <button type="button" data-awp="NEUTRAL" aria-pressed="true">中性</button>
+              <button type="button" data-awp="PREFER" aria-pressed="false">优先 AWP</button>
+              <button type="button" data-awp="SAVE_FOR_AWP" aria-pressed="false">为 AWP 留钱</button>
+            </fieldset>
+            <p class="rs-ctrl-hint">仅影响策略权重，仍平等展示全部合法方案；仅引擎给出唯一默认项时标明优先。</p>
+          </div>
+        </section>
+
+        <footer class="rs-rail-foot">
+          <details class="rs-diag">
+            <summary>高级诊断</summary>
+            <dl class="rs-diag-list" id="diag-list">
+              <div><dt>CS2 目录</dt><dd id="diag-install">—</dd></div>
+              <div><dt>配置文件</dt><dd id="diag-cfg">—</dd></div>
+              <div><dt>定位来源</dt><dd id="diag-source">—</dd></div>
+              <div><dt>实时状态</dt><dd id="diag-live">—</dd></div>
+            </dl>
+          </details>
+          <button type="button" id="reset-defaults-btn" class="rs-link-btn">恢复默认设置</button>
+        </footer>
+      </aside>
+    </div>
+
+    <script src="/hud-renderer.js"></script>
     <script src="/settings.js"></script>
   </body>
 </html>

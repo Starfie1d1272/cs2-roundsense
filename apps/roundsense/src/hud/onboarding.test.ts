@@ -100,6 +100,34 @@ describe('CS2 Steam discovery', () => {
     });
     expect(found.status).toBe('NOT_FOUND');
   });
+
+  it('does not silently fall back to another Steam install when strictPreferredPath is true', async () => {
+    const root = await makeTempDir();
+    const steamMain = join(root, 'Steam');
+    const steamCs2 = join(steamMain, 'steamapps', 'common', 'Counter-Strike Global Offensive');
+    await createFakeCs2Install(steamCs2);
+    const invalidExplicit = join(root, 'WrongFolder');
+    await mkdir(invalidExplicit, { recursive: true });
+
+    const strictResult = await discoverCs2({
+      preferredInstallPath: invalidExplicit,
+      strictPreferredPath: true,
+      extraSteamRoots: [steamMain],
+      env: {},
+      registry: async () => undefined,
+    });
+    expect(strictResult.status).toBe('NOT_FOUND');
+    expect(strictResult.checked).toEqual([invalidExplicit]);
+
+    const autoResult = await discoverCs2({
+      preferredInstallPath: invalidExplicit,
+      strictPreferredPath: false,
+      extraSteamRoots: [steamMain],
+      env: {},
+      registry: async () => undefined,
+    });
+    expect(autoResult.status).toBe('FOUND');
+  });
 });
 
 describe('GSI config inspection, install, backup, and restore', () => {

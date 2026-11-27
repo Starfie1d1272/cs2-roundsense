@@ -53,6 +53,8 @@ export interface DiscoverCs2Options {
   platform?: NodeJS.Platform;
   env?: NodeJS.ProcessEnv;
   preferredInstallPath?: string;
+  /** When true, an invalid preferredInstallPath returns NOT_FOUND instead of falling back to auto-discovery. */
+  strictPreferredPath?: boolean;
   extraSteamRoots?: readonly string[];
   registry?: RegistryReader;
 }
@@ -221,6 +223,9 @@ export async function discoverCs2(options: DiscoverCs2Options = {}): Promise<Cs2
     checked.push(preferred);
     const found = await validateInstall(preferred, 'PREFERRED');
     if (found) return { status: 'FOUND', install: found, checked, warnings };
+    if (options.strictPreferredPath) {
+      return { status: 'NOT_FOUND', checked, warnings };
+    }
   }
 
   const appRegistryKeys = [

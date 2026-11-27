@@ -19,8 +19,18 @@ const ASSETS: Record<string, [string, string]> = {
   '/': ['settings.html', 'text/html; charset=utf-8'],
   '/overlay': ['overlay.html', 'text/html; charset=utf-8'],
   '/hud.css': ['hud.css', 'text/css; charset=utf-8'],
+  '/hud-renderer.js': ['hud-renderer.js', 'text/javascript; charset=utf-8'],
   '/hud-client.js': ['hud-client.js', 'text/javascript; charset=utf-8'],
   '/settings.js': ['settings.js', 'text/javascript; charset=utf-8'],
+};
+
+const CS2_ICON_RE = /^\/assets\/cs2\/([a-z0-9_]+\.svg)$/;
+const PREVIEW_ASSET_RE = /^\/assets\/preview\/([a-z0-9_-]+)\.(webp|png|jpg|jpeg)$/;
+const IMAGE_MIME: Record<string, string> = {
+  webp: 'image/webp',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
 };
 
 export interface GsiOnboardingStatus {
@@ -126,6 +136,7 @@ export async function startHudService(options: HudServiceOptions) {
     const discovery = await discoverCs2({
       ...options.onboarding?.discoverOptions,
       preferredInstallPath: overrideInstallPath ?? preferredInstallPath,
+      strictPreferredPath: overrideInstallPath !== undefined,
     });
     if (discovery.status === 'NOT_FOUND') {
       return {
@@ -324,19 +335,56 @@ export async function startHudService(options: HudServiceOptions) {
       }
       return;
     }
-    const asset = ASSETS[path];
-    if ((request.method === 'GET' || request.method === 'HEAD') && asset) {
-      try {
-        const contents = await readFile(
-          fileURLToPath(new URL(`../../ui/${asset[0]}`, import.meta.url)),
-        );
-        response
-          .writeHead(200, { 'content-type': asset[1] })
-          .end(request.method === 'HEAD' ? undefined : contents);
-      } catch {
-        response.writeHead(500).end();
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const asset = ASSETS[path];
+      if (asset) {
+        try {
+          const contents = await readFile(
+            fileURLToPath(new URL(`../../ui/${asset[0]}`, import.meta.url)),
+          );
+          response
+            .writeHead(200, { 'content-type': asset[1] })
+            .end(request.method === 'HEAD' ? undefined : contents);
+        } catch {
+          response.writeHead(500).end();
+        }
+        return;
       }
-      return;
+      const iconMatch = CS2_ICON_RE.exec(path);
+      if (iconMatch) {
+        try {
+          const contents = await readFile(
+            fileURLToPath(new URL(`../../ui/assets/cs2/${iconMatch[1]}`, import.meta.url)),
+          );
+          response
+            .writeHead(200, {
+              'content-type': 'image/svg+xml; charset=utf-8',
+              'cache-control': 'public, max-age=3600',
+            })
+            .end(request.method === 'HEAD' ? undefined : contents);
+        } catch {
+          response.writeHead(404).end();
+        }
+        return;
+      }
+      const previewMatch = PREVIEW_ASSET_RE.exec(path);
+      if (previewMatch) {
+        try {
+          const fileName = `${previewMatch[1]}.${previewMatch[2]}`;
+          const contents = await readFile(
+            fileURLToPath(new URL(`../../ui/assets/preview/${fileName}`, import.meta.url)),
+          );
+          response
+            .writeHead(200, {
+              'content-type': IMAGE_MIME[previewMatch[2]] ?? 'application/octet-stream',
+              'cache-control': 'public, max-age=3600',
+            })
+            .end(request.method === 'HEAD' ? undefined : contents);
+        } catch {
+          response.writeHead(404).end();
+        }
+        return;
+      }
     }
     response.writeHead(404).end();
   });
