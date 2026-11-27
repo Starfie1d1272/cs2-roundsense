@@ -359,12 +359,13 @@
       spendEl.className = 'rs-opt-spend';
       spendEl.textContent = hasBound ? '≤ ' + formatMoney(opt.maxSpendNow) : formatMoney(opt.spend);
 
-      const isSaveAwpReady =
-        snapshot.settings?.awpPriority === 'SAVE_FOR_AWP' &&
+      const awpPriority = snapshot.settings?.awpPriority ?? 'NEUTRAL';
+      const isAwpNextReady =
+        awpPriority !== 'NEUTRAL' &&
         opt.lossNextMoney !== null &&
         opt.lossNextMoney !== undefined &&
         opt.lossNextMoney >= 5400;
-      const cap = isSaveAwpReady
+      const cap = isAwpNextReady
         ? { text: '下局有狙', cls: 'cap-full' }
         : (CAPABILITY_META[opt.futureCapability] ?? CAPABILITY_META.NOT_EVALUATED);
       const nextEl = document.createElement('div');
