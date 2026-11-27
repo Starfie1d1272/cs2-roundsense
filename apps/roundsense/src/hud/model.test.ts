@@ -56,46 +56,114 @@ function lifecycle(runtime: HudRuntime, skip = false) {
 }
 
 describe('live HUD semantics', () => {
-  it('shows every option with real spending and loss projections', () => {
+  it('exposes structured options with id, money, purchases, spending bounds, and future capability', () => {
     const runtime = new HudRuntime();
     runtime.observe(receipt());
     const out = runtime.snapshot(0n);
+    expect(out.version).toBe(2);
     expect(out.visible).toBe(true);
-    expect(out.cards.map((c) => c.title)).toEqual(['强起', '半起', 'ECO']);
-    expect(out.cards.find((c) => c.title === '半起')).toMatchObject({
-      budgetLabel: '投入 ≤',
-      budget: 1300,
+    expect(out.money).toBe(3450);
+    expect(out.lossIndex).toBe(1);
+    expect(out.roundContext).toBe('NORMAL');
+    expect(out.policyStatus).toBe('READY');
+    expect(out.defaultOptionId).toBeNull();
+    expect(out.options.map((o) => o.mode)).toEqual(['FORCE', 'LIGHT', 'PRESERVE']);
+
+    const light = out.options.find((o) => o.mode === 'LIGHT')!;
+    expect(light.id).toBeTruthy();
+    expect(light).toMatchObject({
+      mode: 'LIGHT',
+      isDefault: false,
+      maxSpendNow: 1300,
       spend: 1150,
-      nextMoney: 4200,
-      capability: '长枪甲道具',
-      qualifier: '可选',
+      lossNextMoney: 4200,
+      futureCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
     });
-    expect(out.cards.find((c) => c.title === 'ECO')).toMatchObject({
+    expect(light.purchases.length).toBeGreaterThan(0);
+    expect(light.purchases[0]).toMatchObject({
+      item: expect.any(String),
+      quantity: expect.any(Number),
+      helmetUpgradeOnly: false,
+    });
+
+    const preserve = out.options.find((o) => o.mode === 'PRESERVE')!;
+    expect(preserve).toMatchObject({
       spend: 0,
-      nextMoney: 5350,
-      purchases: '无需购买',
+      lossNextMoney: 5350,
+      purchases: [],
     });
-    expect(out.cards).toHaveLength(out.options.length);
   });
+
+  it('marks helmetUpgradeOnly when already holding 100 kevlar without helmet', () => {
+    const runtime = new HudRuntime();
+    runtime.observe(
+      receipt(
+        payload({
+          player: {
+            ...payload().player,
+            team: 'T',
+            state: { money: 4500, armor: 100, helmet: false, defusekit: false },
+            weapons: {},
+          },
+        }),
+      ),
+    );
+    const out = runtime.snapshot(0n);
+    const full = out.options.find((o) => o.mode === 'FULL')!;
+    const helmetPurchase = full.purchases.find((p) => p.item === 'kevlar_helmet');
+    expect(helmetPurchase).toMatchObject({
+      item: 'kevlar_helmet',
+      quantity: 1,
+      helmetUpgradeOnly: true,
+    });
+  });
+
+  it('preserves conditionalAlternatives in structured form', () => {
+    const runtime = new HudRuntime();
+    runtime.observe(
+      receipt(
+        payload({
+          player: {
+            ...payload().player,
+            team: 'CT',
+            state: { money: 5200, armor: 0, helmet: false, defusekit: false },
+            weapons: {},
+          },
+        }),
+      ),
+    );
+    const out = runtime.snapshot(0n);
+    const full = out.options.find((o) => o.mode === 'FULL')!;
+    expect(Array.isArray(full.conditionalAlternatives)).toBe(true);
+    for (const alt of full.conditionalAlternatives) {
+      expect(typeof alt.condition).toBe('string');
+      expect(typeof alt.reason).toBe('string');
+      expect(Array.isArray(alt.purchases)).toBe(true);
+    }
+  });
+
   it.each(['live', 'over', undefined])('hides outside explicit freezetime: %s', (phase) => {
     const runtime = new HudRuntime();
     runtime.observe(receipt(payload({ round: { phase } })));
     expect(runtime.snapshot(0n)).toMatchObject({
       visible: false,
-      cards: [],
+      options: [],
+      money: null,
       hiddenReason: 'outside-freezetime',
     });
   });
-  it('expires without a new packet and never returns the old cards', () => {
+
+  it('expires without a new packet and never returns stale options', () => {
     const runtime = new HudRuntime();
     runtime.observe(receipt());
     expect(runtime.snapshot(5_001_000_000n)).toMatchObject({
       visible: false,
-      cards: [],
       options: [],
+      money: null,
       hiddenReason: 'stale',
     });
   });
+
   it('hides warmup, foreign player, menu and noncompetitive source', () => {
     const examples = [
       payload({ map: { ...payload().map, phase: 'warmup' } }),
@@ -111,67 +179,78 @@ describe('live HUD semantics', () => {
       expect(runtime.snapshot(0n).visible).toBe(false);
     }
   });
+
   it("does not reuse last round's inventory from a partial current frame", () => {
     const runtime = new HudRuntime();
     runtime.observe(receipt());
     runtime.observe(
       receipt(payload({ player: { ...payload().player, weapons: undefined } }), 1, 50),
     );
-    expect(runtime.snapshot(50_000_000n).cards).toEqual([
-      expect.objectContaining({
-        title: '信息不足',
-        spend: null,
-        nextMoney: null,
-        budget: null,
-      }),
-    ]);
+    expect(runtime.snapshot(50_000_000n)).toMatchObject({
+      visible: true,
+      policyStatus: 'INSUFFICIENT_STATE',
+      options: [],
+    });
   });
-  it('shows missing loss state and pistol unsupported without made-up amounts', () => {
-    for (const data of [
-      payload({ map: { ...payload().map, team_ct: { score: 4 } } }),
-      payload({ map: { ...payload().map, round: 1 } }),
-    ]) {
-      const runtime = new HudRuntime();
-      runtime.observe(receipt(data));
-      expect(runtime.snapshot(0n).cards[0]).toMatchObject({
-        spend: null,
-        nextMoney: null,
-        budget: null,
-      });
-    }
+
+  it('reports missing loss state and pistol unsupported without made-up options', () => {
+    const missingLoss = new HudRuntime();
+    missingLoss.observe(receipt(payload({ map: { ...payload().map, team_ct: { score: 4 } } })));
+    expect(missingLoss.snapshot(0n)).toMatchObject({
+      visible: true,
+      policyStatus: 'INSUFFICIENT_STATE',
+      options: [],
+    });
+
+    const pistol = new HudRuntime();
+    pistol.observe(receipt(payload({ map: { ...payload().map, round: 1 } })));
+    expect(pistol.snapshot(0n)).toMatchObject({
+      visible: true,
+      roundContext: 'PISTOL',
+      policyStatus: 'UNSUPPORTED_POLICY_EVIDENCE',
+      options: [],
+    });
   });
+
   it('preserves post-pistol winner through a terminal frame without player fields', () => {
     const runtime = new HudRuntime();
     lifecycle(runtime);
-    expect(runtime.snapshot(300_000_000n).cards.some((c) => c.title === '全起')).toBe(true);
+    expect(runtime.snapshot(300_000_000n).options.some((o) => o.mode === 'FULL')).toBe(true);
   });
+
   it('retains complete history when changing presentation settings', () => {
     const runtime = new HudRuntime();
     lifecycle(runtime);
-    const before = runtime.snapshot(300_000_000n).cards;
+    const before = runtime.snapshot(300_000_000n).options;
     runtime.updateSettings({ ...DEFAULT_HUD_SETTINGS, scale: 1.2 });
-    expect(runtime.snapshot(300_000_000n).cards).toEqual(before);
+    expect(runtime.snapshot(300_000_000n).options).toEqual(before);
   });
+
   it('does not recover an unseen pistol winner across a sequence gap', () => {
     const runtime = new HudRuntime();
     lifecycle(runtime, true);
-    expect(runtime.snapshot(300_000_000n).cards.map((c) => c.title)).toEqual(['ECO', '强起']);
+    expect(runtime.snapshot(300_000_000n).options.map((o) => o.mode)).toEqual([
+      'PRESERVE',
+      'FORCE',
+    ]);
   });
+
   it.each([6_000, 250])(
     'discards known winner history after a time gap or clock rollback: %sms',
     (timeMs) => {
       const runtime = new HudRuntime();
       lifecycle(runtime);
-      expect(runtime.snapshot(300_000_000n).cards.some((c) => c.title === '全起')).toBe(true);
+      expect(runtime.snapshot(300_000_000n).options.some((o) => o.mode === 'FULL')).toBe(true);
       const next = payload();
       next.map!.round = 2;
       runtime.observe(receipt(next, 4, timeMs));
-      expect(runtime.snapshot(BigInt(timeMs) * 1_000_000n).cards.map((c) => c.title)).toEqual([
-        'ECO',
-        '强起',
+      expect(runtime.snapshot(BigInt(timeMs) * 1_000_000n).options.map((o) => o.mode)).toEqual([
+        'PRESERVE',
+        'FORCE',
       ]);
     },
   );
+
   it('supports explicitly declared AWP preference without suppressing other options', () => {
     const runtime = new HudRuntime();
     runtime.updateSettings({ ...DEFAULT_HUD_SETTINGS, awpPriority: 'PREFER' });
@@ -185,8 +264,9 @@ describe('live HUD semantics', () => {
         }),
       ),
     );
-    const cards = runtime.snapshot(0n).cards;
-    expect(cards[0]).toMatchObject({ title: '起 AWP', qualifier: '优先' });
-    expect(cards.length).toBeGreaterThan(1);
+    const snap = runtime.snapshot(0n);
+    expect(snap.options[0]).toMatchObject({ mode: 'AWP_PATH', isDefault: true });
+    expect(snap.defaultOptionId).toBe(snap.options[0]!.id);
+    expect(snap.options.length).toBeGreaterThan(1);
   });
 });

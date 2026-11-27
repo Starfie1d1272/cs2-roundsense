@@ -62,7 +62,10 @@ describe('HUD real HTTP pipeline', () => {
     const text = await response.text();
     expect(text).not.toContain('test-only');
     expect(text).not.toContain(SELF);
-    expect(JSON.parse(text).cards).toHaveLength(3);
+    const snap = JSON.parse(text) as { version: number; money: number; options: unknown[] };
+    expect(snap.version).toBe(2);
+    expect(snap.money).toBe(3450);
+    expect(snap.options).toHaveLength(3);
     const controller = new AbortController();
     const events = await fetch(base + '/events', { signal: controller.signal });
     const reader = events.body!.getReader();
@@ -74,7 +77,7 @@ describe('HUD real HTTP pipeline', () => {
       body: JSON.stringify({ ...data, round: { phase: 'live' } }),
     });
     expect(live.status).toBe(204);
-    expect(s.snapshot()).toMatchObject({ visible: false, cards: [] });
+    expect(s.snapshot()).toMatchObject({ visible: false, options: [] });
   });
   it('allows same-origin settings and rejects external origins and malformed values', async () => {
     const s = await service();

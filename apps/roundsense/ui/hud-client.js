@@ -7,79 +7,179 @@
   let latest = null;
   let lastMessage = -Infinity;
   let nativePending = false;
-  const money = (value) => (value === null ? '—' : '$' + Number(value).toLocaleString('en-US'));
-  const text = (id, value) => {
-    const node = document.getElementById(id);
-    if (node) node.textContent = value;
+
+  const ITEM_NAMES = {
+    ak47: 'AK',
+    m4a4: 'M4A4',
+    m4a1s: 'M4A1-S',
+    galil: 'Galil',
+    famas: 'FAMAS',
+    aug: 'AUG',
+    sg553: 'SG553',
+    awp: 'AWP',
+    ssg08: '鸟狙',
+    scar20: 'SCAR',
+    g3sg1: 'G3SG1',
+    mac10: 'MAC-10',
+    mp9: 'MP9',
+    mp7: 'MP7',
+    mp5sd: 'MP5',
+    ump45: 'UMP',
+    p90: 'P90',
+    bizon: '野牛',
+    nova: 'Nova',
+    xm1014: 'XM1014',
+    mag7: 'MAG7',
+    sawedoff: '短喷',
+    m249: 'M249',
+    negev: 'Negev',
+    glock: 'Glock',
+    usp: 'USP',
+    p2000: 'P2000',
+    p250: 'P250',
+    dual: '双枪',
+    tec9: 'Tec9',
+    cz75: 'CZ',
+    fiveseven: 'FN57',
+    deagle: '沙鹰',
+    r8: 'R8',
+    zeus: '电击枪',
+    kevlar: '半甲',
+    kevlar_helmet: '甲头',
+    defuse_kit: '钳',
+    smoke: '烟',
+    flash: '闪',
+    he: '雷',
+    molotov: '火',
+    incendiary: '火',
+    decoy: '诱饵',
   };
+  const MODE_NAMES = {
+    FULL: '全起',
+    FORCE: '强起',
+    LIGHT: '半起',
+    PRESERVE: 'ECO',
+    AWP_PATH: '起 AWP',
+  };
+  const CAPABILITY_NAMES = {
+    RIFLE_ARMOR_BASIC_UTILITY: '长枪甲道具',
+    RIFLE_ARMOR: '长枪甲',
+    INSUFFICIENT: '长枪钱不足',
+    NOT_EVALUATED: '能力未评估',
+  };
+
+  const money = (value) => (value === null ? '—' : '$' + Number(value).toLocaleString('en-US'));
+  const formatPurchases = (items) =>
+    items
+      .map((p) => {
+        const name = p.helmetUpgradeOnly ? '头盔' : (ITEM_NAMES[p.item] ?? p.item);
+        return name + (p.quantity > 1 ? `×${p.quantity}` : '');
+      })
+      .join(' · ') || '无需购买';
+
   function hide() {
     hud.hidden = true;
     latest = null;
   }
+
   function render(snapshot) {
-    if (snapshot.version !== 1 || typeof snapshot.visible !== 'boolean' || !snapshot.settings)
+    if (snapshot.version !== 2 || typeof snapshot.visible !== 'boolean' || !snapshot.settings)
       throw new Error('Invalid HUD snapshot');
     lastMessage = performance.now();
     latest = snapshot;
-    const cards = snapshot.visible ? snapshot.cards : [];
-    hud.hidden = !cards.length;
+    hud.hidden = !snapshot.visible;
     document.documentElement.style.setProperty('--hud-opacity', snapshot.settings.opacity);
     document.documentElement.style.setProperty('--hud-scale', snapshot.settings.scale);
-    const contentKey = JSON.stringify(cards);
+    const contentKey = JSON.stringify({
+      visible: snapshot.visible,
+      side: snapshot.side,
+      money: snapshot.money,
+      policyStatus: snapshot.policyStatus,
+      options: snapshot.options,
+    });
     if (hud.dataset.content !== contentKey) {
       hud.dataset.content = contentKey;
       hud.replaceChildren();
-      const heading = document.createElement('div');
-      heading.className = 'hud-heading';
-      heading.textContent = '本局可选方案';
-      hud.append(heading);
-      for (const card of cards) {
-        const row = document.createElement('section');
-        row.className = 'hud-option';
-        row.title = card.assumption + ' 补买：' + card.purchases;
-        const main = document.createElement('div');
-        main.className = 'hud-main';
-        const title = document.createElement('strong');
-        title.textContent = card.title;
-        main.append(title);
-        const qualifier = document.createElement('small');
-        qualifier.textContent = card.qualifier === '优先' ? '优先' : '';
-        main.append(qualifier);
-        const budget = document.createElement('span');
-        budget.className = 'hud-budget';
-        budget.textContent =
-          card.budget === null ? '—' : card.budgetLabel + ' ' + money(card.budget);
-        main.append(budget);
-        const next = document.createElement('span');
-        next.className = 'hud-next';
-        next.textContent = card.nextMoney === null ? '败后 —' : '败后 ≈' + money(card.nextMoney);
-        main.append(next);
-        const details = document.createElement('div');
-        details.className = 'hud-row';
-        const purchase = document.createElement('span');
-        purchase.className = 'purchase';
-        purchase.textContent =
-          card.purchases +
-          (card.spend === null || card.budgetLabel === '花费' ? '' : ' · ' + money(card.spend));
-        details.append(purchase);
-        const capability = document.createElement('span');
-        capability.className = 'hud-capability';
-        capability.textContent = card.capability;
-        details.append(capability);
-        row.append(main, details);
-        hud.append(row);
-      }
-      if (cards.some((card) => card.nextMoney !== null)) {
-        const footnote = document.createElement('div');
-        footnote.className = 'hud-footnote';
-        footnote.textContent = cards.some((card) => card.assumption.startsWith('T 未下包'))
-          ? '败后：未下包 · 无额外收入 · 按重买'
-          : '败后：无额外收入 · 按重新购买计算';
-        hud.append(footnote);
+      if (snapshot.visible) {
+        const heading = document.createElement('div');
+        heading.className = 'hud-heading';
+        heading.textContent =
+          snapshot.money === null ? '本局可选方案' : `本局可选方案 · ${money(snapshot.money)}`;
+        hud.append(heading);
+        if (snapshot.options.length > 0) {
+          for (const option of snapshot.options) {
+            const row = document.createElement('section');
+            row.className = 'hud-option';
+            const main = document.createElement('div');
+            main.className = 'hud-main';
+            const title = document.createElement('strong');
+            title.textContent = MODE_NAMES[option.mode] ?? option.mode;
+            main.append(title);
+            const qualifier = document.createElement('small');
+            qualifier.textContent = option.isDefault ? '优先' : '';
+            main.append(qualifier);
+            const hasBound = option.maxSpendNow !== null;
+            const budget = document.createElement('span');
+            budget.className = 'hud-budget';
+            budget.textContent = hasBound
+              ? `投入 ≤ ${money(option.maxSpendNow)}`
+              : `花费 ${money(option.spend)}`;
+            main.append(budget);
+            const next = document.createElement('span');
+            next.className = 'hud-next';
+            next.textContent =
+              option.lossNextMoney === null ? '败后 —' : '败后 ≈' + money(option.lossNextMoney);
+            main.append(next);
+            const details = document.createElement('div');
+            details.className = 'hud-row';
+            const purchase = document.createElement('span');
+            purchase.className = 'purchase';
+            purchase.textContent =
+              formatPurchases(option.purchases) + (hasBound ? ' · ' + money(option.spend) : '');
+            details.append(purchase);
+            const capability = document.createElement('span');
+            capability.className = 'hud-capability';
+            capability.textContent =
+              CAPABILITY_NAMES[option.futureCapability] ?? option.futureCapability;
+            details.append(capability);
+            row.append(main, details);
+            hud.append(row);
+          }
+          if (snapshot.options.some((option) => option.lossNextMoney !== null)) {
+            const footnote = document.createElement('div');
+            footnote.className = 'hud-footnote';
+            footnote.textContent =
+              snapshot.side === 'T'
+                ? '败后：未下包 · 无额外收入 · 按重买'
+                : '败后：无额外收入 · 按重新购买计算';
+            hud.append(footnote);
+          }
+        } else {
+          const row = document.createElement('section');
+          row.className = 'hud-option';
+          const main = document.createElement('div');
+          main.className = 'hud-main';
+          const title = document.createElement('strong');
+          title.textContent =
+            snapshot.policyStatus === 'UNSUPPORTED_POLICY_EVIDENCE' ? '手枪局' : '信息不足';
+          main.append(title);
+          const details = document.createElement('div');
+          details.className = 'hud-row';
+          const purchase = document.createElement('span');
+          purchase.className = 'purchase';
+          purchase.textContent =
+            snapshot.policyStatus === 'UNSUPPORTED_POLICY_EVIDENCE'
+              ? '暂不提供购买建议'
+              : '等待完整状态';
+          details.append(purchase);
+          row.append(main, details);
+          hud.append(row);
+        }
       }
     }
     window.dispatchEvent(new CustomEvent('roundsense-snapshot', { detail: snapshot }));
   }
+
   async function syncNative() {
     if (!invoke || nativePending) return;
     nativePending = true;
@@ -101,6 +201,7 @@
       nativePending = false;
     }
   }
+
   const source = new EventSource('/events');
   source.onmessage = (event) => {
     try {

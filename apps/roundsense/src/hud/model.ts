@@ -4,8 +4,11 @@ import {
   type PolicyV3Output,
   type PolicyV3State,
   type RecommendationOption,
+  type RoundContext,
+  type SpendingGuidance,
 } from '@roundsense/economy-advisor';
 import type { GsiReceipt } from '@roundsense/gsi-protocol';
+import type { ItemId } from '@roundsense/shared-types';
 import { PolicyStateTracker } from '../policy-state.js';
 import { inventoryFrom } from '../inventory.js';
 
@@ -15,98 +18,85 @@ export interface HudSettings {
   scale: number;
   opacity: number;
 }
+
 export const DEFAULT_HUD_SETTINGS: HudSettings = {
   awpPriority: 'NEUTRAL',
   position: 'below-radar',
   scale: 1,
   opacity: 0.84,
 };
+
 export const HUD_STALE_AFTER_MS = 5_000;
-export interface HudCard {
-  title: string;
-  qualifier: string;
-  budgetLabel: string;
-  budget: number | null;
-  purchases: string;
-  spend: number | null;
-  nextMoney: number | null;
-  capability: string;
-  assumption: string;
-}
+
 export type HudHiddenReason =
   'awaiting' | 'stale' | 'not-playing' | 'not-self' | 'not-competitive' | 'outside-freezetime';
+
+export interface HudPurchaseItem {
+  item: ItemId;
+  quantity: number;
+  /** True when upgrading 100-point kevlar to kevlar+helmet ($350) rather than buying full vesthelm. */
+  helmetUpgradeOnly: boolean;
+}
+
+export interface HudConditionalAlternative {
+  condition: string;
+  purchases: HudPurchaseItem[];
+  reason: string;
+}
+
+export type HudFutureCapability =
+  'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
+
+export interface HudOption {
+  id: string;
+  mode: PolicyMode;
+  isDefault: boolean;
+  adviceStrength: RecommendationOption['adviceStrength'];
+  spendingGuidance: SpendingGuidance;
+  spend: number;
+  maxSpendNow: number | null;
+  purchases: HudPurchaseItem[];
+  lossNextMoney: number | null;
+  lossWithPlantNextMoney: number | null;
+  futureCapability: HudFutureCapability;
+  conditionalAlternatives: HudConditionalAlternative[];
+}
+
 export interface HudSnapshot {
-  version: 1;
+  version: 2;
   revision: number;
   visible: boolean;
   hiddenReason: HudHiddenReason | null;
   side: 'CT' | 'T' | null;
   round: number | null;
+  money: number | null;
+  lossIndex: number | null;
+  roundContext: RoundContext | null;
+  policyStatus: PolicyV3Output['status'] | null;
+  defaultOptionId: string | null;
+  unresolved: string[];
   settings: HudSettings;
-  cards: HudCard[];
-  options: { mode: PolicyMode; spend: number; selected: boolean }[];
+  options: HudOption[];
 }
-const NAMES: Record<string, string> = {
-  ak47: 'AK',
-  m4a4: 'M4A4',
-  m4a1s: 'M4A1-S',
-  galil: 'Galil',
-  famas: 'FAMAS',
-  aug: 'AUG',
-  sg553: 'SG553',
-  awp: 'AWP',
-  ssg08: '鸟狙',
-  scar20: 'SCAR',
-  g3sg1: 'G3SG1',
-  mac10: 'MAC-10',
-  mp9: 'MP9',
-  mp7: 'MP7',
-  mp5sd: 'MP5',
-  ump45: 'UMP',
-  p90: 'P90',
-  bizon: '野牛',
-  nova: 'Nova',
-  xm1014: 'XM1014',
-  mag7: 'MAG7',
-  sawedoff: '短喷',
-  m249: 'M249',
-  negev: 'Negev',
-  glock: 'Glock',
-  usp: 'USP',
-  p2000: 'P2000',
-  p250: 'P250',
-  dual: '双枪',
-  tec9: 'Tec9',
-  cz75: 'CZ',
-  fiveseven: 'FN57',
-  deagle: '沙鹰',
-  r8: 'R8',
-  zeus: '电击枪',
-  kevlar: '半甲',
-  kevlar_helmet: '甲头',
-  defuse_kit: '钳',
-  smoke: '烟',
-  flash: '闪',
-  he: '雷',
-  molotov: '火',
-  incendiary: '火',
-  decoy: '诱饵',
-};
-export const MODE_NAMES: Record<PolicyMode, string> = {
-  FULL: '全起',
-  FORCE: '强起',
-  LIGHT: '半起',
-  PRESERVE: 'ECO',
-  AWP_PATH: '起 AWP',
-};
 
-export function cardForOption(
+function mapPurchases(
+  purchases: RecommendationOption['purchases'],
+  armor: number,
+  helmet: boolean,
+): HudPurchaseItem[] {
+  return purchases.map((p) => ({
+    item: p.item,
+    quantity: p.quantity,
+    helmetUpgradeOnly: p.item === 'kevlar_helmet' && armor === 100 && !helmet,
+  }));
+}
+
+export function optionForRecommendation(
   policy: PolicyV3Output,
   option: RecommendationOption,
   armor: number,
   helmet: boolean,
-  side: 'CT' | 'T',
-): HudCard {
+): HudOption {
   const capabilityToProtect =
     'protectedCapability' in option.spendingGuidance
       ? option.spendingGuidance.protectedCapability
@@ -114,39 +104,43 @@ export function cardForOption(
   const boundary = policy.futureAffordability.boundaries.find(
     (b) => b.capability === capabilityToProtect,
   );
-  const next = option.trajectory.find((s) => s.id === 'LOSS_NO_PLANT')?.nextMoney.min ?? null;
+  const lossNextMoney =
+    option.trajectory.find((s) => s.id === 'LOSS_NO_PLANT')?.nextMoney.min ?? null;
+  const lossWithPlantNextMoney =
+    option.trajectory.find((s) => s.id === 'LOSS_WITH_PLANT')?.nextMoney.min ?? null;
   const affordable =
-    next === null
+    lossNextMoney === null
       ? []
       : policy.futureAffordability.boundaries.filter(
-          (b) => b.reachableWithNoSpend && next >= b.targetCash,
+          (b) => b.reachableWithNoSpend && lossNextMoney >= b.targetCash,
         );
-  const capability = affordable.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY')
-    ? '长枪甲道具'
-    : affordable.length
-      ? '长枪甲'
+  const futureCapability: HudFutureCapability = affordable.some(
+    (b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY',
+  )
+    ? 'RIFLE_ARMOR_BASIC_UTILITY'
+    : affordable.length > 0
+      ? 'RIFLE_ARMOR'
       : policy.futureAffordability.status === 'PROJECTED'
-        ? '长枪钱不足'
-        : '能力未评估';
+        ? 'INSUFFICIENT'
+        : 'NOT_EVALUATED';
+
   return {
-    title: MODE_NAMES[option.mode],
-    qualifier: policy.defaultOptionId === option.id ? '优先' : '可选',
-    budgetLabel: boundary ? '投入 ≤' : '花费',
-    budget: boundary?.maxSpendNow ?? option.bundleSpend,
-    purchases:
-      option.purchases
-        .map((p) => {
-          const name =
-            p.item === 'kevlar_helmet' && armor === 100 && !helmet
-              ? '头盔'
-              : (NAMES[p.item] ?? p.item);
-          return name + (p.quantity > 1 ? `×${p.quantity}` : '');
-        })
-        .join(' · ') || '无需购买',
+    id: option.id,
+    mode: option.mode,
+    isDefault: policy.defaultOptionId === option.id,
+    adviceStrength: option.adviceStrength,
+    spendingGuidance: option.spendingGuidance,
     spend: option.bundleSpend,
-    nextMoney: next,
-    capability,
-    assumption: `${side === 'T' ? 'T 未下包；' : ''}无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。`,
+    maxSpendNow: boundary?.maxSpendNow ?? null,
+    purchases: mapPurchases(option.purchases, armor, helmet),
+    lossNextMoney,
+    lossWithPlantNextMoney,
+    futureCapability,
+    conditionalAlternatives: option.conditionalAlternatives.map((alt) => ({
+      condition: alt.condition,
+      purchases: mapPurchases(alt.purchases, armor, helmet),
+      reason: alt.reason,
+    })),
   };
 }
 
@@ -179,11 +173,13 @@ export class HudRuntime {
     this.recalculate();
     this.revision++;
   }
+
   updateSettings(settings: HudSettings): void {
     this.settings = { ...settings };
     this.recalculate();
     this.revision++;
   }
+
   private recalculate(): void {
     if (!this.receipt) return;
     if (!this.state) return;
@@ -210,6 +206,7 @@ export class HudRuntime {
       };
     this.policy = recommendPolicyV3(state);
   }
+
   snapshot(nowNs: bigint): HudSnapshot {
     const payload = this.receipt?.payload;
     let hiddenReason: HudHiddenReason | null = null;
@@ -230,53 +227,47 @@ export class HudRuntime {
       hiddenReason = 'not-self';
     else if (payload.map.mode !== 'competitive') hiddenReason = 'not-competitive';
     else if (payload.round?.phase !== 'freezetime') hiddenReason = 'outside-freezetime';
+
     const side =
       payload?.player?.team === 'CT' || payload?.player?.team === 'T' ? payload.player.team : null;
-    let cards: HudCard[] = [];
-    if (!hiddenReason) {
-      const p = this.policy!;
-      if (p.options.length && side)
-        cards = p.options.map((option) =>
-          cardForOption(
-            p,
-            option,
-            payload?.player?.state?.armor ?? 0,
-            payload?.player?.state?.helmet ?? false,
-            side,
-          ),
-        );
-      else
-        cards = [
-          {
-            title: p.status === 'UNSUPPORTED_POLICY_EVIDENCE' ? '手枪局' : '信息不足',
-            qualifier: '暂无建议',
-            budgetLabel: '',
-            budget: null,
-            purchases:
-              p.status === 'UNSUPPORTED_POLICY_EVIDENCE' ? '暂不提供购买建议' : '等待完整状态',
-            spend: null,
-            nextMoney: null,
-            capability: '暂不预测',
-            assumption: '缺失信息不补造数值。',
-          },
-        ];
-    }
+    const visible = hiddenReason === null;
+    const p = visible ? this.policy : null;
+    const armor = payload?.player?.state?.armor ?? 0;
+    const helmet = payload?.player?.state?.helmet ?? false;
+
+    const options =
+      visible && p && side
+        ? p.options.map((option) => optionForRecommendation(p, option, armor, helmet))
+        : [];
+
+    const moneyFact = this.state?.player.money;
+    const lossFact = this.state?.player.lossIndex;
+    const contextFact = this.state?.round.context;
+
     return {
-      version: 1,
+      version: 2,
       revision: this.revision,
-      visible: hiddenReason === null && cards.length > 0,
+      visible,
       hiddenReason,
       side,
       round: payload?.map?.round ?? null,
+      money:
+        visible && moneyFact?.status !== 'UNKNOWN' && moneyFact?.value !== undefined
+          ? moneyFact.value
+          : null,
+      lossIndex:
+        visible && lossFact?.status !== 'UNKNOWN' && lossFact?.value !== undefined
+          ? lossFact.value
+          : null,
+      roundContext:
+        visible && contextFact?.status !== 'UNKNOWN' && contextFact?.value !== undefined
+          ? contextFact.value
+          : null,
+      policyStatus: p?.status ?? null,
+      defaultOptionId: p?.defaultOptionId ?? null,
+      unresolved: p ? [...p.unresolved] : [],
       settings: { ...this.settings },
-      cards,
-      options: hiddenReason
-        ? []
-        : (this.policy?.options ?? []).map((o) => ({
-            mode: o.mode,
-            spend: o.bundleSpend,
-            selected: o.id === this.policy?.defaultOptionId,
-          })),
+      options,
     };
   }
 }

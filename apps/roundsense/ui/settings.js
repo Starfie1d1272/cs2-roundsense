@@ -30,12 +30,16 @@
       ? `${snapshot.side ?? ''} · 第 ${snapshot.round ?? '?'} 回合 · 冻结时间 · HUD 可见`
       : reasons[snapshot.hiddenReason] || '暂无输出';
     document.getElementById('empty-preview').hidden = snapshot.visible;
-    document.getElementById('assumption').textContent = snapshot.cards[0]?.assumption || '';
+    document.getElementById('assumption').textContent = snapshot.visible
+      ? snapshot.side === 'T'
+        ? 'T 未下包；无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。'
+        : '无额外击杀收入、保枪或队友转移；败后购买能力按重新购买计算。'
+      : '';
     const list = document.getElementById('options');
     list.replaceChildren();
     snapshot.options.forEach((option) => {
       const li = document.createElement('li');
-      li.textContent = `${option.selected ? '●' : '○'} ${modes[option.mode]} · $${option.spend.toLocaleString('en-US')}`;
+      li.textContent = `${option.isDefault ? '●' : '○'} ${modes[option.mode]} · $${option.spend.toLocaleString('en-US')}`;
       list.append(li);
     });
     if (!initialized) {
