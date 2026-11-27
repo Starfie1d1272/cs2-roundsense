@@ -16,8 +16,7 @@
             <span class="rs-brand-sub">CS2 冻结时间经济决策助手</span>
           </div>
           <div class="rs-topbar-meta">
-            <span id="preview-source-badge" class="rs-source-badge">离线示例预览</span>
-            <a href="/overlay" target="_blank" rel="noopener" class="rs-link-subtle">独立叠层视图</a>
+            <span id="preview-source-badge" class="rs-source-badge">Policy V3 预览</span>
           </div>
         </header>
 
@@ -26,7 +25,7 @@
             <button type="button" class="rs-chip is-active" data-scenario="ct-mid">CT 半起 · $3,450</button>
             <button type="button" class="rs-chip" data-scenario="retained-rifle">保留长枪升头</button>
             <button type="button" class="rs-chip" data-scenario="t-rich">T 富裕 · $8,000</button>
-            <button type="button" class="rs-chip" data-scenario="ct-low">CT 低经济</button>
+            <button type="button" class="rs-chip" data-scenario="ct-save-awp">CT 攒狙 · $3,900</button>
             <button type="button" class="rs-chip" data-scenario="pistol">手枪局</button>
             <button type="button" class="rs-chip" data-scenario="live" id="scenario-live-btn" hidden>实时对局</button>
           </div>
@@ -44,39 +43,9 @@
         </div>
 
         <section class="rs-stage-wrap" aria-label="局内 HUD 实景预览">
-          <div id="cs2-stage" class="rs-cs2-stage map-bright">
-            <div class="rs-cs2-top" aria-hidden="true">
-              <div class="rs-cs2-strip">
-                <span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span><span class="rs-cs2-slot ct"></span>
-              </div>
-              <div class="rs-cs2-clock">
-                <span class="rs-cs2-time">0:12</span>
-                <span class="rs-cs2-scores"><b class="ct">4</b><b class="t">3</b></span>
-              </div>
-              <div class="rs-cs2-strip">
-                <span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span><span class="rs-cs2-slot t"></span>
-              </div>
-            </div>
-
-            <div class="rs-cs2-radar" aria-hidden="true">
-              <div class="rs-cs2-radar-cap">
-                <span id="stage-map-label">DE_DUST2</span>
-                <span>FREEZETIME</span>
-              </div>
-            </div>
-
+          <div id="cs2-stage" class="rs-cs2-stage has-photo map-bright aspect-4-3">
             <div id="hud-anchor" class="rs-hud-anchor pos-below-radar">
               <article id="hud-preview" class="rs-hud" aria-live="polite"></article>
-            </div>
-
-            <div class="rs-cs2-bl" aria-hidden="true">
-              <span class="rs-cs2-hp">100</span>
-              <span id="stage-cash" class="rs-cs2-cash">$3,450</span>
-            </div>
-
-            <div class="rs-cs2-br" aria-hidden="true">
-              <img id="stage-weapon-img" src="/assets/cs2/m4a1s.svg" alt="" />
-              <span class="rs-cs2-ammo">20 / 80</span>
             </div>
           </div>
         </section>
@@ -102,15 +71,15 @@
               <span id="live-state-label" class="rs-status-val muted">连接本地服务…</span>
             </div>
             <p id="gsi-summary" class="rs-status-note">正在检查 CS2 安装目录与配置文件…</p>
-            <p id="gsi-other-files" class="rs-status-note" hidden></p>
+            <p id="gsi-conflict-warning" class="rs-error-text" hidden></p>
 
             <div id="gsi-manual-box" class="rs-manual-box" hidden>
-              <label for="manual-install-path">CS2 安装根目录</label>
+              <label for="manual-install-path">CS2 安装路径（支持根目录、game、cfg 或 cs2.exe）</label>
               <div class="rs-manual-row">
                 <input
                   id="manual-install-path"
                   type="text"
-                  placeholder="例如 C:\Program Files (x86)\Steam\steamapps\common\Counter-Strike Global Offensive"
+                  placeholder="粘贴 CS2 目录或 cs2.exe 路径"
                   autocomplete="off"
                 />
                 <button type="button" id="gsi-manual-apply" class="rs-btn rs-btn-primary">验证并安装</button>
@@ -120,7 +89,7 @@
 
             <div class="rs-action-stack">
               <button type="button" id="gsi-primary-btn" class="rs-btn rs-btn-primary" hidden>一键安装 GSI 配置</button>
-              <div class="rs-action-row">
+              <div id="gsi-secondary-actions" class="rs-action-row">
                 <button type="button" id="gsi-redetect-btn" class="rs-btn rs-btn-ghost">重新检测</button>
                 <button type="button" id="gsi-manual-toggle" class="rs-btn rs-btn-ghost">指定目录</button>
                 <button type="button" id="gsi-restore-btn" class="rs-btn rs-btn-ghost" hidden>恢复备份</button>
@@ -187,7 +156,9 @@
               <div><dt>CS2 目录</dt><dd id="diag-install">—</dd></div>
               <div><dt>配置文件</dt><dd id="diag-cfg">—</dd></div>
               <div><dt>定位来源</dt><dd id="diag-source">—</dd></div>
+              <div><dt>其他 GSI</dt><dd id="diag-other">—</dd></div>
               <div><dt>实时状态</dt><dd id="diag-live">—</dd></div>
+              <div><dt>调试视图</dt><dd><a href="/overlay" target="_blank" rel="noopener" class="rs-link-subtle">打开独立叠层视图</a></dd></div>
             </dl>
           </details>
           <button type="button" id="reset-defaults-btn" class="rs-link-btn">恢复默认设置</button>

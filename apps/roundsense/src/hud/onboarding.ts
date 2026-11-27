@@ -25,7 +25,7 @@ const INSTALL_DIRECTORY_FALLBACKS = [
   'Counter-Strike Global Offensive',
   'Counter-Strike 2',
 ] as const;
-const BACKUP_MANIFEST_FILE = 'gsi-backup-manifest.json';
+const BACKUP_MANIFEST_PREFIX = 'gsi-backup-manifest';
 
 export type RegistryReader = (key: string, valueName: string) => Promise<string | undefined>;
 
@@ -65,6 +65,7 @@ export type GsiConfigInspection =
       path: string;
       expectedSha256: string;
       otherGsiFiles: readonly string[];
+      conflictingGsiFiles: readonly string[];
     }
   | {
       status: 'NEEDS_INSTALL';
@@ -73,18 +74,21 @@ export type GsiConfigInspection =
       expectedSha256: string;
       actualSha256?: string;
       otherGsiFiles: readonly string[];
+      conflictingGsiFiles: readonly string[];
     }
   | {
       status: 'NOT_FOUND';
       path: string;
       reason: 'CFG_DIRECTORY_MISSING';
       otherGsiFiles: readonly string[];
+      conflictingGsiFiles: readonly string[];
     }
   | {
       status: 'ERROR';
       path: string;
       reason: string;
       otherGsiFiles: readonly string[];
+      conflictingGsiFiles: readonly string[];
     };
 
 export interface GsiInstallResult {
@@ -219,12 +223,19 @@ export async function discoverCs2(options: DiscoverCs2Options = {}): Promise<Cs2
   const warnings: string[] = [];
 
   if (options.preferredInstallPath) {
-    const preferred = normalize(resolve(options.preferredInstallPath));
-    checked.push(preferred);
-    const found = await validateInstall(preferred, 'PREFERRED');
-    if (found) return { status: 'FOUND', install: found, checked, warnings };
+    const startPath = normalize(resolve(options.preferredInstallPath));
+    // Walk up from cs2.exe, game/, csgo/, or cfg/ to locate the CS2 install root.
+    let cursor = startPath;
+    for (let depth = 0; depth < 5; depth++) {
+      checked.push(cursor);
+      const found = await validateInstall(cursor, 'PREFERRED');
+      if (found) return { status: 'FOUND', install: found, checked, warnings };
+      const parent = dirname(cursor);
+      if (parent === cursor) break;
+      cursor = parent;
+    }
     if (options.strictPreferredPath) {
-      return { status: 'NOT_FOUND', checked, warnings };
+      return { status: 'NOT_FOUND', checked: uniquePaths(checked), warnings };
     }
   }
 
@@ -307,10 +318,39 @@ async function listOtherGsiFiles(cfgDirectory: string): Promise<string[]> {
   }
 }
 
-async function readManifest(backupDir?: string): Promise<BackupManifest | null> {
-  if (!backupDir) return null;
+async function findConflictingGsiFiles(
+  cfgDirectory: string,
+  otherFiles: readonly string[],
+  port: number,
+): Promise<string[]> {
+  const conflicts: string[] = [];
+  for (const name of otherFiles) {
+    try {
+      const text = await readFile(join(cfgDirectory, name), 'utf8');
+      const match = /"uri"\s+"([^"]+)"/i.exec(text);
+      if (!match?.[1]) continue;
+      const uri = new URL(match[1]);
+      const host = uri.hostname.toLowerCase();
+      const targetPort = uri.port ? Number(uri.port) : uri.protocol === 'https:' ? 443 : 80;
+      if ((host === '127.0.0.1' || host === 'localhost' || host === '::1') && targetPort === port) {
+        conflicts.push(name);
+      }
+    } catch {
+      // ignore unreadable or malformed third-party cfg files
+    }
+  }
+  return conflicts;
+}
+
+function manifestFileNameFor(cfgPath: string): string {
+  const key = sha256(normalize(cfgPath).toLowerCase()).slice(0, 12);
+  return `${BACKUP_MANIFEST_PREFIX}.${key}.json`;
+}
+
+async function readManifest(backupDir?: string, cfgPath?: string): Promise<BackupManifest | null> {
+  if (!backupDir || !cfgPath) return null;
   try {
-    const raw = await readFile(join(backupDir, BACKUP_MANIFEST_FILE), 'utf8');
+    const raw = await readFile(join(backupDir, manifestFileNameFor(cfgPath)), 'utf8');
     const parsed = JSON.parse(raw) as Partial<BackupManifest>;
     if (
       typeof parsed.cfgPath !== 'string' ||
@@ -327,7 +367,7 @@ async function readManifest(backupDir?: string): Promise<BackupManifest | null> 
 
 async function writeManifest(backupDir: string, manifest: BackupManifest): Promise<void> {
   await mkdir(backupDir, { recursive: true, mode: 0o700 });
-  const target = join(backupDir, BACKUP_MANIFEST_FILE);
+  const target = join(backupDir, manifestFileNameFor(manifest.cfgPath));
   const temp = `${target}.tmp`;
   await writeFile(temp, JSON.stringify(manifest, null, 2), { mode: 0o600 });
   await rename(temp, target);
@@ -341,15 +381,21 @@ export async function inspectGsiConfig(options: GsiConfigOptions): Promise<GsiCo
       path,
       reason: 'CFG_DIRECTORY_MISSING',
       otherGsiFiles: [],
+      conflictingGsiFiles: [],
     };
   }
   const otherGsiFiles = await listOtherGsiFiles(options.cfgDirectory);
+  const conflictingGsiFiles = await findConflictingGsiFiles(
+    options.cfgDirectory,
+    otherGsiFiles,
+    options.port ?? 3001,
+  );
   const expected = renderHudGsiCfg(options);
   const expectedSha256 = sha256(expected);
   try {
     const actual = await readFile(path);
     if (actual.equals(Buffer.from(expected, 'utf8')))
-      return { status: 'READY', path, expectedSha256, otherGsiFiles };
+      return { status: 'READY', path, expectedSha256, otherGsiFiles, conflictingGsiFiles };
     return {
       status: 'NEEDS_INSTALL',
       path,
@@ -357,6 +403,7 @@ export async function inspectGsiConfig(options: GsiConfigOptions): Promise<GsiCo
       expectedSha256,
       actualSha256: sha256(actual),
       otherGsiFiles,
+      conflictingGsiFiles,
     };
   } catch (error) {
     if (isMissing(error))
@@ -366,12 +413,14 @@ export async function inspectGsiConfig(options: GsiConfigOptions): Promise<GsiCo
         reason: 'MISSING',
         expectedSha256,
         otherGsiFiles,
+        conflictingGsiFiles,
       };
     return {
       status: 'ERROR',
       path,
       reason: (error as Error).message,
       otherGsiFiles,
+      conflictingGsiFiles,
     };
   }
 }
@@ -407,7 +456,7 @@ export async function installGsiConfig(
   const temporary = join(dirname(path), `.${gsiCfgFileName()}.${suffix}.tmp`);
   let backupPath: string | undefined;
 
-  const existingManifest = await readManifest(options.backupDir);
+  const existingManifest = await readManifest(options.backupDir, path);
   if (options.backupDir) {
     await mkdir(options.backupDir, { recursive: true, mode: 0o700 });
     const hasOriginalBackup =
@@ -421,6 +470,10 @@ export async function installGsiConfig(
         : true);
 
     if (hasOriginalBackup && existingManifest) {
+      if (inspection.reason === 'CONTENT_MISMATCH') {
+        const preRepair = join(options.backupDir, `${gsiCfgFileName()}.pre-repair-${stamp}`);
+        await copyFile(path, preRepair).catch(() => undefined);
+      }
       backupPath = existingManifest.backupFileName
         ? join(options.backupDir, existingManifest.backupFileName)
         : undefined;
@@ -483,10 +536,12 @@ export async function restoreGsiConfig(
   options: Pick<GsiConfigOptions, 'cfgDirectory' | 'backupDir'>,
 ): Promise<GsiRestoreResult> {
   const path = join(options.cfgDirectory, gsiCfgFileName());
-  const manifest = await readManifest(options.backupDir);
+  const manifest = await readManifest(options.backupDir, path);
   if (!manifest || !options.backupDir || manifest.cfgPath !== path) {
     return { status: 'NO_ACTION', path, reason: 'NO_MANIFEST' };
   }
+  const removeManifests = () =>
+    rm(join(options.backupDir!, manifestFileNameFor(path)), { force: true });
 
   let currentContent: Buffer | null = null;
   try {
@@ -497,7 +552,7 @@ export async function restoreGsiConfig(
 
   if (currentContent === null) {
     if (!manifest.hadPreviousFile) {
-      await rm(join(options.backupDir, BACKUP_MANIFEST_FILE), { force: true });
+      await removeManifests();
       return { status: 'NO_ACTION', path, reason: 'ALREADY_MISSING' };
     }
   } else if (sha256(currentContent) !== manifest.installedSha256) {
@@ -522,12 +577,12 @@ export async function restoreGsiConfig(
       throw error;
     }
     await rm(backupFullPath, { force: true });
-    await rm(join(options.backupDir, BACKUP_MANIFEST_FILE), { force: true });
+    await removeManifests();
     return { status: 'RESTORED', path, mode: 'FROM_BACKUP' };
   }
 
   await rm(path, { force: true });
-  await rm(join(options.backupDir, BACKUP_MANIFEST_FILE), { force: true });
+  await removeManifests();
   return { status: 'RESTORED', path, mode: 'REMOVED' };
 }
 
@@ -535,6 +590,6 @@ export async function canRestoreGsiConfig(
   options: Pick<GsiConfigOptions, 'cfgDirectory' | 'backupDir'>,
 ): Promise<boolean> {
   const path = join(options.cfgDirectory, gsiCfgFileName());
-  const manifest = await readManifest(options.backupDir);
+  const manifest = await readManifest(options.backupDir, path);
   return manifest !== null && manifest.cfgPath === path;
 }

@@ -177,7 +177,36 @@
     return CONDITION_LABELS[raw] ?? raw;
   }
 
-  function createConditionalRow(alt) {
+  function purchaseKey(p) {
+    return p.helmetUpgradeOnly ? 'helmet_only' : p.item;
+  }
+
+  function diffPurchases(basePurchases, altPurchases) {
+    const baseMap = new Map();
+    for (const p of basePurchases || []) {
+      const k = purchaseKey(p);
+      baseMap.set(k, (baseMap.get(k) || 0) + (p.quantity || 1));
+    }
+    const added = [];
+    const altMap = new Map();
+    for (const p of altPurchases || []) {
+      const k = purchaseKey(p);
+      altMap.set(k, { ...p, quantity: (altMap.get(k)?.quantity || 0) + (p.quantity || 1) });
+    }
+    let hasRemoved = false;
+    for (const [k, qty] of baseMap.entries()) {
+      if ((altMap.get(k)?.quantity || 0) < qty) hasRemoved = true;
+    }
+    for (const [k, p] of altMap.entries()) {
+      const baseQty = baseMap.get(k) || 0;
+      if (p.quantity > baseQty) {
+        added.push(hasRemoved ? p : { ...p, quantity: p.quantity - baseQty });
+      }
+    }
+    return { added: sortPurchases(added), isSwap: hasRemoved };
+  }
+
+  function createConditionalRow(alt, basePurchases) {
     const line = document.createElement('div');
     line.className = 'rs-cond-row';
 
@@ -187,14 +216,17 @@
     line.append(condText);
 
     if (Array.isArray(alt.purchases) && alt.purchases.length > 0) {
-      const arrow = document.createElement('span');
-      arrow.className = 'rs-cond-arrow';
-      arrow.textContent = '→';
-      line.append(arrow);
+      const { added, isSwap } = diffPurchases(basePurchases, alt.purchases);
+      const displayList = added.length > 0 ? added : sortPurchases(alt.purchases);
+
+      const op = document.createElement('span');
+      op.className = isSwap ? 'rs-cond-op is-swap' : 'rs-cond-op is-add';
+      op.textContent = added.length > 0 ? (isSwap ? '换' : '+') : '→';
+      line.append(op);
 
       const icons = document.createElement('span');
       icons.className = 'rs-cond-icons';
-      for (const p of sortPurchases(alt.purchases)) {
+      for (const p of displayList) {
         icons.append(createGearNode(p));
       }
       line.append(icons);
@@ -366,7 +398,7 @@
 
       if (Array.isArray(opt.conditionalAlternatives) && opt.conditionalAlternatives.length > 0) {
         for (const alt of opt.conditionalAlternatives) {
-          row.append(createConditionalRow(alt));
+          row.append(createConditionalRow(alt, opt.purchases));
         }
       }
 

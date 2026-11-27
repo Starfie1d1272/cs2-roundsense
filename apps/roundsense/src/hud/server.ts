@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { createGsiReceiver, type GsiReceipt } from '@roundsense/gsi-protocol';
 import { HudRuntime, type HudSettings } from './model.js';
+import { buildPreviewSnapshot, isPreviewScenarioId } from './preview.js';
 import { parseHudSettings } from './settings.js';
 import {
   canRestoreGsiConfig,
@@ -33,6 +34,14 @@ const IMAGE_MIME: Record<string, string> = {
   jpeg: 'image/jpeg',
 };
 
+export interface GsiRuntimeHealth {
+  accepted: number;
+  rejected: number;
+  consumerErrors: number;
+  lastAcceptedAtMs: number | null;
+  lastRejectReason: string | null;
+}
+
 export interface GsiOnboardingStatus {
   platform: NodeJS.Platform;
   discoveryStatus: 'FOUND' | 'NOT_FOUND';
@@ -43,9 +52,11 @@ export interface GsiOnboardingStatus {
   cfgStatus: 'READY' | 'NEEDS_INSTALL' | 'NOT_FOUND' | 'ERROR';
   cfgReason: string | null;
   otherGsiFiles: readonly string[];
+  conflictingGsiFiles: readonly string[];
   canInstall: boolean;
   canRestore: boolean;
   warnings: readonly string[];
+  gsiHealth: GsiRuntimeHealth;
 }
 
 export interface HudOnboardingOptions {
@@ -120,13 +131,33 @@ export async function startHudService(options: HudServiceOptions) {
       client.write(event);
     }
   };
+  let consumerErrors = 0;
+  let lastAcceptedAtMs: number | null = null;
+  let lastRejectReason: string | null = null;
+
   const gsi = createGsiReceiver({
     token: options.token,
     maxBodyBytes: 64 * 1024,
     onPayload: (receipt) => {
-      runtime.observe(receipt);
-      broadcast();
+      lastAcceptedAtMs = Date.now();
+      try {
+        runtime.observe(receipt);
+        broadcast();
+      } catch {
+        consumerErrors++;
+      }
     },
+    onReject: (_status, reason) => {
+      lastRejectReason = reason;
+    },
+  });
+
+  const gsiHealth = (): GsiRuntimeHealth => ({
+    accepted: gsi.accepted(),
+    rejected: gsi.rejected(),
+    consumerErrors,
+    lastAcceptedAtMs,
+    lastRejectReason,
   });
 
   const resolvedGsiPort = () =>
@@ -149,9 +180,11 @@ export async function startHudService(options: HudServiceOptions) {
         cfgStatus: 'NOT_FOUND',
         cfgReason: 'CS2_INSTALL_NOT_FOUND',
         otherGsiFiles: [],
+        conflictingGsiFiles: [],
         canInstall: false,
         canRestore: false,
         warnings: discovery.warnings,
+        gsiHealth: gsiHealth(),
       };
     }
     const cfgDirectory = discovery.install.cfgDirectory;
@@ -173,9 +206,11 @@ export async function startHudService(options: HudServiceOptions) {
       cfgStatus: inspection.status,
       cfgReason: 'reason' in inspection ? inspection.reason : null,
       otherGsiFiles: inspection.otherGsiFiles,
+      conflictingGsiFiles: inspection.conflictingGsiFiles,
       canInstall: inspection.status === 'NEEDS_INSTALL',
       canRestore,
       warnings: discovery.warnings,
+      gsiHealth: gsiHealth(),
     };
   };
 
@@ -192,7 +227,8 @@ export async function startHudService(options: HudServiceOptions) {
       'Content-Security-Policy',
       "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://ipc.localhost; frame-ancestors 'none'; base-uri 'none'",
     );
-    const path = new URL(request.url ?? '/', `http://${expectedHost}`).pathname;
+    const parsedUrl = new URL(request.url ?? '/', `http://${expectedHost}`);
+    const path = parsedUrl.pathname;
     if (request.method === 'GET' && path === '/events') {
       if (request.headers.origin && request.headers.origin !== `http://${expectedHost}`) {
         response.writeHead(403).end();
@@ -223,6 +259,27 @@ export async function startHudService(options: HudServiceOptions) {
       response
         .writeHead(200, { 'content-type': 'application/json' })
         .end(JSON.stringify(snapshot()));
+      return;
+    }
+    if (request.method === 'GET' && path === '/preview') {
+      const scenario = parsedUrl.searchParams.get('scenario') ?? 'ct-mid';
+      if (!isPreviewScenarioId(scenario)) {
+        response.writeHead(404).end();
+        return;
+      }
+      const currentSettings = snapshot().settings;
+      const awpParam = parsedUrl.searchParams.get('awpPriority');
+      const awpPriority =
+        awpParam === 'NEUTRAL' || awpParam === 'PREFER' || awpParam === 'SAVE_FOR_AWP'
+          ? awpParam
+          : currentSettings.awpPriority;
+      const previewSnapshot = buildPreviewSnapshot(scenario, {
+        ...currentSettings,
+        awpPriority,
+      });
+      response
+        .writeHead(200, { 'content-type': 'application/json' })
+        .end(JSON.stringify(previewSnapshot));
       return;
     }
     if (request.method === 'GET' && path === '/gsi/status') {

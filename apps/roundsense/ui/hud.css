@@ -205,9 +205,9 @@ html, body {
 }
 
 .rs-gear-qty {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: #CBD5E1;
+  color: #E2E8F0;
   line-height: 1;
 }
 
@@ -222,8 +222,9 @@ html, body {
 }
 
 .rs-actual-spend {
-  font-size: 10.5px;
-  color: #98A3B3;
+  font-size: 11px;
+  font-weight: 600;
+  color: #CBD5E1;
   margin-left: 2px;
 }
 
@@ -250,8 +251,17 @@ html, body {
   color: #B4BECA;
 }
 
-.rs-cond-arrow {
-  color: #768292;
+.rs-cond-op {
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.rs-cond-op.is-add {
+  color: var(--accent);
+}
+
+.rs-cond-op.is-swap {
+  color: var(--cap-rifle);
 }
 
 .rs-cond-icons {
@@ -436,56 +446,19 @@ html, body {
 
 .rs-cs2-stage {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: calc(100vh - 170px);
-  padding: 12px;
-  border: 1px solid var(--border-rule);
-  overflow: hidden;
-  user-select: none;
-  background-size: cover;
-  background-position: center;
-}
-
-.rs-cs2-stage.map-bright:not(.has-photo) {
-  background:
-    radial-gradient(ellipse at 72% 28%, rgba(255, 232, 185, 0.52) 0%, rgba(220, 190, 140, 0.18) 38%, transparent 66%),
-    linear-gradient(175deg, #98B6CE 0%, #C7D4DC 24%, #D9C39E 25%, #C4A67A 52%, #8F7657 76%, #5B4D3E 100%);
-}
-
-.rs-cs2-stage.map-bright:not(.has-photo)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(64, 52, 39, 0.56) 0%, rgba(64, 52, 39, 0.14) 26%, transparent 45%),
-    linear-gradient(108deg, transparent 58%, rgba(247, 229, 194, 0.34) 58.3%, rgba(205, 174, 126, 0.48) 75%, rgba(112, 90, 62, 0.72) 100%);
-}
-
-.rs-cs2-stage.map-dark:not(.has-photo) {
-  background:
-    radial-gradient(ellipse at 52% 26%, rgba(88, 120, 108, 0.32) 0%, transparent 55%),
-    linear-gradient(175deg, #273335 0%, #34403E 22%, #2B312E 23%, #1F2522 56%, #141816 100%);
-}
-
-.rs-cs2-stage.map-dark:not(.has-photo)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(10, 14, 13, 0.72) 0%, transparent 38%),
-    linear-gradient(260deg, rgba(16, 22, 19, 0.75) 0%, transparent 40%);
-}
-
-.rs-cs2-stage.has-photo {
   width: auto;
   height: min(calc(100vh - 172px), 740px);
   max-width: 100%;
   aspect-ratio: 4 / 3;
+  border: 1px solid var(--border-rule);
+  overflow: hidden;
+  user-select: none;
+  background-color: var(--bg-inset);
   background-size: 100% 100%;
+  background-position: center;
 }
 
-.rs-cs2-stage.has-photo.aspect-16-10 {
+.rs-cs2-stage.aspect-16-10 {
   width: 100%;
   height: auto;
   max-height: calc(100vh - 172px);
@@ -494,178 +467,13 @@ html, body {
   background-position: center top;
 }
 
-.rs-cs2-stage.has-photo.aspect-16-9 {
+.rs-cs2-stage.aspect-16-9 {
   width: 100%;
   height: auto;
   max-height: calc(100vh - 172px);
   aspect-ratio: 16 / 9;
   background-size: cover;
   background-position: center top;
-}
-
-.rs-cs2-stage.has-photo .rs-cs2-top,
-.rs-cs2-stage.has-photo .rs-cs2-radar,
-.rs-cs2-stage.has-photo .rs-cs2-bl,
-.rs-cs2-stage.has-photo .rs-cs2-br {
-  display: none;
-}
-
-.rs-cs2-stage.has-photo .rs-hud-anchor.pos-below-radar {
-  top: 34.5%;
-  left: 1.8%;
-}
-
-.rs-cs2-stage.has-photo .rs-hud-anchor.pos-lower-left {
-  bottom: 8.5%;
-  left: 1.8%;
-}
-
-.rs-cs2-stage.has-photo .rs-hud-anchor.pos-lower-right {
-  bottom: 10%;
-  right: 1.8%;
-}
-
-.rs-cs2-top {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: stretch;
-  gap: 3px;
-  z-index: 2;
-  font-variant-numeric: tabular-nums;
-}
-
-.rs-cs2-strip {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-  background: rgba(12, 15, 20, 0.65);
-  padding: 4px 6px;
-}
-
-.rs-cs2-slot {
-  width: 20px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.12);
-  border-bottom: 2px solid #5B9BD5;
-}
-
-.rs-cs2-slot.t {
-  border-bottom-color: #D9A441;
-}
-
-.rs-cs2-clock {
-  background: rgba(12, 15, 20, 0.82);
-  padding: 3px 12px;
-  text-align: center;
-  min-width: 78px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
-}
-
-.rs-cs2-time {
-  display: block;
-  font-size: 15px;
-  font-weight: 700;
-  color: #F5F7FA;
-  line-height: 1.1;
-}
-
-.rs-cs2-scores {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  font-size: 11px;
-  margin-top: 1px;
-}
-
-.rs-cs2-scores .ct { color: #7CC2F7; }
-.rs-cs2-scores .t { color: #E8B95B; }
-
-.rs-cs2-radar {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  width: 156px;
-  height: 156px;
-  background: rgba(11, 14, 18, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  overflow: hidden;
-  z-index: 2;
-}
-
-.rs-cs2-radar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.88;
-}
-
-.rs-cs2-radar-cap {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 3px 6px;
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  background: rgba(9, 12, 16, 0.78);
-  color: #CBD5E1;
-  display: flex;
-  justify-content: space-between;
-}
-
-.rs-cs2-bl {
-  position: absolute;
-  left: 14px;
-  bottom: 12px;
-  padding: 3px 10px;
-  background: rgba(12, 15, 20, 0.72);
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  z-index: 2;
-  font-variant-numeric: tabular-nums;
-}
-
-.rs-cs2-hp {
-  font-size: 20px;
-  font-weight: 700;
-  color: #F3F5F7;
-  opacity: 0.9;
-}
-
-.rs-cs2-cash {
-  font-size: 24px;
-  font-weight: 800;
-  color: #90E27A;
-}
-
-.rs-cs2-br {
-  position: absolute;
-  right: 14px;
-  bottom: 12px;
-  padding: 4px 10px;
-  background: rgba(12, 15, 20, 0.72);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  z-index: 2;
-}
-
-.rs-cs2-br img {
-  height: 16px;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.85));
-}
-
-.rs-cs2-ammo {
-  font-size: 18px;
-  font-weight: 700;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-  font-variant-numeric: tabular-nums;
 }
 
 .rs-hud-anchor {
@@ -675,20 +483,20 @@ html, body {
 }
 
 .rs-hud-anchor.pos-below-radar {
-  top: 180px;
-  left: 14px;
+  top: 34.5%;
+  left: 1.8%;
   transform-origin: top left;
 }
 
 .rs-hud-anchor.pos-lower-left {
-  bottom: 56px;
-  left: 14px;
+  bottom: 8.5%;
+  left: 1.8%;
   transform-origin: bottom left;
 }
 
 .rs-hud-anchor.pos-lower-right {
-  bottom: 62px;
-  right: 14px;
+  bottom: 10%;
+  right: 1.8%;
   transform-origin: bottom right;
 }
 
@@ -1083,11 +891,10 @@ input[type="range"]::-moz-range-thumb {
     justify-content: center;
   }
 
-  .rs-cs2-top,
-  .rs-cs2-radar,
-  .rs-cs2-bl,
-  .rs-cs2-br {
-    display: none;
+  .rs-cs2-stage {
+    width: 100%;
+    height: auto;
+    background-size: cover;
   }
 
   .rs-hud-anchor,

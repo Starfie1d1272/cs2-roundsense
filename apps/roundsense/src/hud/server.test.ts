@@ -220,7 +220,7 @@ describe('HUD real HTTP pipeline', () => {
   });
 
   it('serves CS2 SVG icons safely and rejects path traversal', async () => {
-    const s = await startHudService({ token: 'tok-assets' });
+    const s = await startHudService({ token: 'tok-assets', gsiPort: 0, webPort: 0 });
     services.push(s);
     const base = `http://127.0.0.1:${s.webPort}`;
 
@@ -234,5 +234,42 @@ describe('HUD real HTTP pipeline', () => {
 
     const traversalRes = await fetch(base + '/assets/cs2/../../package.json');
     expect(traversalRes.status).toBe(404);
+  });
+
+  it('serves live Policy V3 offline previews that react to awpPriority without mutating live state', async () => {
+    const s = await startHudService({ token: 'tok-preview', gsiPort: 0, webPort: 0 });
+    services.push(s);
+    const base = `http://127.0.0.1:${s.webPort}`;
+
+    const ctMid = (await fetch(base + '/preview?scenario=ct-mid').then((r) => r.json())) as {
+      options: Array<{
+        mode: string;
+        isDefault: boolean;
+        maxSpendNow: number | null;
+        spend: number;
+        lossNextMoney: number | null;
+      }>;
+    };
+    const light = ctMid.options.find((o) => o.mode === 'LIGHT');
+    expect(light).toMatchObject({
+      mode: 'LIGHT',
+      isDefault: false,
+      maxSpendNow: 1300,
+      spend: 1150,
+      lossNextMoney: 4200,
+    });
+
+    const tRichAwp = (await fetch(base + '/preview?scenario=t-rich&awpPriority=PREFER').then((r) =>
+      r.json(),
+    )) as { options: Array<{ mode: string; isDefault: boolean }> };
+    expect(tRichAwp.options[0]).toMatchObject({ mode: 'AWP_PATH', isDefault: true });
+
+    const saveAwp = (await fetch(
+      base + '/preview?scenario=ct-save-awp&awpPriority=SAVE_FOR_AWP',
+    ).then((r) => r.json())) as { options: Array<{ mode: string }> };
+    expect(saveAwp.options.some((o) => o.mode === 'PRESERVE')).toBe(true);
+
+    const bad = await fetch(base + '/preview?scenario=nonexistent');
+    expect(bad.status).toBe(404);
   });
 });

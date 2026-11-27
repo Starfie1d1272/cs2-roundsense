@@ -767,7 +767,10 @@ function planOption(
   if (mode === 'FORCE' && state.round.side.value === 'CT') {
     const loadout = resultingLoadout(inventory, plan.purchases);
     if (loadout.armor > 0 && !loadout.hasHelmet) {
-      const completedDesired: ItemId[] = [...desired, 'kevlar_helmet'];
+      const completedDesired: ItemId[] = [
+        ...desired.filter((item) => item !== 'kevlar'),
+        'kevlar_helmet',
+      ];
       const completedPlan = planPurchases(
         inventory,
         compact(completedDesired),

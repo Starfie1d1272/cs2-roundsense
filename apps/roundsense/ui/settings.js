@@ -1,4 +1,4 @@
-/* Settings & GSI onboarding controller: offline preview + instant auto-save + real GSI API. */
+/* Settings & GSI onboarding controller: real Policy V3 preview + instant auto-save + GSI API. */
 (() => {
   'use strict';
 
@@ -18,249 +18,14 @@
     'outside-freezetime': '回合进行中（自动隐藏）',
   };
 
-  function makeScenario(partial) {
-    return {
-      version: 2,
-      revision: 0,
-      visible: true,
-      hiddenReason: null,
-      lossIndex: 1,
-      roundContext: 'NORMAL',
-      policyStatus: 'OK',
-      defaultOptionId: null,
-      unresolved: [],
-      settings: { ...DEFAULT_SETTINGS },
-      ...partial,
-    };
-  }
-
-  const OFFLINE_SCENARIOS = {
-    'ct-mid': makeScenario({
-      side: 'CT',
-      round: 8,
-      money: 3450,
-      defaultOptionId: 'light',
-      options: [
-        {
-          id: 'force',
-          mode: 'FORCE',
-          isDefault: false,
-          adviceStrength: 'OPTION',
-          spendingGuidance: { kind: 'UNBOUNDED' },
-          spend: 3450,
-          maxSpendNow: null,
-          purchases: [
-            { item: 'mp9', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'kevlar_helmet', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 2, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 1900,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'INSUFFICIENT',
-          conditionalAlternatives: [],
-        },
-        {
-          id: 'light',
-          mode: 'LIGHT',
-          isDefault: true,
-          adviceStrength: 'DEFAULT',
-          spendingGuidance: {
-            kind: 'PROTECT_NEXT_ROUND',
-            protectedCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          },
-          spend: 1150,
-          maxSpendNow: 1300,
-          purchases: [
-            { item: 'kevlar', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 4200,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          conditionalAlternatives: [
-            {
-              condition: '若队友无钳',
-              purchases: [{ item: 'defuse_kit', quantity: 1, helmetUpgradeOnly: false }],
-              reason: '补拆弹器',
-            },
-          ],
-        },
-        {
-          id: 'preserve',
-          mode: 'PRESERVE',
-          isDefault: false,
-          adviceStrength: 'OPTION',
-          spendingGuidance: { kind: 'PRESERVE' },
-          spend: 0,
-          maxSpendNow: null,
-          purchases: [],
-          lossNextMoney: 5350,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          conditionalAlternatives: [],
-        },
-      ],
-    }),
-    'retained-rifle': makeScenario({
-      side: 'CT',
-      round: 10,
-      money: 4200,
-      lossIndex: 0,
-      defaultOptionId: 'full',
-      options: [
-        {
-          id: 'full',
-          mode: 'FULL',
-          isDefault: true,
-          adviceStrength: 'DEFAULT',
-          spendingGuidance: { kind: 'UNBOUNDED' },
-          spend: 1750,
-          maxSpendNow: null,
-          purchases: [
-            { item: 'kevlar_helmet', quantity: 1, helmetUpgradeOnly: true },
-            { item: 'defuse_kit', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 2, helmetUpgradeOnly: false },
-            { item: 'he', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 3850,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'RIFLE_ARMOR',
-          conditionalAlternatives: [],
-        },
-        {
-          id: 'light',
-          mode: 'LIGHT',
-          isDefault: false,
-          adviceStrength: 'OPTION',
-          spendingGuidance: {
-            kind: 'PROTECT_NEXT_ROUND',
-            protectedCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          },
-          spend: 850,
-          maxSpendNow: 950,
-          purchases: [
-            { item: 'kevlar_helmet', quantity: 1, helmetUpgradeOnly: true },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 4750,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          conditionalAlternatives: [],
-        },
-      ],
-    }),
-    't-rich': makeScenario({
-      side: 'T',
-      round: 11,
-      money: 8000,
-      lossIndex: 2,
-      defaultOptionId: 'full',
-      options: [
-        {
-          id: 'awp',
-          mode: 'AWP_PATH',
-          isDefault: false,
-          adviceStrength: 'OPTION',
-          spendingGuidance: { kind: 'UNBOUNDED' },
-          spend: 6750,
-          maxSpendNow: null,
-          purchases: [
-            { item: 'awp', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'kevlar_helmet', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 2, helmetUpgradeOnly: false },
-            { item: 'molotov', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 3650,
-          lossWithPlantNextMoney: 4450,
-          futureCapability: 'RIFLE_ARMOR',
-          conditionalAlternatives: [],
-        },
-        {
-          id: 'full',
-          mode: 'FULL',
-          isDefault: true,
-          adviceStrength: 'DEFAULT',
-          spendingGuidance: { kind: 'UNBOUNDED' },
-          spend: 4700,
-          maxSpendNow: null,
-          purchases: [
-            { item: 'ak47', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'kevlar_helmet', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'smoke', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'flash', quantity: 2, helmetUpgradeOnly: false },
-            { item: 'molotov', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 5700,
-          lossWithPlantNextMoney: 6500,
-          futureCapability: 'RIFLE_ARMOR_BASIC_UTILITY',
-          conditionalAlternatives: [],
-        },
-      ],
-    }),
-    'ct-low': makeScenario({
-      side: 'CT',
-      round: 5,
-      money: 1200,
-      lossIndex: 2,
-      defaultOptionId: 'preserve',
-      options: [
-        {
-          id: 'force',
-          mode: 'FORCE',
-          isDefault: false,
-          adviceStrength: 'OPTION',
-          spendingGuidance: { kind: 'UNBOUNDED' },
-          spend: 1150,
-          maxSpendNow: null,
-          purchases: [
-            { item: 'kevlar', quantity: 1, helmetUpgradeOnly: false },
-            { item: 'fiveseven', quantity: 1, helmetUpgradeOnly: false },
-          ],
-          lossNextMoney: 2450,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'INSUFFICIENT',
-          conditionalAlternatives: [],
-        },
-        {
-          id: 'preserve',
-          mode: 'PRESERVE',
-          isDefault: true,
-          adviceStrength: 'DEFAULT',
-          spendingGuidance: { kind: 'PRESERVE' },
-          spend: 0,
-          maxSpendNow: null,
-          purchases: [],
-          lossNextMoney: 3600,
-          lossWithPlantNextMoney: null,
-          futureCapability: 'RIFLE_ARMOR',
-          conditionalAlternatives: [],
-        },
-      ],
-    }),
-    pistol: makeScenario({
-      side: 'CT',
-      round: 1,
-      money: 800,
-      lossIndex: 0,
-      roundContext: 'PISTOL',
-      policyStatus: 'UNSUPPORTED_POLICY_EVIDENCE',
-      options: [],
-    }),
+  const BACKDROP_URLS = {
+    bright: '/assets/preview/bright.webp',
+    dark: '/assets/preview/dark.webp',
   };
 
-  // DOM refs
   const stageEl = document.getElementById('cs2-stage');
   const hudAnchor = document.getElementById('hud-anchor');
   const hudPreview = document.getElementById('hud-preview');
-  const stageMapLabelEl = document.getElementById('stage-map-label');
-  const stageMapLabel = document.getElementById('stage-map-label');
-  const stageCash = document.getElementById('stage-cash');
-  const stageWeaponImg = document.getElementById('stage-weapon-img');
   const previewSourceBadge = document.getElementById('preview-source-badge');
   const scenarioLiveBtn = document.getElementById('scenario-live-btn');
 
@@ -273,8 +38,9 @@
   const gsiDot = document.getElementById('gsi-dot');
   const gsiStateLabel = document.getElementById('gsi-state-label');
   const gsiSummary = document.getElementById('gsi-summary');
-  const gsiOtherFiles = document.getElementById('gsi-other-files');
+  const gsiConflictWarning = document.getElementById('gsi-conflict-warning');
   const gsiPrimaryBtn = document.getElementById('gsi-primary-btn');
+  const gsiSecondaryActions = document.getElementById('gsi-secondary-actions');
   const gsiRedetectBtn = document.getElementById('gsi-redetect-btn');
   const gsiManualToggle = document.getElementById('gsi-manual-toggle');
   const gsiRestoreBtn = document.getElementById('gsi-restore-btn');
@@ -289,6 +55,7 @@
   const diagInstall = document.getElementById('diag-install');
   const diagCfg = document.getElementById('diag-cfg');
   const diagSource = document.getElementById('diag-source');
+  const diagOther = document.getElementById('diag-other');
   const diagLive = document.getElementById('diag-live');
 
   let currentSettings = { ...DEFAULT_SETTINGS };
@@ -296,39 +63,32 @@
   let activeBackdrop = 'bright';
   let activeAspect = '4-3';
   let liveSnapshot = null;
+  let lastGsiHealth = null;
+  let previewSnapshot = null;
+  let previewSeq = 0;
   let saveTimer = null;
   let saving = false;
   let pendingSave = false;
   let gsiBusy = false;
-  const BACKDROP_URLS = {
-    bright: '/assets/preview/bright.webp',
-    dark: '/assets/preview/dark.webp',
-  };
 
   function applyBackdrop() {
-    stageEl.classList.toggle('map-bright', activeBackdrop === 'bright');
-    stageEl.classList.toggle('map-dark', activeBackdrop === 'dark');
     stageEl.classList.toggle('aspect-4-3', activeAspect === '4-3');
     stageEl.classList.toggle('aspect-16-10', activeAspect === '16-10');
     stageEl.classList.toggle('aspect-16-9', activeAspect === '16-9');
     stageEl.style.backgroundImage = 'url("' + BACKDROP_URLS[activeBackdrop] + '")';
-    stageEl.classList.add('has-photo');
-    if (stageMapLabelEl) {
-      stageMapLabelEl.textContent = activeBackdrop === 'bright' ? 'DE_DUST2' : 'DE_ANCIENT';
-    }
   }
 
   function syncSettingsControls() {
-    document.querySelectorAll('#pos-seg button').forEach((btn) => {
+    for (const btn of document.querySelectorAll('#pos-seg button')) {
       const on = btn.dataset.position === currentSettings.position;
       btn.setAttribute('aria-pressed', String(on));
       btn.classList.toggle('is-active', on);
-    });
-    document.querySelectorAll('#awp-seg button').forEach((btn) => {
+    }
+    for (const btn of document.querySelectorAll('#awp-seg button')) {
       const on = btn.dataset.awp === currentSettings.awpPriority;
       btn.setAttribute('aria-pressed', String(on));
       btn.classList.toggle('is-active', on);
-    });
+    }
     scaleRange.value = String(currentSettings.scale);
     scaleOutput.textContent = Math.round(currentSettings.scale * 100) + '%';
     opacityRange.value = String(currentSettings.opacity);
@@ -341,20 +101,37 @@
     document.documentElement.style.setProperty('--hud-opacity', String(currentSettings.opacity));
 
     const useLive = activeScenario === 'live' && liveSnapshot && liveSnapshot.visible;
-    const baseSnap = useLive
-      ? liveSnapshot
-      : (OFFLINE_SCENARIOS[activeScenario] ?? OFFLINE_SCENARIOS['ct-mid']);
-    const snap = { ...baseSnap, settings: { ...currentSettings } };
+    const baseSnap = useLive ? liveSnapshot : previewSnapshot;
+    if (!baseSnap) return;
 
+    const snap = { ...baseSnap, settings: { ...currentSettings } };
     window.RoundSenseHud.render(hudPreview, snap, { forceShow: true, skipRootVars: true });
 
-    stageCash.textContent =
-      snap.money !== null && snap.money !== undefined
-        ? window.RoundSenseHud.formatMoney(snap.money)
-        : '$3,450';
-    stageWeaponImg.src = snap.side === 'T' ? '/assets/cs2/ak47.svg' : '/assets/cs2/m4a1s.svg';
-    previewSourceBadge.textContent = useLive ? '实时对局接入' : '离线示例预览';
+    previewSourceBadge.textContent = useLive ? '实时对局接入' : 'Policy V3 预览';
     previewSourceBadge.classList.toggle('is-live', Boolean(useLive));
+  }
+
+  async function refreshPreviewSnapshot() {
+    if (activeScenario === 'live') {
+      renderPreview();
+      return;
+    }
+    const seq = ++previewSeq;
+    const url =
+      '/preview?scenario=' +
+      encodeURIComponent(activeScenario) +
+      '&awpPriority=' +
+      encodeURIComponent(currentSettings.awpPriority);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const snap = await res.json();
+      if (seq !== previewSeq) return;
+      previewSnapshot = snap;
+      renderPreview();
+    } catch {
+      // keep previous preview snapshot if local server is momentarily unavailable
+    }
   }
 
   async function persistSettings() {
@@ -393,36 +170,52 @@
   }
 
   function updateSettingsLocal(patch, immediate = false) {
+    const awpChanged =
+      patch.awpPriority !== undefined && patch.awpPriority !== currentSettings.awpPriority;
     currentSettings = { ...currentSettings, ...patch };
     syncSettingsControls();
     renderPreview();
+    if (awpChanged) void refreshPreviewSnapshot();
     scheduleSave(immediate);
   }
 
   function renderGsiStatus(status) {
     gsiPrimaryBtn.hidden = true;
     gsiRestoreBtn.hidden = !status.canRestore;
-    gsiOtherFiles.hidden = true;
+    gsiConflictWarning.hidden = true;
     manualError.hidden = true;
+    if (status.gsiHealth) {
+      lastGsiHealth = status.gsiHealth;
+      if (liveSnapshot) updateLiveStatus(liveSnapshot, false);
+    }
 
     diagInstall.textContent = status.installPath || '未检测到';
     diagCfg.textContent = status.cfgPath || '—';
     diagSource.textContent = status.installSource || '—';
+    diagOther.textContent =
+      Array.isArray(status.otherGsiFiles) && status.otherGsiFiles.length > 0
+        ? status.otherGsiFiles.join('、')
+        : '无';
 
-    if (Array.isArray(status.otherGsiFiles) && status.otherGsiFiles.length > 0) {
-      gsiOtherFiles.textContent =
-        '检测到其他工具的 GSI 配置：' + status.otherGsiFiles.join('、') + '（不会改动）';
-      gsiOtherFiles.hidden = false;
+    if (Array.isArray(status.conflictingGsiFiles) && status.conflictingGsiFiles.length > 0) {
+      gsiConflictWarning.textContent =
+        '检测到同端口冲突配置：' +
+        status.conflictingGsiFiles.join('、') +
+        '，可能导致数据重复或认证失败。';
+      gsiConflictWarning.hidden = false;
     }
 
     if (status.cfgStatus === 'READY') {
       gsiDot.className = 'rs-dot ok';
       gsiStateLabel.textContent = '已就绪';
       gsiStateLabel.className = 'rs-status-val ok';
-      gsiSummary.textContent = '已安装并校验 RoundSense 配置文件。';
+      gsiSummary.textContent = '配置已安装并校验一致，正常启动 CS2 即可自动生效。';
       gsiManualBox.hidden = true;
+      gsiSecondaryActions.hidden = !status.canRestore;
       return;
     }
+
+    gsiSecondaryActions.hidden = false;
 
     if (status.cfgStatus === 'NEEDS_INSTALL') {
       gsiDot.className = 'rs-dot warn';
@@ -485,9 +278,18 @@
       if (data.status) renderGsiStatus(data.status);
       if (!res.ok) {
         if (res.status === 404 && bodyObj && bodyObj.installPath) {
-          manualError.textContent = '该目录不是有效的 CS2 安装目录（缺少 cs2.exe 或 cfg 目录）。';
+          manualError.textContent = '该路径不是有效的 CS2 安装目录（缺少 cs2.exe 或 cfg 目录）。';
           manualError.hidden = false;
           gsiManualBox.hidden = false;
+        } else if (
+          res.status === 409 &&
+          data.restore &&
+          data.restore.reason === 'EXTERNALLY_MODIFIED'
+        ) {
+          gsiSummary.textContent =
+            '配置文件在安装后曾被外部修改，为避免覆盖已停止恢复；如需重新对齐可点击一键修复。';
+          gsiPrimaryBtn.textContent = '一键修复 GSI 配置';
+          gsiPrimaryBtn.hidden = false;
         } else {
           gsiSummary.textContent = '操作未完成（' + (data.error || 'HTTP ' + res.status) + '）。';
         }
@@ -523,6 +325,27 @@
       liveStateLabel.className = 'rs-status-val ok';
       scenarioLiveBtn.hidden = false;
       diagLive.textContent = 'rev ' + snapshot.revision + ' · visible';
+    } else if (
+      snapshot.hiddenReason === 'outside-freezetime' ||
+      snapshot.hiddenReason === 'not-self' ||
+      snapshot.hiddenReason === 'not-competitive'
+    ) {
+      liveDot.className = 'rs-dot ok';
+      liveStateLabel.textContent =
+        '连接正常 · ' + (HIDDEN_REASON_LABELS[snapshot.hiddenReason] || '已隐藏');
+      liveStateLabel.className = 'rs-status-val ok';
+      diagLive.textContent = 'rev ' + snapshot.revision + ' · ' + snapshot.hiddenReason;
+    } else if (
+      lastGsiHealth &&
+      lastGsiHealth.rejected > 0 &&
+      lastGsiHealth.accepted === 0 &&
+      lastGsiHealth.lastRejectReason &&
+      /auth|token|unauthorized/i.test(lastGsiHealth.lastRejectReason)
+    ) {
+      liveDot.className = 'rs-dot err';
+      liveStateLabel.textContent = 'Token 不匹配，请修复配置';
+      liveStateLabel.className = 'rs-status-val err';
+      diagLive.textContent = 'rejected: ' + lastGsiHealth.lastRejectReason;
     } else {
       liveDot.className = 'rs-dot idle';
       liveStateLabel.textContent = HIDDEN_REASON_LABELS[snapshot.hiddenReason] || '等待进入比赛';
@@ -534,18 +357,17 @@
     if (activeScenario === 'live') renderPreview();
   }
 
-  // Bind UI events
-  document.querySelectorAll('#scenario-tabs button').forEach((btn) => {
+  for (const btn of document.querySelectorAll('#scenario-tabs button')) {
     btn.addEventListener('click', () => {
       activeScenario = btn.dataset.scenario;
       for (const b of document.querySelectorAll('#scenario-tabs button')) {
         b.classList.toggle('is-active', b === btn);
       }
-      renderPreview();
+      void refreshPreviewSnapshot();
     });
-  });
+  }
 
-  document.querySelectorAll('#aspect-tabs button').forEach((btn) => {
+  for (const btn of document.querySelectorAll('#aspect-tabs button')) {
     btn.addEventListener('click', () => {
       activeAspect = btn.dataset.aspect;
       for (const b of document.querySelectorAll('#aspect-tabs button')) {
@@ -553,9 +375,9 @@
       }
       applyBackdrop();
     });
-  });
+  }
 
-  document.querySelectorAll('#backdrop-tabs button').forEach((btn) => {
+  for (const btn of document.querySelectorAll('#backdrop-tabs button')) {
     btn.addEventListener('click', () => {
       activeBackdrop = btn.dataset.backdrop;
       for (const b of document.querySelectorAll('#backdrop-tabs button')) {
@@ -563,19 +385,19 @@
       }
       applyBackdrop();
     });
-  });
+  }
 
-  document.querySelectorAll('#pos-seg button').forEach((btn) => {
+  for (const btn of document.querySelectorAll('#pos-seg button')) {
     btn.addEventListener('click', () =>
       updateSettingsLocal({ position: btn.dataset.position }, true),
     );
-  });
+  }
 
-  document.querySelectorAll('#awp-seg button').forEach((btn) => {
+  for (const btn of document.querySelectorAll('#awp-seg button')) {
     btn.addEventListener('click', () =>
       updateSettingsLocal({ awpPriority: btn.dataset.awp }, true),
     );
-  });
+  }
 
   scaleRange.addEventListener('input', () => {
     updateSettingsLocal({ scale: Number(scaleRange.value) }, false);
@@ -606,11 +428,9 @@
     void runGsiMutation('/gsi/install', { installPath: val });
   });
 
-  // Boot: load current settings from /snapshot, start SSE, and fetch /gsi/status
   async function boot() {
     syncSettingsControls();
     applyBackdrop();
-    renderPreview();
     void refreshGsiStatus();
 
     try {
@@ -620,13 +440,14 @@
         if (snap && snap.settings) {
           currentSettings = { ...DEFAULT_SETTINGS, ...snap.settings };
           syncSettingsControls();
-          renderPreview();
         }
         updateLiveStatus(snap, false);
       }
     } catch {
       updateLiveStatus(null, true);
     }
+
+    await refreshPreviewSnapshot();
 
     const source = new EventSource('/events');
     source.onmessage = (event) => {

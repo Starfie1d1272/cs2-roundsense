@@ -117,7 +117,8 @@ describe('CS2 Steam discovery', () => {
       registry: async () => undefined,
     });
     expect(strictResult.status).toBe('NOT_FOUND');
-    expect(strictResult.checked).toEqual([invalidExplicit]);
+    expect(strictResult.checked).toContain(invalidExplicit);
+    expect(strictResult.checked).not.toContain(steamCs2);
 
     const autoResult = await discoverCs2({
       preferredInstallPath: invalidExplicit,
@@ -127,6 +128,53 @@ describe('CS2 Steam discovery', () => {
       registry: async () => undefined,
     });
     expect(autoResult.status).toBe('FOUND');
+  });
+
+  it('resolves CS2 install root upward from cs2.exe or nested cfg directory', async () => {
+    const root = await makeTempDir();
+    const cs2Root = join(root, 'MyCS2');
+    const { cfgDirectory } = await createFakeCs2Install(cs2Root);
+    const exePath = join(cs2Root, CS2_EXECUTABLE_RELATIVE);
+
+    const fromExe = await discoverCs2({
+      preferredInstallPath: exePath,
+      strictPreferredPath: true,
+      env: {},
+      registry: async () => undefined,
+    });
+    expect(fromExe.status).toBe('FOUND');
+    if (fromExe.status === 'FOUND') expect(fromExe.install.installPath).toBe(cs2Root);
+
+    const fromCfg = await discoverCs2({
+      preferredInstallPath: cfgDirectory,
+      strictPreferredPath: true,
+      env: {},
+      registry: async () => undefined,
+    });
+    expect(fromCfg.status).toBe('FOUND');
+    if (fromCfg.status === 'FOUND') expect(fromCfg.install.installPath).toBe(cs2Root);
+  });
+
+  it('flags only same-port third-party GSI configs as conflicts while ignoring different ports', async () => {
+    const root = await makeTempDir();
+    const { cfgDirectory } = await createFakeCs2Install(join(root, 'CS2'));
+    await writeFile(
+      join(cfgDirectory, 'gamestate_integration_mizar.cfg'),
+      '"Mizar" { "uri" "http://127.0.0.1:3000/gsi" }',
+      'utf8',
+    );
+    await writeFile(
+      join(cfgDirectory, 'gamestate_integration_old_rs.cfg'),
+      '"OldRS" { "uri" "http://127.0.0.1:3001/" }',
+      'utf8',
+    );
+
+    const inspection = await inspectGsiConfig({ cfgDirectory, token: 'tok', port: 3001 });
+    expect(inspection.otherGsiFiles).toEqual([
+      'gamestate_integration_mizar.cfg',
+      'gamestate_integration_old_rs.cfg',
+    ]);
+    expect(inspection.conflictingGsiFiles).toEqual(['gamestate_integration_old_rs.cfg']);
   });
 });
 
