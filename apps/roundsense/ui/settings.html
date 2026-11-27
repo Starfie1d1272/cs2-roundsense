@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RoundSense · HUD 设置</title>
+    <link rel="stylesheet" href="/hud.css" />
+  </head>
+  <body class="settings-page">
+    <h1>RoundSense · 冻结时间 HUD</h1>
+    <p>所有可选方案一起展示。回合开始后自动隐藏，设置在局外完成。</p>
+    <section>
+      <h2>当前连接与输出</h2>
+      <div id="connection-status" class="status">等待本地服务…</div>
+      <div class="hud-preview">
+        <article id="hud" class="hud" hidden></article>
+        <span id="empty-preview" class="status">暂无购买建议</span>
+      </div>
+      <p id="assumption" class="help-note"></p>
+      <ul id="options" class="option-list"></ul>
+      <a href="/overlay" target="_blank" rel="noopener" id="live-hud-link"
+        >打开浏览器 HUD 视图 ↗</a
+      >
+      <p class="help-note">
+        浏览器视图用于调试；局内屏幕覆盖需要 Windows 桌面程序。桌面程序仅在 CS2
+        前台时显示，不抢焦点，鼠标穿透。
+      </p>
+    </section>
+    <section>
+      <h2>展示偏好</h2>
+      <form id="settings-form">
+        <div class="settings-form">
+          <label
+            >AWP 偏好<select name="awpPriority">
+              <option value="NEUTRAL">中性</option>
+              <option value="PREFER">优先 AWP</option>
+              <option value="SAVE_FOR_AWP">为 AWP 留钱</option>
+            </select></label
+          ><label
+            >位置<select name="position">
+              <option value="below-radar">雷达下方</option>
+              <option value="lower-left">左下方</option>
+              <option value="lower-right">右下方</option>
+            </select></label
+          ><label
+            >缩放 <output id="scale-label">100%</output
+            ><input
+              name="scale"
+              type="range"
+              min="0.8"
+              max="1.5"
+              step="0.05"
+              value="1" /></label
+          ><label
+            >背景不透明度 <output id="opacity-label">84%</output
+            ><input
+              name="opacity"
+              type="range"
+              min="0.45"
+              max="0.95"
+              step="0.01"
+              value="0.84"
+          /></label>
+        </div>
+        <div class="form-footer">
+          <button type="submit">保存设置</button
+          ><span id="save-result" role="status"></span>
+        </div>
+      </form>
+      <p class="help-note">
+        显示全部可选方案，不替你选定某一项；只有引擎明确给出唯一优先方案时才标注“优先”。
+      </p>
+    </section>
+    <section>
+      <h2>GSI 配置与旧配置</h2>
+      <details>
+        <summary>查看连接方式及残留配置处理</summary>
+        <p>
+          在 CS2 电脑上运行
+          <code>pnpm hud --cfg --cfg-out roundsense.cfg &gt; $null</code
+          >，再运行配置工具安装。HUD 使用 1 秒心跳；旧配置的 60
+          秒心跳不适用于及时失效检测。
+        </p>
+        <pre>
+powershell -ExecutionPolicy Bypass -File scripts/windows/gsi-config.ps1 -Action Status
+powershell -ExecutionPolicy Bypass -File scripts/windows/gsi-config.ps1 -Action Install -Source roundsense.cfg</pre>
+        <p>
+          只更新 RoundSense
+          的文件，先备份再写入。其他工具的配置仅列出，不删除。文件检查不会打印
+          token。
+        </p>
+      </details>
+    </section>
+    <footer>
+      本地、只读、普通玩家 GSI · 不读取对手精确现金 · 不提供未校准倒计时
+    </footer>
+    <script src="/hud-client.js"></script>
+    <script src="/settings.js"></script>
+  </body>
+</html>
