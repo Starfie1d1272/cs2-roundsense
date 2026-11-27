@@ -5,6 +5,9 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+apps/desktop/release/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
 
 # Recordings & experiment outputs (never commit captured data)
 recordings/

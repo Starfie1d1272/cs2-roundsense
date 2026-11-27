@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "RoundSense",
+  "version": "0.1.0",
+  "identifier": "dev.roundsense.hud",
+  "build": {
+    "frontendDist": "../../roundsense/ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "capabilities": [
+        {
+          "identifier": "overlay",
+          "description": "Local HUD overlay only: geometry lease command, no filesystem or dialog access.",
+          "windows": ["overlay"],
+          "remote": {
+            "urls": ["http://127.0.0.1:3100/overlay"]
+          },
+          "permissions": ["allow-set-overlay-state"]
+        },
+        {
+          "identifier": "settings",
+          "description": "Local Settings window: native folder picker and directory open commands only.",
+          "windows": ["settings"],
+          "remote": {
+            "urls": ["http://127.0.0.1:3100/"]
+          },
+          "permissions": [
+            "allow-pick-cs2-folder",
+            "allow-open-directory",
+            "allow-open-logs-dir"
+          ]
+        }
+      ]
+    }
+  },
+  "bundle": {
+    "active": false,
+    "icon": ["icons/icon.png", "icons/icon.ico"]
+  }
+}

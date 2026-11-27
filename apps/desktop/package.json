@@ -1,0 +1,12 @@
+{
+  "name": "@roundsense/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:sidecar": "node ../../scripts/build-desktop-sidecar.mjs",
+    "package:win": "node ../../scripts/package-windows-portable.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.4"
+  }
+}
