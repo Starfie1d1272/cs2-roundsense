@@ -158,5 +158,5 @@ pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip
 分叉或工具链版本不匹配时停止，不重置或覆盖已有工作。环境快照本身不会自动拉取
 Git 更新，需要在环境的启动说明中要求每个新任务执行此脚本。
 
-完整研究资产保留在 frozen research branches；mainline 保留生产代码、权威结论与可复现
-验收入口。
+完整研究资产已通过 `archive/*` Git 标签归档，详见 [研究归档索引](docs/research-index.md)；
+mainline 保留生产代码、权威结论与可复现验收入口。
