@@ -10,6 +10,7 @@ use std::{
 
 pub const WEB_ORIGIN: &str = "http://127.0.0.1:3100";
 const WEB_ADDR: &str = "127.0.0.1:3100";
+const MAX_LOG_BYTES: u64 = 1024 * 1024;
 
 /// Returns the per-user RoundSense data directory (%LOCALAPPDATA%\RoundSense on Windows,
 /// ~/.config/RoundSense elsewhere), matching apps/roundsense/src/hud/index.ts.
@@ -30,7 +31,54 @@ pub fn logs_dir() -> PathBuf {
     data_dir().join("logs")
 }
 
-/// Checks whether a healthy RoundSense HUD backend is already listening on 127.0.0.1:3100.
+fn is_port_occupied() -> bool {
+    let addr: SocketAddr = WEB_ADDR.parse().expect("fixed loopback address");
+    TcpStream::connect_timeout(&addr, Duration::from_millis(200)).is_ok()
+}
+
+/// Parses an HTTP/1.x response body, supporting both Content-Length and chunked transfer encoding.
+fn parse_health_response(response: &str) -> bool {
+    let Some((head, raw_body)) = response.split_once("\r\n\r\n") else {
+        return false;
+    };
+    let Some(status_line) = head.lines().next() else {
+        return false;
+    };
+    if !status_line.starts_with("HTTP/1.1 200") && !status_line.starts_with("HTTP/1.0 200") {
+        return false;
+    }
+    let is_chunked = head
+        .lines()
+        .any(|line| line.to_ascii_lowercase().starts_with("transfer-encoding:") && line.to_ascii_lowercase().contains("chunked"));
+    let body = if is_chunked {
+        decode_chunked(raw_body)
+    } else {
+        raw_body.to_string()
+    };
+    let Ok(json) = serde_json::from_str::<serde_json::Value>(body.trim()) else {
+        return false;
+    };
+    json["ok"] == true && json["product"] == "roundsense"
+}
+
+fn decode_chunked(input: &str) -> String {
+    let mut out = String::new();
+    let mut rest = input;
+    while let Some((size_line, after_size)) = rest.split_once("\r\n") {
+        let hex = size_line.split(';').next().unwrap_or("").trim();
+        let Ok(len) = usize::from_str_radix(hex, 16) else {
+            break;
+        };
+        if len == 0 || after_size.len() < len {
+            break;
+        }
+        out.push_str(&after_size[..len]);
+        rest = after_size[len..].strip_prefix("\r\n").unwrap_or("");
+    }
+    out
+}
+
+/// Checks whether the RoundSense HUD backend is listening and healthy on 127.0.0.1:3100.
 pub fn is_backend_healthy() -> bool {
     let addr: SocketAddr = WEB_ADDR.parse().expect("fixed loopback address");
     let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(400)) else {
@@ -47,13 +95,7 @@ pub fn is_backend_healthy() -> bool {
     if stream.take(32 * 1024).read_to_string(&mut response).is_err() {
         return false;
     }
-    let Some(body) = response.split("\r\n\r\n").nth(1) else {
-        return false;
-    };
-    let Ok(json) = serde_json::from_str::<serde_json::Value>(body) else {
-        return false;
-    };
-    json["ok"] == true && json["product"] == "roundsense"
+    parse_health_response(&response)
 }
 
 fn bundle_root() -> Result<PathBuf, String> {
@@ -67,7 +109,7 @@ fn bundle_root() -> Result<PathBuf, String> {
 struct SidecarPaths {
     node_bin: PathBuf,
     server_script: PathBuf,
-    ui_dir: Option<PathBuf>,
+    ui_dir: PathBuf,
 }
 
 fn resolve_sidecar_paths() -> Result<SidecarPaths, String> {
@@ -80,36 +122,36 @@ fn resolve_sidecar_paths() -> Result<SidecarPaths, String> {
     let bundled_node = sidecar_dir.join("node");
 
     let bundled_script = sidecar_dir.join("roundsense-server.mjs");
-    if bundled_script.is_file() {
-        let node_bin = if bundled_node.is_file() {
-            bundled_node
-        } else {
-            PathBuf::from("node")
-        };
-        let ui_dir = sidecar_dir.join("ui");
+    let bundled_ui = sidecar_dir.join("ui");
+
+    if bundled_node.is_file() && bundled_script.is_file() && bundled_ui.is_dir() {
         return Ok(SidecarPaths {
-            node_bin,
+            node_bin: bundled_node,
             server_script: bundled_script,
-            ui_dir: ui_dir.is_dir().then_some(ui_dir),
+            ui_dir: bundled_ui,
         });
     }
 
+    #[cfg(debug_assertions)]
     if let Ok(explicit) = std::env::var("ROUNDSENSE_SIDECAR_SCRIPT") {
         let script = PathBuf::from(explicit);
-        if script.is_file() {
+        let ui_dir = std::env::var("ROUNDSENSE_UI_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| script.parent().unwrap_or(Path::new(".")).join("ui"));
+        if script.is_file() && ui_dir.is_dir() {
             return Ok(SidecarPaths {
                 node_bin: PathBuf::from(
                     std::env::var("ROUNDSENSE_NODE_BIN").unwrap_or_else(|_| "node".into()),
                 ),
                 server_script: script,
-                ui_dir: std::env::var("ROUNDSENSE_UI_DIR").ok().map(PathBuf::from),
+                ui_dir,
             });
         }
     }
 
     Err(format!(
-        "未找到内置后端文件: {}。请确认便携包解压完整，或先启动本地服务。",
-        bundled_script.display()
+        "便携包文件不完整（缺少 sidecar 运行时或 UI 资源，目录: {}）。请重新完整解压 RoundSense 压缩包后再启动。",
+        sidecar_dir.display()
     ))
 }
 
@@ -117,93 +159,52 @@ fn resolve_sidecar_paths() -> Result<SidecarPaths, String> {
 mod win_job {
     use std::os::windows::io::AsRawHandle;
     use std::process::Child;
-
-    const JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS: u32 = 9;
-    const JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: u32 = 0x2000;
-
-    #[repr(C)]
-    struct IoCounters {
-        read_operation_count: u64,
-        write_operation_count: u64,
-        other_operation_count: u64,
-        read_transfer_count: u64,
-        write_transfer_count: u64,
-        other_transfer_count: u64,
-    }
-
-    #[repr(C)]
-    struct JobObjectBasicLimitInformation {
-        per_process_user_time_limit: i64,
-        per_job_user_time_limit: i64,
-        limit_flags: u32,
-        minimum_working_set_size: usize,
-        maximum_working_set_size: usize,
-        active_process_limit: u32,
-        affinity: usize,
-        priority_class: u32,
-        scheduling_class: u32,
-    }
-
-    #[repr(C)]
-    struct JobObjectExtendedLimitInformation {
-        basic_limit_information: JobObjectBasicLimitInformation,
-        io_info: IoCounters,
-        process_memory_limit: usize,
-        job_memory_limit: usize,
-        peak_process_memory_used: usize,
-        peak_job_memory_used: usize,
-    }
-
-    #[link(name = "kernel32")]
-    extern "system" {
-        fn CreateJobObjectW(attributes: *mut core::ffi::c_void, name: *const u16) -> isize;
-        fn SetInformationJobObject(
-            job: isize,
-            class: u32,
-            info: *const core::ffi::c_void,
-            length: u32,
-        ) -> i32;
-        fn AssignProcessToJobObject(job: isize, process: isize) -> i32;
-        fn CloseHandle(handle: isize) -> i32;
-    }
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows_sys::Win32::System::JobObjects::{
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    };
 
     /// Holds a Windows Job Object configured with KILL_ON_JOB_CLOSE so the Node
     /// sidecar can never leak as an orphan even if RoundSense.exe terminates abruptly.
-    pub struct JobGuard(isize);
+    pub struct JobGuard(HANDLE);
 
     unsafe impl Send for JobGuard {}
 
     impl JobGuard {
-        pub fn attach(child: &Child) -> Option<Self> {
+        pub fn attach(child: &Child) -> Result<Self, String> {
             unsafe {
-                let job = CreateJobObjectW(core::ptr::null_mut(), core::ptr::null());
-                if job == 0 {
-                    return None;
+                let job = CreateJobObjectW(core::ptr::null(), core::ptr::null());
+                if job.is_null() {
+                    return Err("无法创建 Windows Job Object".into());
                 }
-                let mut info: JobObjectExtendedLimitInformation = core::mem::zeroed();
-                info.basic_limit_information.limit_flags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = core::mem::zeroed();
+                info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
                 let ok = SetInformationJobObject(
                     job,
-                    JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
+                    JobObjectExtendedLimitInformation,
                     &info as *const _ as *const core::ffi::c_void,
-                    core::mem::size_of::<JobObjectExtendedLimitInformation>() as u32,
+                    core::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
                 );
-                if ok == 0 || AssignProcessToJobObject(job, child.as_raw_handle() as isize) == 0 {
+                if ok == 0
+                    || AssignProcessToJobObject(job, child.as_raw_handle() as HANDLE) == 0
+                {
                     CloseHandle(job);
-                    return None;
+                    return Err("无法将内置 Node 进程绑定到生命周期 Job Object".into());
                 }
-                Some(Self(job))
+                Ok(Self(job))
             }
         }
     }
 
     impl Drop for JobGuard {
         fn drop(&mut self) {
-            if self.0 != 0 {
+            if !self.0.is_null() {
                 unsafe {
                     CloseHandle(self.0);
                 }
-                self.0 = 0;
+                self.0 = core::ptr::null_mut();
             }
         }
     }
@@ -226,27 +227,36 @@ impl SidecarState {
         }))
     }
 
-    /// Ensures the local Node HUD backend is reachable on 127.0.0.1:3100.
-    /// If already healthy (e.g. dev mode), attaches to it without spawning a duplicate.
+    /// Starts the bundled Node HUD sidecar and waits until /health returns HTTP 200.
+    /// In release builds, RoundSense.exe is the sole lifecycle owner of its sidecar.
     pub fn ensure_started(&self) -> Result<(), String> {
+        #[cfg(debug_assertions)]
         if is_backend_healthy() {
             return Ok(());
+        }
+
+        if is_port_occupied() {
+            return Err(format!(
+                "本地端口 3100 已被其他程序占用，RoundSense 无法启动内置服务。请关闭占用端口的程序后重试。"
+            ));
         }
 
         let paths = resolve_sidecar_paths()?;
         let log_dir = logs_dir();
         let _ = fs::create_dir_all(&log_dir);
+        let log_path = log_dir.join("sidecar.log");
+        if fs::metadata(&log_path).map(|m| m.len() > MAX_LOG_BYTES).unwrap_or(false) {
+            let _ = fs::write(&log_path, b"");
+        }
         let log_file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(log_dir.join("sidecar.log"))
+            .open(&log_path)
             .ok();
 
         let mut cmd = Command::new(&paths.node_bin);
         cmd.arg(&paths.server_script);
-        if let Some(ui_dir) = paths.ui_dir {
-            cmd.env("ROUNDSENSE_UI_DIR", ui_dir);
-        }
+        cmd.env("ROUNDSENSE_UI_DIR", &paths.ui_dir);
         if let Some(file) = log_file {
             if let Ok(err_file) = file.try_clone() {
                 cmd.stdout(Stdio::from(file));
@@ -270,7 +280,14 @@ impl SidecarState {
             .map_err(|e| format!("启动内置 Node 服务失败 ({}): {e}", paths.node_bin.display()))?;
 
         #[cfg(windows)]
-        let job = win_job::JobGuard::attach(&child);
+        let job = match win_job::JobGuard::attach(&child) {
+            Ok(j) => Some(j),
+            Err(err) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(err);
+            }
+        };
 
         let deadline = Instant::now() + Duration::from_secs(10);
         while Instant::now() < deadline {
@@ -285,14 +302,20 @@ impl SidecarState {
                 return Ok(());
             }
             if let Ok(Some(status)) = child.try_wait() {
-                return Err(format!("内置 Node 服务意外退出（exit: {status}），请查看 sidecar.log。"));
+                return Err(format!(
+                    "内置 Node 服务意外退出（exit: {status}）。请查看日志：{}",
+                    log_path.display()
+                ));
             }
             std::thread::sleep(Duration::from_millis(120));
         }
 
         let _ = child.kill();
         let _ = child.wait();
-        Err("等待内置 Node 服务就绪超时（10s），请查看 sidecar.log。".to_string())
+        Err(format!(
+            "等待内置 Node 服务就绪超时（10s）。请查看日志：{}",
+            log_path.display()
+        ))
     }
 
     pub fn stop(&self) {
@@ -312,5 +335,28 @@ impl SidecarState {
 impl Drop for SidecarState {
     fn drop(&mut self) {
         self.stop();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_content_length_health_response() {
+        let resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 34\r\n\r\n{\"ok\":true,\"product\":\"roundsense\"}";
+        assert!(parse_health_response(resp));
+    }
+
+    #[test]
+    fn parses_chunked_health_response() {
+        let resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n22\r\n{\"ok\":true,\"product\":\"roundsense\"}\r\n0\r\n\r\n";
+        assert!(parse_health_response(resp));
+    }
+
+    #[test]
+    fn rejects_non_200_health_response() {
+        let resp = "HTTP/1.1 500 Internal Server Error\r\n\r\n{\"ok\":true,\"product\":\"roundsense\"}";
+        assert!(!parse_health_response(resp));
     }
 }

@@ -117,6 +117,7 @@ export interface PolicyReason {
 export interface ConditionalAlternative {
   condition: string;
   purchases: readonly PurchaseItem[];
+  bundleSpend: number;
   reason: string;
 }
 
@@ -606,6 +607,7 @@ function conversionOption(
       conditionalAlternatives.push({
         condition: '若队友暂无钳子',
         purchases: kitPlan.purchases,
+        bundleSpend: kitPlan.totalCost,
         reason: '钳子不占 grenade slot；队友覆盖不可见',
       });
     }
@@ -824,6 +826,7 @@ function planOption(
       conditionalAlternatives.push({
         condition: '若队友暂无钳子',
         purchases: kitPlan.purchases,
+        bundleSpend: kitPlan.totalCost,
         reason: '钳子不占 grenade slot；队友覆盖不可见',
       });
   }
@@ -844,6 +847,7 @@ function planOption(
       conditionalAlternatives.push({
         condition: 'T fourth utility slot',
         purchases: alternate.purchases,
+        bundleSpend: alternate.totalCost,
         reason: 'HE 与 second flash 均保留为合法 alternative',
       });
   }

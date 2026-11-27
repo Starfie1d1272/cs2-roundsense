@@ -14,6 +14,36 @@ use tauri::{
 };
 use tauri_plugin_dialog::DialogExt;
 
+fn show_fatal_error(message: &str) {
+    #[cfg(windows)]
+    {
+        use std::ffi::OsStr;
+        use std::os::windows::ffi::OsStrExt;
+        use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_OK};
+
+        let title: Vec<u16> = OsStr::new("RoundSense 启动失败")
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let body: Vec<u16> = OsStr::new(message)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        unsafe {
+            MessageBoxW(
+                core::ptr::null_mut(),
+                body.as_ptr(),
+                title.as_ptr(),
+                MB_OK | MB_ICONERROR,
+            );
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        eprintln!("RoundSense 启动失败: {message}");
+    }
+}
+
 fn show_settings_window(app: &AppHandle) {
     if let Some(win) = app.get_webview_window("settings") {
         let _ = win.unminimize();
@@ -49,17 +79,20 @@ fn open_dir_in_os(path: &Path) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn pick_cs2_folder(window: WebviewWindow) -> Result<Option<String>, String> {
+async fn pick_cs2_folder(window: WebviewWindow) -> Result<Option<String>, String> {
     if window.label() != "settings" {
         return Err("invalid caller".into());
     }
-    let picked = window
-        .app_handle()
-        .dialog()
-        .file()
-        .set_title("选择 Counter-Strike Global Offensive 安装目录")
-        .blocking_pick_folder();
-    Ok(picked.map(|p| p.to_string()))
+    let app = window.app_handle().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        app.dialog()
+            .file()
+            .set_title("选择 Counter-Strike Global Offensive 安装目录")
+            .blocking_pick_folder()
+            .map(|p| p.to_string())
+    })
+    .await
+    .map_err(|e| format!("文件夹选择器异常: {e}"))
 }
 
 #[tauri::command]
@@ -126,11 +159,12 @@ fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
 }
 
 fn main() {
-    let app = tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
+    let built = tauri::Builder::default()
+        // single-instance MUST be registered first per Tauri v2 docs.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_settings_window(app);
         }))
+        .plugin(tauri_plugin_dialog::init())
         .manage(OverlayHost::new())
         .manage(SidecarState::empty())
         .invoke_handler(tauri::generate_handler![
@@ -192,8 +226,15 @@ fn main() {
                 }
             }
         })
-        .build(tauri::generate_context!())
-        .expect("failed to build RoundSense desktop host");
+        .build(tauri::generate_context!());
+
+    let app = match built {
+        Ok(app) => app,
+        Err(error) => {
+            show_fatal_error(&error.to_string());
+            std::process::exit(1);
+        }
+    };
 
     app.run(|app_handle, event| {
         if let RunEvent::Exit = event {

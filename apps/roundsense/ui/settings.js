@@ -70,6 +70,7 @@
   let liveSnapshot = null;
   let lastGsiHealth = null;
   let lastCfgDirectory = null;
+  let lastCfgStatus = null;
   let previewSnapshot = null;
   let previewSeq = 0;
   let saveTimer = null;
@@ -196,6 +197,7 @@
     }
 
     lastCfgDirectory = status.cfgDirectory || null;
+    lastCfgStatus = status.cfgStatus || null;
     if (diagOpenCfgBtn) diagOpenCfgBtn.disabled = !lastCfgDirectory;
     diagInstall.textContent = status.installPath || '未检测到';
     diagCfg.textContent = status.cfgPath || '—';
@@ -353,7 +355,8 @@
           lastGsiHealth.lastRejectAtMs > lastGsiHealth.lastAcceptedAtMs))
     ) {
       liveDot.className = 'rs-dot err';
-      liveStateLabel.textContent = 'Token 不匹配，请修复配置';
+      liveStateLabel.textContent =
+        lastCfgStatus === 'READY' ? '配置已更新，请重启 CS2' : 'Token 不匹配，请修复配置';
       liveStateLabel.className = 'rs-status-val err';
       diagLive.textContent = 'rejected: ' + lastGsiHealth.lastRejectReason;
     } else {

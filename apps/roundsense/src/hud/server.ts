@@ -274,15 +274,13 @@ export async function startHudService(options: HudServiceOptions) {
       return;
     }
     if (request.method === 'GET' && path === '/health') {
-      response.writeHead(200, { 'content-type': 'application/json' }).end(
-        JSON.stringify({
-          ok: true,
-          product: 'roundsense',
-          webPort: (web.address() as { port: number } | null)?.port ?? options.webPort ?? 3100,
-          gsiPort: resolvedGsiPort(),
-          gsiHealth: gsiHealth(),
-        }),
-      );
+      const body = Buffer.from(JSON.stringify({ ok: true, product: 'roundsense' }), 'utf8');
+      response
+        .writeHead(200, {
+          'content-type': 'application/json',
+          'content-length': String(body.length),
+        })
+        .end(body);
       return;
     }
     if (request.method === 'GET' && path === '/snapshot') {

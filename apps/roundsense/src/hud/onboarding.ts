@@ -342,8 +342,12 @@ async function findConflictingGsiFiles(
   return conflicts;
 }
 
+function normalizedPathKey(cfgPath: string): string {
+  return normalize(cfgPath).toLowerCase();
+}
+
 function pathHashFor(cfgPath: string): string {
-  return sha256(normalize(cfgPath).toLowerCase()).slice(0, 12);
+  return sha256(normalizedPathKey(cfgPath)).slice(0, 12);
 }
 
 function manifestFileNameFor(cfgPath: string): string {
@@ -460,11 +464,14 @@ export async function installGsiConfig(
   let backupPath: string | undefined;
 
   const existingManifest = await readManifest(options.backupDir, path);
+  const pathKey = normalizedPathKey(path);
+  let nextManifest: BackupManifest | null = null;
+
   if (options.backupDir) {
     await mkdir(options.backupDir, { recursive: true, mode: 0o700 });
     const hasOriginalBackup =
       existingManifest !== null &&
-      existingManifest.cfgPath === path &&
+      normalizedPathKey(existingManifest.cfgPath) === pathKey &&
       (existingManifest.hadPreviousFile
         ? Boolean(
             existingManifest.backupFileName &&
@@ -481,24 +488,25 @@ export async function installGsiConfig(
       backupPath = existingManifest.backupFileName
         ? join(options.backupDir, existingManifest.backupFileName)
         : undefined;
+      nextManifest = { ...existingManifest, cfgPath: path, installedSha256: expectedSha256 };
     } else if (inspection.reason === 'CONTENT_MISMATCH') {
       const backupFileName = `${hash}.original.cfg`;
       backupPath = join(options.backupDir, backupFileName);
       await copyFile(path, backupPath);
-      await writeManifest(options.backupDir, {
+      nextManifest = {
         cfgPath: path,
         installedSha256: expectedSha256,
         hadPreviousFile: true,
         backupFileName,
         createdAt: now.toISOString(),
-      });
+      };
     } else {
-      await writeManifest(options.backupDir, {
+      nextManifest = {
         cfgPath: path,
         installedSha256: expectedSha256,
         hadPreviousFile: false,
         createdAt: now.toISOString(),
-      });
+      };
     }
   } else if (inspection.reason === 'CONTENT_MISMATCH') {
     backupPath = `${path}.backup-${stamp}`;
@@ -516,11 +524,8 @@ export async function installGsiConfig(
     throw error;
   }
 
-  if (options.backupDir && existingManifest && existingManifest.cfgPath === path) {
-    await writeManifest(options.backupDir, {
-      ...existingManifest,
-      installedSha256: expectedSha256,
-    });
+  if (options.backupDir && nextManifest) {
+    await writeManifest(options.backupDir, nextManifest);
   }
 
   return {

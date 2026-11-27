@@ -44,9 +44,67 @@ jobs:
           workspaces: apps/desktop/src-tauri
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @roundsense/desktop build:sidecar
-      - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
-      - run: cargo build --release --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - run: cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - run: cargo build --release --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
       - run: pnpm --filter @roundsense/desktop package:win
+      - name: Smoke-test extracted portable ZIP (startup, HTTP readiness, clean shutdown)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $env:TEMP 'roundsense-smoke'
+          if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+          Expand-Archive -Path 'apps/desktop/dist/RoundSense-win64-portable.zip' -DestinationPath $stage
+          $exe = Join-Path $stage 'RoundSense-win64\RoundSense.exe'
+          if (-not (Test-Path $exe)) { throw "Missing $exe" }
+
+          $proc = Start-Process -FilePath $exe -PassThru
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 50; $i++) {
+              if ($proc.HasExited) {
+                $log = Join-Path $env:LOCALAPPDATA 'RoundSense\logs\sidecar.log'
+                if (Test-Path $log) { Get-Content $log }
+                throw "RoundSense.exe exited prematurely with code $($proc.ExitCode)"
+              }
+              try {
+                $h = Invoke-RestMethod -Uri 'http://127.0.0.1:3100/health' -TimeoutSec 1
+                if ($h.ok -eq $true -and $h.product -eq 'roundsense') {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+              Start-Sleep -Milliseconds 200
+            }
+            if (-not $ready) { throw 'Timed out waiting for RoundSense.exe /health' }
+
+            $root = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/' -UseBasicParsing -TimeoutSec 3
+            $overlay = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/overlay' -UseBasicParsing -TimeoutSec 3
+            $preview = Invoke-RestMethod -Uri 'http://127.0.0.1:3100/preview?scenario=ct-mid' -TimeoutSec 3
+            $svg = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/assets/cs2/ak47.svg' -UseBasicParsing -TimeoutSec 3
+            if ($root.StatusCode -ne 200 -or $overlay.StatusCode -ne 200 -or $svg.StatusCode -ne 200) {
+              throw 'Unexpected HTTP status from bundled sidecar'
+            }
+            if ($preview.version -ne 2 -or $preview.options.Count -lt 1) {
+              throw 'Invalid Policy V3 preview response'
+            }
+            Write-Host "Smoke test HTTP checks passed (preview options: $($preview.options.Count))"
+          } finally {
+            if (-not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+              $proc.WaitForExit(5000) | Out-Null
+            }
+          }
+
+          Start-Sleep -Seconds 2
+          $stillUp = $false
+          try {
+            Invoke-RestMethod -Uri 'http://127.0.0.1:3100/health' -TimeoutSec 1 | Out-Null
+            $stillUp = $true
+          } catch {}
+          if ($stillUp) {
+            throw 'Sidecar process leaked after RoundSense.exe terminated (port 3100 still responding)'
+          }
+          Write-Host 'Verified clean shutdown: Job Object reclaimed sidecar and released port 3100.'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: RoundSense-win64-portable

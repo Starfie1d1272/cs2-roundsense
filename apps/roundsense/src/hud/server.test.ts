@@ -279,13 +279,11 @@ describe('HUD real HTTP pipeline', () => {
     const webBase = `http://127.0.0.1:${s.webPort}`;
     const gsiBase = `http://127.0.0.1:${s.gsiPort}`;
 
-    const health = (await fetch(webBase + '/health').then((r) => r.json())) as {
-      ok: boolean;
-      product: string;
-      gsiHealth: { rejected: number };
-    };
-    expect(health).toMatchObject({ ok: true, product: 'roundsense' });
-    expect(health.gsiHealth.rejected).toBe(0);
+    const healthRes = await fetch(webBase + '/health');
+    expect(healthRes.status).toBe(200);
+    expect(Number(healthRes.headers.get('content-length'))).toBeGreaterThan(0);
+    const health = (await healthRes.json()) as { ok: boolean; product: string };
+    expect(health).toEqual({ ok: true, product: 'roundsense' });
 
     const controller = new AbortController();
     const sse = await fetch(webBase + '/events', { signal: controller.signal });

@@ -32,6 +32,35 @@ await cp(hostExeSrc, resolve(stageDir, 'RoundSense.exe'));
 await cp(sidecarSrc, resolve(stageDir, 'sidecar'), { recursive: true });
 await cp(nodeExeSrc, resolve(stageDir, 'sidecar/node.exe'));
 
+const nodeLicenseSrc = resolve(dirname(nodeExeSrc), 'LICENSE');
+try {
+  const s = await stat(nodeLicenseSrc);
+  if (s.isFile()) await cp(nodeLicenseSrc, resolve(stageDir, 'sidecar/NODE-LICENSE.txt'));
+} catch {
+  // optional if runner node layout omits sibling LICENSE
+}
+
+await writeFile(
+  resolve(stageDir, 'THIRD-PARTY-NOTICES.txt'),
+  [
+    'RoundSense — Third-Party Notices',
+    '================================',
+    '',
+    '1. Node.js Runtime (sidecar/node.exe)',
+    '   License: MIT (https://github.com/nodejs/node/blob/main/LICENSE)',
+    '   See sidecar/NODE-LICENSE.txt when bundled alongside node.exe.',
+    '',
+    '2. Tauri & Rust Crates (RoundSense.exe)',
+    '   Built with Tauri v2 (Apache-2.0 / MIT) and windows-sys (Apache-2.0 / MIT).',
+    '',
+    '3. CS2 Weapon & Equipment Silhouettes (sidecar/ui/assets/cs2/*.svg)',
+    '   Derived from Valve Counter-Strike 2 game HUD icon silhouettes for read-only',
+    '   companion display. Counter-Strike 2 is a trademark of Valve Corporation.',
+    '',
+  ].join('\r\n'),
+  'utf8',
+);
+
 const zip = new JSZip();
 async function addDirToZip(dir, prefix) {
   const entries = await readdir(dir, { withFileTypes: true });

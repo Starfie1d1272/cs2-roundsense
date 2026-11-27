@@ -57,47 +57,24 @@ pub fn set_overlay_state(
 /// Queries foreground window identity and client geometry only; never reads game memory.
 #[cfg(windows)]
 fn foreground_cs2() -> Option<Rect> {
-    #[repr(C)]
-    struct WinRect {
-        left: i32,
-        top: i32,
-        right: i32,
-        bottom: i32,
-    }
-    #[repr(C)]
-    struct Point {
-        x: i32,
-        y: i32,
-    }
-    #[link(name = "user32")]
-    extern "system" {
-        fn GetForegroundWindow() -> isize;
-        fn GetWindowThreadProcessId(hwnd: isize, pid: *mut u32) -> u32;
-        fn GetClientRect(hwnd: isize, rect: *mut WinRect) -> i32;
-        fn ClientToScreen(hwnd: isize, point: *mut Point) -> i32;
-        fn IsIconic(hwnd: isize) -> i32;
-    }
-    #[link(name = "kernel32")]
-    extern "system" {
-        fn OpenProcess(access: u32, inherit: i32, pid: u32) -> isize;
-        fn QueryFullProcessImageNameW(
-            process: isize,
-            flags: u32,
-            buffer: *mut u16,
-            size: *mut u32,
-        ) -> i32;
-        fn CloseHandle(handle: isize) -> i32;
-    }
+    use windows_sys::Win32::Foundation::{CloseHandle, POINT, RECT};
+    use windows_sys::Win32::Graphics::Gdi::ClientToScreen;
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetClientRect, GetForegroundWindow, GetWindowThreadProcessId, IsIconic,
+    };
 
     unsafe {
         let hwnd = GetForegroundWindow();
-        if hwnd == 0 || IsIconic(hwnd) != 0 {
+        if hwnd.is_null() || IsIconic(hwnd) != 0 {
             return None;
         }
-        let mut pid = 0;
+        let mut pid = 0u32;
         GetWindowThreadProcessId(hwnd, &mut pid);
-        let process = OpenProcess(0x1000, 0, pid); // PROCESS_QUERY_LIMITED_INFORMATION
-        if process == 0 {
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        if process.is_null() {
             return None;
         }
         let mut buffer = [0u16; 1024];
@@ -111,13 +88,13 @@ fn foreground_cs2() -> Option<Rect> {
         if !path.rsplit('\\').next()?.eq_ignore_ascii_case("cs2.exe") {
             return None;
         }
-        let mut rect = WinRect {
+        let mut rect = RECT {
             left: 0,
             top: 0,
             right: 0,
             bottom: 0,
         };
-        let mut origin = Point { x: 0, y: 0 };
+        let mut origin = POINT { x: 0, y: 0 };
         if GetClientRect(hwnd, &mut rect) == 0 || ClientToScreen(hwnd, &mut origin) == 0 {
             return None;
         }
@@ -150,15 +127,22 @@ pub fn spawn_tracker(handle: AppHandle) {
                 break;
             };
             let state = handle.state::<OverlayHost>();
-            let request = state.0.lock().ok().and_then(|lease| {
+            let visible_request = state.0.lock().ok().and_then(|lease| {
                 if lease.renewed.elapsed() < Duration::from_secs(3) {
-                    lease.request.clone()
+                    lease.request.clone().filter(|r| r.visible)
                 } else {
                     None
                 }
             });
-            let game = foreground_cs2();
-            if let (Some(request), Some(game)) = (request.filter(|r| r.visible), game) {
+            // Skip Win32 foreground/process queries completely when HUD is hidden.
+            let Some(request) = visible_request else {
+                if shown {
+                    let _ = window.hide();
+                    shown = false;
+                }
+                continue;
+            };
+            if let Some(game) = foreground_cs2() {
                 let dpi = window.scale_factor().unwrap_or(1.0);
                 let width = (request.width * request.scale * dpi).ceil() as i32;
                 let height = (request.height * request.scale * dpi).ceil() as i32;

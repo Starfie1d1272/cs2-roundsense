@@ -503,20 +503,20 @@ html, body {
 }
 
 .rs-hud-anchor.pos-below-radar {
-  top: 34.5%;
-  left: 1.8%;
+  top: 34%;
+  left: 2%;
   transform-origin: top left;
 }
 
 .rs-hud-anchor.pos-lower-left {
-  bottom: 8.5%;
-  left: 1.8%;
+  bottom: 14%;
+  left: 2%;
   transform-origin: bottom left;
 }
 
 .rs-hud-anchor.pos-lower-right {
-  bottom: 10%;
-  right: 1.8%;
+  bottom: 16%;
+  right: 2%;
   transform-origin: bottom right;
 }
 

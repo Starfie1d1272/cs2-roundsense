@@ -8,17 +8,18 @@ pub struct Rect {
 
 /// Computes physical desktop coordinates for the HUD inside the CS2 client rect,
 /// supporting multi-monitor setups (including negative origins).
+/// Percentages match apps/roundsense/ui/hud.css (.pos-below-radar / .pos-lower-left / .pos-lower-right).
 pub fn place(game: Rect, width: i32, height: i32, position: &str) -> (i32, i32) {
-    let padding = ((game.width as f64 * 0.025).round() as i32).max(12);
+    let padding = ((game.width as f64 * 0.02).round() as i32).max(12);
     let x = if position == "lower-right" {
         game.x + game.width - padding - width
     } else {
         game.x + padding
     };
     let y = match position {
-        "lower-left" => game.y + game.height - (game.height as f64 * 0.17).round() as i32 - height,
-        "lower-right" => game.y + game.height - (game.height as f64 * 0.25).round() as i32 - height,
-        _ => game.y + (game.height as f64 * 0.33).round() as i32,
+        "lower-left" => game.y + game.height - (game.height as f64 * 0.14).round() as i32 - height,
+        "lower-right" => game.y + game.height - (game.height as f64 * 0.16).round() as i32 - height,
+        _ => game.y + (game.height as f64 * 0.34).round() as i32,
     };
     (
         x.clamp(game.x, game.x + (game.width - width).max(0)),
@@ -54,7 +55,7 @@ mod tests {
             width: 1920,
             height: 1080,
         };
-        assert_eq!(place(game, 264, 140, "lower-right").0, 1608);
-        assert_eq!(place(game, 317, 168, "lower-right").0, 1555);
+        assert_eq!(place(game, 264, 140, "lower-right").0, 1618);
+        assert_eq!(place(game, 317, 168, "lower-right").0, 1565);
     }
 }

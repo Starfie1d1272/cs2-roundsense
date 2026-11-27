@@ -62,6 +62,7 @@ export interface HudOption {
   lossNextMoney: number | null;
   lossWithPlantNextMoney: number | null;
   futureCapability: HudFutureCapability;
+  awpNextReady: boolean;
   conditionalAlternatives: HudConditionalAlternative[];
 }
 
@@ -94,21 +95,14 @@ function mapPurchases(
   }));
 }
 
-function purchaseCost(purchases: readonly HudPurchaseItem[]): number {
-  const helmetUpgradeCost = price(DEFAULT_RULES, 'kevlar_helmet') - price(DEFAULT_RULES, 'kevlar');
-  let total = 0;
-  for (const p of purchases) {
-    const unit = p.helmetUpgradeOnly ? helmetUpgradeCost : price(DEFAULT_RULES, p.item);
-    total += unit * p.quantity;
-  }
-  return total;
-}
+const AWP_ARMOR_THRESHOLD = price(DEFAULT_RULES, 'awp') + price(DEFAULT_RULES, 'kevlar');
 
 export function optionForRecommendation(
   policy: PolicyV3Output,
   option: RecommendationOption,
   armor: number,
   helmet: boolean,
+  awpPriority: HudSettings['awpPriority'] = 'NEUTRAL',
 ): HudOption {
   const capabilityToProtect =
     'protectedCapability' in option.spendingGuidance
@@ -149,15 +143,14 @@ export function optionForRecommendation(
     lossNextMoney,
     lossWithPlantNextMoney,
     futureCapability,
-    conditionalAlternatives: option.conditionalAlternatives.map((alt) => {
-      const mapped = mapPurchases(alt.purchases, armor, helmet);
-      return {
-        condition: alt.condition,
-        purchases: mapped,
-        spendDelta: purchaseCost(mapped) - option.bundleSpend,
-        reason: alt.reason,
-      };
-    }),
+    awpNextReady:
+      awpPriority !== 'NEUTRAL' && lossNextMoney !== null && lossNextMoney >= AWP_ARMOR_THRESHOLD,
+    conditionalAlternatives: option.conditionalAlternatives.map((alt) => ({
+      condition: alt.condition,
+      purchases: mapPurchases(alt.purchases, armor, helmet),
+      spendDelta: alt.bundleSpend - option.bundleSpend,
+      reason: alt.reason,
+    })),
   };
 }
 
@@ -198,6 +191,7 @@ export class HudRuntime {
   }
 
   private recalculate(): void {
+    this.policy = null;
     if (!this.receipt) return;
     if (!this.state) return;
     const state = {
@@ -254,7 +248,9 @@ export class HudRuntime {
 
     const options =
       visible && p && side
-        ? p.options.map((option) => optionForRecommendation(p, option, armor, helmet))
+        ? p.options.map((option) =>
+            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority),
+          )
         : [];
 
     const moneyFact = this.state?.player.money;

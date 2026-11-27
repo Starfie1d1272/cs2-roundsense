@@ -7,6 +7,7 @@
   let latest = null;
   let lastMessage = -Infinity;
   let nativePending = false;
+  let staleTimer = null;
 
   function hide() {
     if (hud) hud.hidden = true;
@@ -36,12 +37,21 @@
     }
   }
 
+  function resetStaleTimer() {
+    if (staleTimer) clearTimeout(staleTimer);
+    staleTimer = setTimeout(() => {
+      hide();
+      void syncNative();
+    }, 2000);
+  }
+
   const source = new EventSource('/events');
   source.onmessage = (event) => {
     try {
       const snapshot = JSON.parse(event.data);
       lastMessage = performance.now();
       latest = snapshot;
+      resetStaleTimer();
       window.RoundSenseHud.render(hud, snapshot);
       void syncNative();
     } catch {
@@ -50,12 +60,8 @@
     }
   };
   source.onerror = () => {
+    if (staleTimer) clearTimeout(staleTimer);
     hide();
     void syncNative();
   };
-
-  setInterval(() => {
-    if (performance.now() - lastMessage >= 2000) hide();
-    void syncNative();
-  }, 250);
 })();

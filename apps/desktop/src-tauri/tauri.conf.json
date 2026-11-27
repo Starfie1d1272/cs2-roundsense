@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "dev.roundsense.hud",
   "build": {
-    "frontendDist": "../../roundsense/ui"
+    "frontendDist": "dist-empty"
   },
   "app": {
     "withGlobalTauri": true,
