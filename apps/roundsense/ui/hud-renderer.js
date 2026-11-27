@@ -126,12 +126,15 @@
     return '/assets/cs2/' + key + '.svg';
   }
 
-  function createGearNode(purchase) {
+  function createGearNode(purchase, addGroupSep) {
     const key = purchase.helmetUpgradeOnly ? 'helmet_only' : purchase.item;
     const label = ITEM_NAMES[key] ?? purchase.item;
     const src = iconPathFor(purchase.item, purchase.helmetUpgradeOnly);
+    const cat = ITEM_CATEGORY[key] ?? 'gun';
+    const isDualFlash = key === 'flash' && purchase.quantity === 2;
     const wrap = document.createElement('span');
-    wrap.className = 'rs-gear-item';
+    wrap.className =
+      'rs-gear-item' + (isDualFlash ? ' rs-gear-pair' : '') + (addGroupSep ? ' rs-gear-sep' : '');
     wrap.title = purchase.quantity > 1 ? label + ' ×' + purchase.quantity : label;
 
     if (purchase.helmetUpgradeOnly) {
@@ -142,13 +145,15 @@
     }
 
     if (src) {
-      const img = document.createElement('img');
-      const cat = ITEM_CATEGORY[key] ?? 'gun';
-      img.className = 'rs-icon rs-icon-' + cat;
-      img.src = src;
-      img.alt = label;
-      img.decoding = 'async';
-      wrap.append(img);
+      const iconCount = isDualFlash ? 2 : 1;
+      for (let i = 0; i < iconCount; i++) {
+        const img = document.createElement('img');
+        img.className = 'rs-icon rs-icon-' + cat;
+        img.src = src;
+        img.alt = label;
+        img.decoding = 'async';
+        wrap.append(img);
+      }
     } else {
       const fallback = document.createElement('span');
       fallback.className = 'rs-gear-fallback';
@@ -156,7 +161,7 @@
       wrap.append(fallback);
     }
 
-    if (purchase.quantity > 1) {
+    if (purchase.quantity > 1 && !isDualFlash) {
       const qty = document.createElement('span');
       qty.className = 'rs-gear-qty';
       qty.textContent = '×' + purchase.quantity;
@@ -227,9 +232,16 @@
       const icons = document.createElement('span');
       icons.className = 'rs-cond-icons';
       for (const p of displayList) {
-        icons.append(createGearNode(p));
+        icons.append(createGearNode(p, false));
       }
       line.append(icons);
+    }
+
+    if (typeof alt.spendDelta === 'number' && alt.spendDelta !== 0) {
+      const delta = document.createElement('span');
+      delta.className = 'rs-cond-delta' + (alt.spendDelta < 0 ? ' is-save' : '');
+      delta.textContent = (alt.spendDelta > 0 ? '+' : '-') + formatMoney(Math.abs(alt.spendDelta));
+      line.append(delta);
     }
 
     return line;
@@ -267,6 +279,7 @@
       roundContext: snapshot.roundContext,
       policyStatus: snapshot.policyStatus,
       unresolved: snapshot.unresolved,
+      awpPriority: snapshot.settings?.awpPriority ?? 'NEUTRAL',
       options: snapshot.options,
     });
     if (container.dataset.content === contentKey) return;
@@ -346,7 +359,14 @@
       spendEl.className = 'rs-opt-spend';
       spendEl.textContent = hasBound ? '≤ ' + formatMoney(opt.maxSpendNow) : formatMoney(opt.spend);
 
-      const cap = CAPABILITY_META[opt.futureCapability] ?? CAPABILITY_META.NOT_EVALUATED;
+      const isSaveAwpReady =
+        snapshot.settings?.awpPriority === 'SAVE_FOR_AWP' &&
+        opt.lossNextMoney !== null &&
+        opt.lossNextMoney !== undefined &&
+        opt.lossNextMoney >= 5400;
+      const cap = isSaveAwpReady
+        ? { text: '下局有狙', cls: 'cap-full' }
+        : (CAPABILITY_META[opt.futureCapability] ?? CAPABILITY_META.NOT_EVALUATED);
       const nextEl = document.createElement('div');
       nextEl.className = 'rs-opt-next ' + cap.cls;
       const nextMain = document.createElement('span');
@@ -373,8 +393,12 @@
       const strip = document.createElement('div');
       strip.className = 'rs-gear-strip';
       if (Array.isArray(opt.purchases) && opt.purchases.length > 0) {
+        let prevCat = null;
         for (const p of sortPurchases(opt.purchases)) {
-          strip.append(createGearNode(p));
+          const k = p.helmetUpgradeOnly ? 'helmet_only' : p.item;
+          const cat = ITEM_CATEGORY[k] ?? 'gun';
+          strip.append(createGearNode(p, prevCat !== null && prevCat !== cat));
+          prevCat = cat;
         }
         if (hasBound) {
           const actual = document.createElement('span');
@@ -409,14 +433,7 @@
     foot.className = 'rs-hud-foot';
     const left = document.createElement('span');
     left.textContent = anchorText;
-    const right = document.createElement('span');
-    if (list.some((o) => o.lossNextMoney !== null && o.lossNextMoney !== undefined)) {
-      right.textContent =
-        snapshot.side === 'T' ? '败后未下包 · 无额外收入重买' : '败后按无额外收入重买';
-    } else {
-      right.textContent = '当前仅显示本局参考';
-    }
-    foot.append(left, right);
+    foot.append(left);
     container.append(foot);
   }
 

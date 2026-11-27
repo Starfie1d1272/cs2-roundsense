@@ -342,9 +342,12 @@ async function findConflictingGsiFiles(
   return conflicts;
 }
 
+function pathHashFor(cfgPath: string): string {
+  return sha256(normalize(cfgPath).toLowerCase()).slice(0, 12);
+}
+
 function manifestFileNameFor(cfgPath: string): string {
-  const key = sha256(normalize(cfgPath).toLowerCase()).slice(0, 12);
-  return `${BACKUP_MANIFEST_PREFIX}.${key}.json`;
+  return `${BACKUP_MANIFEST_PREFIX}.${pathHashFor(cfgPath)}.json`;
 }
 
 async function readManifest(backupDir?: string, cfgPath?: string): Promise<BackupManifest | null> {
@@ -469,18 +472,19 @@ export async function installGsiConfig(
           )
         : true);
 
+    const hash = pathHashFor(path);
     if (hasOriginalBackup && existingManifest) {
       if (inspection.reason === 'CONTENT_MISMATCH') {
-        const preRepair = join(options.backupDir, `${gsiCfgFileName()}.pre-repair-${stamp}`);
-        await copyFile(path, preRepair).catch(() => undefined);
+        const preRepair = join(options.backupDir, `${hash}.pre-repair.cfg`);
+        await copyFile(path, preRepair);
       }
       backupPath = existingManifest.backupFileName
         ? join(options.backupDir, existingManifest.backupFileName)
         : undefined;
     } else if (inspection.reason === 'CONTENT_MISMATCH') {
-      const backupFileName = `${gsiCfgFileName()}.original-${stamp}`;
+      const backupFileName = `${hash}.original.cfg`;
       backupPath = join(options.backupDir, backupFileName);
-      await copyFile(path, backupPath, fsConstants.COPYFILE_EXCL);
+      await copyFile(path, backupPath);
       await writeManifest(options.backupDir, {
         cfgPath: path,
         installedSha256: expectedSha256,

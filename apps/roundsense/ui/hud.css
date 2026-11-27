@@ -166,7 +166,7 @@ html, body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -174,6 +174,14 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 1.5px;
+}
+
+.rs-gear-pair {
+  gap: 1.5px;
+}
+
+.rs-gear-sep {
+  margin-left: 3.5px;
 }
 
 .rs-icon {
@@ -267,7 +275,19 @@ html, body {
 .rs-cond-icons {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+}
+
+.rs-cond-delta {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #CBD5E1;
+  white-space: nowrap;
+}
+
+.rs-cond-delta.is-save {
+  color: var(--accent);
 }
 
 .rs-cond-icons .rs-icon-eq,

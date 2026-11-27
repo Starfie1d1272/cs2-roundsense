@@ -82,6 +82,7 @@
                   placeholder="粘贴 CS2 目录或 cs2.exe 路径"
                   autocomplete="off"
                 />
+                <button type="button" id="gsi-pick-folder-btn" class="rs-btn rs-btn-ghost" hidden>浏览…</button>
                 <button type="button" id="gsi-manual-apply" class="rs-btn rs-btn-primary">验证并安装</button>
               </div>
               <p id="gsi-manual-error" class="rs-error-text" hidden></p>
@@ -158,6 +159,7 @@
               <div><dt>定位来源</dt><dd id="diag-source">—</dd></div>
               <div><dt>其他 GSI</dt><dd id="diag-other">—</dd></div>
               <div><dt>实时状态</dt><dd id="diag-live">—</dd></div>
+              <div id="diag-native-row" hidden><dt>本机目录</dt><dd><button type="button" id="diag-open-cfg" class="rs-link-btn">打开 cfg 目录</button> · <button type="button" id="diag-open-logs" class="rs-link-btn">打开日志目录</button></dd></div>
               <div><dt>调试视图</dt><dd><a href="/overlay" target="_blank" rel="noopener" class="rs-link-subtle">打开独立叠层视图</a></dd></div>
             </dl>
           </details>

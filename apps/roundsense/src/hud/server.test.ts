@@ -272,4 +272,45 @@ describe('HUD real HTTP pipeline', () => {
     const bad = await fetch(base + '/preview?scenario=nonexistent');
     expect(bad.status).toBe(404);
   });
+
+  it('exposes /health and streams real-time GSI rejection health over SSE', async () => {
+    const s = await startHudService({ token: 'tok-health', gsiPort: 0, webPort: 0 });
+    services.push(s);
+    const webBase = `http://127.0.0.1:${s.webPort}`;
+    const gsiBase = `http://127.0.0.1:${s.gsiPort}`;
+
+    const health = (await fetch(webBase + '/health').then((r) => r.json())) as {
+      ok: boolean;
+      product: string;
+      gsiHealth: { rejected: number };
+    };
+    expect(health).toMatchObject({ ok: true, product: 'roundsense' });
+    expect(health.gsiHealth.rejected).toBe(0);
+
+    const controller = new AbortController();
+    const sse = await fetch(webBase + '/events', { signal: controller.signal });
+    const reader = sse.body!.getReader();
+    const decoder = new TextDecoder();
+
+    // Send a GSI packet with an invalid token
+    const rejectRes = await fetch(gsiBase + '/', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ auth: { token: 'wrong-token' } }),
+    });
+    expect(rejectRes.status).toBe(401);
+
+    let buffer = '';
+    let seenRejected = false;
+    for (let i = 0; i < 10 && !seenRejected; i++) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      if (buffer.includes('event: health') && buffer.includes('"rejected":1')) {
+        seenRejected = true;
+      }
+    }
+    controller.abort();
+    expect(seenRejected).toBe(true);
+  });
 });

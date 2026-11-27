@@ -46,8 +46,13 @@
   const gsiRestoreBtn = document.getElementById('gsi-restore-btn');
   const gsiManualBox = document.getElementById('gsi-manual-box');
   const manualPathInput = document.getElementById('manual-install-path');
+  const pickFolderBtn = document.getElementById('gsi-pick-folder-btn');
   const manualApplyBtn = document.getElementById('gsi-manual-apply');
   const manualError = document.getElementById('gsi-manual-error');
+  const diagNativeRow = document.getElementById('diag-native-row');
+  const diagOpenCfgBtn = document.getElementById('diag-open-cfg');
+  const diagOpenLogsBtn = document.getElementById('diag-open-logs');
+  const tauriInvoke = window.__TAURI__?.core?.invoke;
 
   const liveDot = document.getElementById('live-dot');
   const liveStateLabel = document.getElementById('live-state-label');
@@ -64,6 +69,7 @@
   let activeAspect = '4-3';
   let liveSnapshot = null;
   let lastGsiHealth = null;
+  let lastCfgDirectory = null;
   let previewSnapshot = null;
   let previewSeq = 0;
   let saveTimer = null;
@@ -189,6 +195,8 @@
       if (liveSnapshot) updateLiveStatus(liveSnapshot, false);
     }
 
+    lastCfgDirectory = status.cfgDirectory || null;
+    if (diagOpenCfgBtn) diagOpenCfgBtn.disabled = !lastCfgDirectory;
     diagInstall.textContent = status.installPath || '未检测到';
     diagCfg.textContent = status.cfgPath || '—';
     diagSource.textContent = status.installSource || '—';
@@ -338,9 +346,11 @@
     } else if (
       lastGsiHealth &&
       lastGsiHealth.rejected > 0 &&
-      lastGsiHealth.accepted === 0 &&
       lastGsiHealth.lastRejectReason &&
-      /auth|token|unauthorized/i.test(lastGsiHealth.lastRejectReason)
+      /auth|token|unauthorized/i.test(lastGsiHealth.lastRejectReason) &&
+      (lastGsiHealth.lastAcceptedAtMs === null ||
+        (lastGsiHealth.lastRejectAtMs !== null &&
+          lastGsiHealth.lastRejectAtMs > lastGsiHealth.lastAcceptedAtMs))
     ) {
       liveDot.className = 'rs-dot err';
       liveStateLabel.textContent = 'Token 不匹配，请修复配置';
@@ -428,6 +438,29 @@
     void runGsiMutation('/gsi/install', { installPath: val });
   });
 
+  if (typeof tauriInvoke === 'function') {
+    pickFolderBtn.hidden = false;
+    diagNativeRow.hidden = false;
+    pickFolderBtn.addEventListener('click', async () => {
+      try {
+        const picked = await tauriInvoke('pick_cs2_folder');
+        if (typeof picked === 'string' && picked.trim()) {
+          manualPathInput.value = picked.trim();
+          await runGsiMutation('/gsi/install', { installPath: picked.trim() });
+        }
+      } catch {
+        manualError.textContent = '无法打开系统文件夹选择器。';
+        manualError.hidden = false;
+      }
+    });
+    diagOpenCfgBtn.addEventListener('click', () => {
+      if (lastCfgDirectory) void tauriInvoke('open_directory', { path: lastCfgDirectory });
+    });
+    diagOpenLogsBtn.addEventListener('click', () => {
+      void tauriInvoke('open_logs_dir');
+    });
+  }
+
   async function boot() {
     syncSettingsControls();
     applyBackdrop();
@@ -458,6 +491,14 @@
         // ignore malformed event
       }
     };
+    source.addEventListener('health', (event) => {
+      try {
+        lastGsiHealth = JSON.parse(event.data);
+        if (liveSnapshot) updateLiveStatus(liveSnapshot, false);
+      } catch {
+        // ignore malformed event
+      }
+    });
     source.onerror = () => updateLiveStatus(null, true);
   }
 

@@ -1,4 +1,6 @@
 import {
+  DEFAULT_RULES,
+  price,
   recommendPolicyV3,
   type PolicyMode,
   type PolicyV3Output,
@@ -41,6 +43,7 @@ export interface HudPurchaseItem {
 export interface HudConditionalAlternative {
   condition: string;
   purchases: HudPurchaseItem[];
+  spendDelta: number;
   reason: string;
 }
 
@@ -91,6 +94,16 @@ function mapPurchases(
   }));
 }
 
+function purchaseCost(purchases: readonly HudPurchaseItem[]): number {
+  const helmetUpgradeCost = price(DEFAULT_RULES, 'kevlar_helmet') - price(DEFAULT_RULES, 'kevlar');
+  let total = 0;
+  for (const p of purchases) {
+    const unit = p.helmetUpgradeOnly ? helmetUpgradeCost : price(DEFAULT_RULES, p.item);
+    total += unit * p.quantity;
+  }
+  return total;
+}
+
 export function optionForRecommendation(
   policy: PolicyV3Output,
   option: RecommendationOption,
@@ -136,11 +149,15 @@ export function optionForRecommendation(
     lossNextMoney,
     lossWithPlantNextMoney,
     futureCapability,
-    conditionalAlternatives: option.conditionalAlternatives.map((alt) => ({
-      condition: alt.condition,
-      purchases: mapPurchases(alt.purchases, armor, helmet),
-      reason: alt.reason,
-    })),
+    conditionalAlternatives: option.conditionalAlternatives.map((alt) => {
+      const mapped = mapPurchases(alt.purchases, armor, helmet);
+      return {
+        condition: alt.condition,
+        purchases: mapped,
+        spendDelta: purchaseCost(mapped) - option.bundleSpend,
+        reason: alt.reason,
+      };
+    }),
   };
 }
 

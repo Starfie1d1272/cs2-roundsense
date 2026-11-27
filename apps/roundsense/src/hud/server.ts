@@ -1,5 +1,7 @@
+import { existsSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createGsiReceiver, type GsiReceipt } from '@roundsense/gsi-protocol';
 import { HudRuntime, type HudSettings } from './model.js';
@@ -39,6 +41,7 @@ export interface GsiRuntimeHealth {
   rejected: number;
   consumerErrors: number;
   lastAcceptedAtMs: number | null;
+  lastRejectAtMs: number | null;
   lastRejectReason: string | null;
 }
 
@@ -70,10 +73,19 @@ export interface HudServiceOptions {
   token: string;
   gsiPort?: number;
   webPort?: number;
+  uiDir?: string;
   nowNs?: () => bigint;
   saveSettings?: (settings: HudSettings) => Promise<void>;
   settings?: HudSettings;
   onboarding?: HudOnboardingOptions;
+}
+
+function resolveUiDir(explicit?: string): string {
+  if (explicit) return explicit;
+  if (process.env.ROUNDSENSE_UI_DIR) return process.env.ROUNDSENSE_UI_DIR;
+  const sibling = fileURLToPath(new URL('./ui', import.meta.url));
+  if (existsSync(join(sibling, 'settings.html'))) return sibling;
+  return fileURLToPath(new URL('../../ui', import.meta.url));
 }
 
 async function readJsonBody(
@@ -111,6 +123,7 @@ function parseOptionalInstallPath(input: unknown): string | undefined | null {
 
 export async function startHudService(options: HudServiceOptions) {
   if (!options.token.trim()) throw new Error('HUD requires a non-empty GSI token');
+  const uiDir = resolveUiDir(options.uiDir);
   const runtime = new HudRuntime();
   if (options.settings) runtime.updateSettings(options.settings);
   const now = options.nowNs ?? process.hrtime.bigint;
@@ -119,10 +132,24 @@ export async function startHudService(options: HudServiceOptions) {
   let settingsBusy = false;
   let gsiMutationBusy = false;
   let preferredInstallPath = options.onboarding?.preferredInstallPath;
+  let consumerErrors = 0;
+  let lastAcceptedAtMs: number | null = null;
+  let lastRejectAtMs: number | null = null;
+  let lastRejectReason: string | null = null;
 
   const snapshot = () => runtime.snapshot(now());
+  const gsiHealth = (): GsiRuntimeHealth => ({
+    accepted: gsi.accepted(),
+    rejected: gsi.rejected(),
+    consumerErrors,
+    lastAcceptedAtMs,
+    lastRejectAtMs,
+    lastRejectReason,
+  });
+  const formatEvents = () =>
+    `data: ${JSON.stringify(snapshot())}\n\nevent: health\ndata: ${JSON.stringify(gsiHealth())}\n\n`;
   const broadcast = () => {
-    const event = `data: ${JSON.stringify(snapshot())}\n\n`;
+    const event = formatEvents();
     for (const client of clients) {
       if (client.writableNeedDrain) {
         latest.set(client, event);
@@ -131,9 +158,6 @@ export async function startHudService(options: HudServiceOptions) {
       client.write(event);
     }
   };
-  let consumerErrors = 0;
-  let lastAcceptedAtMs: number | null = null;
-  let lastRejectReason: string | null = null;
 
   const gsi = createGsiReceiver({
     token: options.token,
@@ -142,22 +166,16 @@ export async function startHudService(options: HudServiceOptions) {
       lastAcceptedAtMs = Date.now();
       try {
         runtime.observe(receipt);
-        broadcast();
       } catch {
         consumerErrors++;
       }
+      broadcast();
     },
     onReject: (_status, reason) => {
+      lastRejectAtMs = Date.now();
       lastRejectReason = reason;
+      broadcast();
     },
-  });
-
-  const gsiHealth = (): GsiRuntimeHealth => ({
-    accepted: gsi.accepted(),
-    rejected: gsi.rejected(),
-    consumerErrors,
-    lastAcceptedAtMs,
-    lastRejectReason,
   });
 
   const resolvedGsiPort = () =>
@@ -242,7 +260,7 @@ export async function startHudService(options: HudServiceOptions) {
         'content-type': 'text/event-stream',
         connection: 'keep-alive',
       });
-      response.write(`retry: 1000\ndata: ${JSON.stringify(snapshot())}\n\n`);
+      response.write(`retry: 1000\n${formatEvents()}`);
       clients.add(response);
       response.on('drain', () => {
         const event = latest.get(response);
@@ -253,6 +271,18 @@ export async function startHudService(options: HudServiceOptions) {
         clients.delete(response);
         latest.delete(response);
       });
+      return;
+    }
+    if (request.method === 'GET' && path === '/health') {
+      response.writeHead(200, { 'content-type': 'application/json' }).end(
+        JSON.stringify({
+          ok: true,
+          product: 'roundsense',
+          webPort: (web.address() as { port: number } | null)?.port ?? options.webPort ?? 3100,
+          gsiPort: resolvedGsiPort(),
+          gsiHealth: gsiHealth(),
+        }),
+      );
       return;
     }
     if (request.method === 'GET' && path === '/snapshot') {
@@ -396,9 +426,7 @@ export async function startHudService(options: HudServiceOptions) {
       const asset = ASSETS[path];
       if (asset) {
         try {
-          const contents = await readFile(
-            fileURLToPath(new URL(`../../ui/${asset[0]}`, import.meta.url)),
-          );
+          const contents = await readFile(join(uiDir, asset[0]));
           response
             .writeHead(200, { 'content-type': asset[1] })
             .end(request.method === 'HEAD' ? undefined : contents);
@@ -410,9 +438,7 @@ export async function startHudService(options: HudServiceOptions) {
       const iconMatch = CS2_ICON_RE.exec(path);
       if (iconMatch) {
         try {
-          const contents = await readFile(
-            fileURLToPath(new URL(`../../ui/assets/cs2/${iconMatch[1]}`, import.meta.url)),
-          );
+          const contents = await readFile(join(uiDir, 'assets', 'cs2', iconMatch[1]));
           response
             .writeHead(200, {
               'content-type': 'image/svg+xml; charset=utf-8',
@@ -428,9 +454,7 @@ export async function startHudService(options: HudServiceOptions) {
       if (previewMatch) {
         try {
           const fileName = `${previewMatch[1]}.${previewMatch[2]}`;
-          const contents = await readFile(
-            fileURLToPath(new URL(`../../ui/assets/preview/${fileName}`, import.meta.url)),
-          );
+          const contents = await readFile(join(uiDir, 'assets', 'preview', fileName));
           response
             .writeHead(200, {
               'content-type': IMAGE_MIME[previewMatch[2]] ?? 'application/octet-stream',

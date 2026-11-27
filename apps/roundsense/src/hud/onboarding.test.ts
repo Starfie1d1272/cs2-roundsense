@@ -229,8 +229,11 @@ describe('GSI config inspection, install, backup, and restore', () => {
     expect(second.changed).toBe(true);
     expect(second.backupPath).toBe(first.backupPath);
 
-    const backupEntries = (await readdir(backupDir)).filter((f) => f.includes('.original-'));
-    expect(backupEntries).toHaveLength(1);
+    const allBackups = await readdir(backupDir);
+    const originalEntries = allBackups.filter((f) => f.endsWith('.original.cfg'));
+    const preRepairEntries = allBackups.filter((f) => f.endsWith('.pre-repair.cfg'));
+    expect(originalEntries).toHaveLength(1);
+    expect(preRepairEntries).toHaveLength(1);
 
     const restored = await restoreGsiConfig({ cfgDirectory, backupDir });
     expect(restored).toEqual({ status: 'RESTORED', path: cfgPath, mode: 'FROM_BACKUP' });
