@@ -41,16 +41,21 @@ const nodeLicenseCandidates = [
   resolve(dirname(nodeExeSrc), '../LICENSE'),
   resolve(dirname(nodeExeSrc), '../share/doc/node/LICENSE'),
 ];
+let copiedNodeLicense = false;
 for (const candidate of nodeLicenseCandidates) {
   try {
     const s = await stat(candidate);
     if (s.isFile()) {
       await cp(candidate, resolve(stageDir, 'sidecar/NODE-LICENSE.txt'));
+      copiedNodeLicense = true;
       break;
     }
   } catch {
     // try next candidate
   }
+}
+if (!copiedNodeLicense) {
+  throw new Error(`Missing Node.js LICENSE near ${nodeExeSrc}`);
 }
 
 await writeFile(

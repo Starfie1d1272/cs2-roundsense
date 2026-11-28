@@ -36,7 +36,7 @@
       lastReportedVisible = visible;
     } catch {
       hud.hidden = true;
-      lastReportedVisible = false;
+      lastReportedVisible = null;
     } finally {
       nativePending = false;
     }

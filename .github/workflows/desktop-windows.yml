@@ -6,10 +6,12 @@ on:
   pull_request:
     paths:
       - 'apps/desktop/**'
-      - 'apps/roundsense/src/hud/**'
+      - 'apps/roundsense/src/**'
       - 'apps/roundsense/ui/**'
       - 'scripts/build-desktop-sidecar.mjs'
       - 'scripts/package-windows-portable.mjs'
+      - 'pnpm-lock.yaml'
+      - '.node-version'
       - '.github/workflows/desktop-windows.yml'
   workflow_dispatch:
 
@@ -49,7 +51,7 @@ jobs:
           $bundleDir = Join-Path $stage 'RoundSense-win64'
           $exe = Join-Path $bundleDir 'RoundSense.exe'
           $sidecarNode = Join-Path $bundleDir 'sidecar\node.exe'
-          foreach ($required in @($exe, $sidecarNode, (Join-Path $bundleDir 'LICENSE.txt'), (Join-Path $bundleDir 'THIRD-PARTY-NOTICES.txt'))) {
+          foreach ($required in @($exe, $sidecarNode, (Join-Path $bundleDir 'LICENSE.txt'), (Join-Path $bundleDir 'THIRD-PARTY-NOTICES.txt'), (Join-Path $bundleDir 'sidecar\NODE-LICENSE.txt'))) {
             if (-not (Test-Path $required)) { throw "Missing required portable file: $required" }
           }
 
