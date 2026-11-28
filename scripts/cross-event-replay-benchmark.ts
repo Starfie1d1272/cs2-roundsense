@@ -954,6 +954,8 @@ async function main() {
       const econByRoundPlayer = new Map<string, PlayerEconRecord>();
       for (const e of economies) econByRoundPlayer.set(`${e.roundNumber}:${e.playerIndex}`, e);
 
+      // Corpus limitation #1: rounds.json does not expose the engine's internal loss-bonus
+      // counter directly, so we reconstruct it using standard MR12 win (-1) / loss (+1) stepping.
       const teamLoss = new Map<string, number>();
       let lossA = 1;
       let lossB = 1;
@@ -1041,6 +1043,9 @@ async function main() {
             kit: alive ? Boolean(flags & 4) : false,
             grenades: alive ? mapGrenades(track.grenades.at(-1)!) : [],
           };
+          // Corpus limitation #2: replay.json tracks only the active held weapon at round end
+          // rather than full inventory, so retained primary/secondary/helmet fall back to the
+          // prior round's freeze-time snapshot (large pickup jumps are filtered by >$800 delta).
           if (alive && prevEcon) {
             retainedPrimary = itemOf(prevEcon.primaryWeapon);
             retainedSecondary = itemOf(prevEcon.secondaryWeapon) ?? undefined;
