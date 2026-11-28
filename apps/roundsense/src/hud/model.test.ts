@@ -135,9 +135,12 @@ describe('live HUD semantics', () => {
     const out = runtime.snapshot(0n);
     const full = out.options.find((o) => o.mode === 'FULL')!;
     expect(Array.isArray(full.conditionalAlternatives)).toBe(true);
+    expect(full.conditionalAlternatives.length).toBeGreaterThan(0);
     for (const alt of full.conditionalAlternatives) {
       expect(typeof alt.condition).toBe('string');
       expect(typeof alt.reason).toBe('string');
+      expect(typeof alt.spendDelta).toBe('number');
+      expect(Number.isFinite(alt.spendDelta)).toBe(true);
       expect(Array.isArray(alt.purchases)).toBe(true);
     }
   });
@@ -268,5 +271,41 @@ describe('live HUD semantics', () => {
     expect(snap.options[0]).toMatchObject({ mode: 'AWP_PATH', isDefault: true });
     expect(snap.defaultOptionId).toBe(snap.options[0]!.id);
     expect(snap.options.length).toBeGreaterThan(1);
+  });
+
+  it('computes awpNextReady from AWP + kevlar threshold only when AWP priority is active', () => {
+    // lossIndex=1 => next loss bonus $1900; money=3500 => PRESERVE lossNextMoney = $5400 (exact AWP + kevlar)
+    const atThreshold = payload({
+      player: {
+        ...payload().player,
+        team: 'CT',
+        state: { money: 3500, armor: 0, helmet: false, defusekit: false },
+        weapons: {},
+      },
+    });
+    const belowThreshold = payload({
+      player: {
+        ...payload().player,
+        team: 'CT',
+        state: { money: 3450, armor: 0, helmet: false, defusekit: false },
+        weapons: {},
+      },
+    });
+
+    const neutral = new HudRuntime();
+    neutral.observe(receipt(atThreshold));
+    expect(neutral.snapshot(0n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady).toBe(
+      false,
+    );
+
+    const prefer = new HudRuntime();
+    prefer.updateSettings({ ...DEFAULT_HUD_SETTINGS, awpPriority: 'PREFER' });
+    prefer.observe(receipt(atThreshold));
+    expect(prefer.snapshot(0n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady).toBe(true);
+
+    prefer.observe(receipt(belowThreshold, 1, 100));
+    expect(
+      prefer.snapshot(100_000_000n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady,
+    ).toBe(false);
   });
 });

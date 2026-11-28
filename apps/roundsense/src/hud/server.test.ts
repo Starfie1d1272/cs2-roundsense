@@ -304,7 +304,7 @@ describe('HUD real HTTP pipeline', () => {
       const { value, done } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      if (buffer.includes('event: health') && buffer.includes('"rejected":1')) {
+      if (buffer.includes('"gsiHealth"') && buffer.includes('"rejected":1')) {
         seenRejected = true;
       }
     }

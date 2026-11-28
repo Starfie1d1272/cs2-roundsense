@@ -71,6 +71,7 @@
   let lastGsiHealth = null;
   let lastCfgDirectory = null;
   let lastCfgStatus = null;
+  let lastHasConflict = false;
   let previewSnapshot = null;
   let previewSeq = 0;
   let saveTimer = null;
@@ -191,13 +192,10 @@
     gsiRestoreBtn.hidden = !status.canRestore;
     gsiConflictWarning.hidden = true;
     manualError.hidden = true;
-    if (status.gsiHealth) {
-      lastGsiHealth = status.gsiHealth;
-      if (liveSnapshot) updateLiveStatus(liveSnapshot, false);
-    }
-
     lastCfgDirectory = status.cfgDirectory || null;
     lastCfgStatus = status.cfgStatus || null;
+    lastHasConflict =
+      Array.isArray(status.conflictingGsiFiles) && status.conflictingGsiFiles.length > 0;
     if (diagOpenCfgBtn) diagOpenCfgBtn.disabled = !lastCfgDirectory;
     diagInstall.textContent = status.installPath || '未检测到';
     diagCfg.textContent = status.cfgPath || '—';
@@ -350,13 +348,19 @@
       lastGsiHealth.rejected > 0 &&
       lastGsiHealth.lastRejectReason &&
       /auth|token|unauthorized/i.test(lastGsiHealth.lastRejectReason) &&
+      lastGsiHealth.lastRejectAtMs !== null &&
+      Date.now() - lastGsiHealth.lastRejectAtMs < 60000 &&
       (lastGsiHealth.lastAcceptedAtMs === null ||
-        (lastGsiHealth.lastRejectAtMs !== null &&
-          lastGsiHealth.lastRejectAtMs > lastGsiHealth.lastAcceptedAtMs))
+        lastGsiHealth.lastRejectAtMs > lastGsiHealth.lastAcceptedAtMs)
     ) {
       liveDot.className = 'rs-dot err';
-      liveStateLabel.textContent =
-        lastCfgStatus === 'READY' ? '配置已更新，请重启 CS2' : 'Token 不匹配，请修复配置';
+      if (lastHasConflict) {
+        liveStateLabel.textContent = '存在同端口冲突配置';
+      } else if (lastCfgStatus === 'READY') {
+        liveStateLabel.textContent = '配置已更新，请重启 CS2';
+      } else {
+        liveStateLabel.textContent = 'Token 不匹配，请修复配置';
+      }
       liveStateLabel.className = 'rs-status-val err';
       diagLive.textContent = 'rejected: ' + lastGsiHealth.lastRejectReason;
     } else {
@@ -489,19 +493,12 @@
     source.onmessage = (event) => {
       try {
         const snap = JSON.parse(event.data);
+        if (snap && snap.gsiHealth) lastGsiHealth = snap.gsiHealth;
         updateLiveStatus(snap, false);
       } catch {
         // ignore malformed event
       }
     };
-    source.addEventListener('health', (event) => {
-      try {
-        lastGsiHealth = JSON.parse(event.data);
-        if (liveSnapshot) updateLiveStatus(liveSnapshot, false);
-      } catch {
-        // ignore malformed event
-      }
-    });
     source.onerror = () => updateLiveStatus(null, true);
   }
 

@@ -257,4 +257,25 @@ describe('GSI config inspection, install, backup, and restore', () => {
     });
     expect(await readFile(cfgPath, 'utf8')).toBe('"UserEdited" {}\n');
   });
+
+  it('restores even when manifest cfgPath differs in casing or path separators', async () => {
+    const root = await makeTempDir();
+    const { cfgDirectory } = await createFakeCs2Install(join(root, 'CS2'));
+    const backupDir = join(root, 'backups');
+    const cfgPath = join(cfgDirectory, gsiCfgFileName());
+    await writeFile(cfgPath, '"Original" {}\n', 'utf8');
+
+    await installGsiConfig({ cfgDirectory, token: 'tok-1', port: 3001, backupDir });
+
+    const manifestName = (await readdir(backupDir)).find((f) => f.endsWith('.manifest.json'))!;
+    const manifestFile = join(backupDir, manifestName);
+    const manifest = JSON.parse(await readFile(manifestFile, 'utf8')) as { cfgPath: string };
+    manifest.cfgPath = manifest.cfgPath.toUpperCase().replace(/\//g, '\\');
+    await writeFile(manifestFile, JSON.stringify(manifest, null, 2), 'utf8');
+
+    expect(await canRestoreGsiConfig({ cfgDirectory, backupDir })).toBe(true);
+    const restored = await restoreGsiConfig({ cfgDirectory, backupDir });
+    expect(restored).toEqual({ status: 'RESTORED', path: cfgPath, mode: 'FROM_BACKUP' });
+    expect(await readFile(cfgPath, 'utf8')).toBe('"Original" {}\n');
+  });
 });

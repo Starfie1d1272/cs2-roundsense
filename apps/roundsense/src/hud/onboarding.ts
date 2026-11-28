@@ -513,6 +513,11 @@ export async function installGsiConfig(
     await copyFile(path, backupPath, fsConstants.COPYFILE_EXCL);
   }
 
+  // Persist backup metadata before mutating the game's cfg so recovery info is never lost.
+  if (options.backupDir && nextManifest) {
+    await writeManifest(options.backupDir, nextManifest);
+  }
+
   try {
     await writeFile(temporary, Buffer.from(expected, 'utf8'), {
       flag: 'wx',
@@ -522,10 +527,6 @@ export async function installGsiConfig(
   } catch (error) {
     await rm(temporary, { force: true }).catch(() => undefined);
     throw error;
-  }
-
-  if (options.backupDir && nextManifest) {
-    await writeManifest(options.backupDir, nextManifest);
   }
 
   return {
@@ -546,7 +547,11 @@ export async function restoreGsiConfig(
 ): Promise<GsiRestoreResult> {
   const path = join(options.cfgDirectory, gsiCfgFileName());
   const manifest = await readManifest(options.backupDir, path);
-  if (!manifest || !options.backupDir || manifest.cfgPath !== path) {
+  if (
+    !manifest ||
+    !options.backupDir ||
+    normalizedPathKey(manifest.cfgPath) !== normalizedPathKey(path)
+  ) {
     return { status: 'NO_ACTION', path, reason: 'NO_MANIFEST' };
   }
   const removeManifests = () =>
@@ -600,5 +605,5 @@ export async function canRestoreGsiConfig(
 ): Promise<boolean> {
   const path = join(options.cfgDirectory, gsiCfgFileName());
   const manifest = await readManifest(options.backupDir, path);
-  return manifest !== null && manifest.cfgPath === path;
+  return manifest !== null && normalizedPathKey(manifest.cfgPath) === normalizedPathKey(path);
 }

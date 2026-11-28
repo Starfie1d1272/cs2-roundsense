@@ -59,7 +59,6 @@ export interface GsiOnboardingStatus {
   canInstall: boolean;
   canRestore: boolean;
   warnings: readonly string[];
-  gsiHealth: GsiRuntimeHealth;
 }
 
 export interface HudOnboardingOptions {
@@ -146,10 +145,10 @@ export async function startHudService(options: HudServiceOptions) {
     lastRejectAtMs,
     lastRejectReason,
   });
-  const formatEvents = () =>
-    `data: ${JSON.stringify(snapshot())}\n\nevent: health\ndata: ${JSON.stringify(gsiHealth())}\n\n`;
+  const formatEvent = () =>
+    `data: ${JSON.stringify({ ...snapshot(), gsiHealth: gsiHealth() })}\n\n`;
   const broadcast = () => {
-    const event = formatEvents();
+    const event = formatEvent();
     for (const client of clients) {
       if (client.writableNeedDrain) {
         latest.set(client, event);
@@ -202,7 +201,6 @@ export async function startHudService(options: HudServiceOptions) {
         canInstall: false,
         canRestore: false,
         warnings: discovery.warnings,
-        gsiHealth: gsiHealth(),
       };
     }
     const cfgDirectory = discovery.install.cfgDirectory;
@@ -228,7 +226,6 @@ export async function startHudService(options: HudServiceOptions) {
       canInstall: inspection.status === 'NEEDS_INSTALL',
       canRestore,
       warnings: discovery.warnings,
-      gsiHealth: gsiHealth(),
     };
   };
 
@@ -260,7 +257,7 @@ export async function startHudService(options: HudServiceOptions) {
         'content-type': 'text/event-stream',
         connection: 'keep-alive',
       });
-      response.write(`retry: 1000\n${formatEvents()}`);
+      response.write(`retry: 1000\n${formatEvent()}`);
       clients.add(response);
       response.on('drain', () => {
         const event = latest.get(response);

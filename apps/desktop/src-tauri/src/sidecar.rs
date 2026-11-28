@@ -36,9 +36,9 @@ fn is_port_occupied() -> bool {
     TcpStream::connect_timeout(&addr, Duration::from_millis(200)).is_ok()
 }
 
-/// Parses an HTTP/1.x response body, supporting both Content-Length and chunked transfer encoding.
+/// Validates an HTTP 200 /health JSON response from our bundled sidecar.
 fn parse_health_response(response: &str) -> bool {
-    let Some((head, raw_body)) = response.split_once("\r\n\r\n") else {
+    let Some((head, body)) = response.split_once("\r\n\r\n") else {
         return false;
     };
     let Some(status_line) = head.lines().next() else {
@@ -47,35 +47,10 @@ fn parse_health_response(response: &str) -> bool {
     if !status_line.starts_with("HTTP/1.1 200") && !status_line.starts_with("HTTP/1.0 200") {
         return false;
     }
-    let is_chunked = head
-        .lines()
-        .any(|line| line.to_ascii_lowercase().starts_with("transfer-encoding:") && line.to_ascii_lowercase().contains("chunked"));
-    let body = if is_chunked {
-        decode_chunked(raw_body)
-    } else {
-        raw_body.to_string()
-    };
     let Ok(json) = serde_json::from_str::<serde_json::Value>(body.trim()) else {
         return false;
     };
     json["ok"] == true && json["product"] == "roundsense"
-}
-
-fn decode_chunked(input: &str) -> String {
-    let mut out = String::new();
-    let mut rest = input;
-    while let Some((size_line, after_size)) = rest.split_once("\r\n") {
-        let hex = size_line.split(';').next().unwrap_or("").trim();
-        let Ok(len) = usize::from_str_radix(hex, 16) else {
-            break;
-        };
-        if len == 0 || after_size.len() < len {
-            break;
-        }
-        out.push_str(&after_size[..len]);
-        rest = after_size[len..].strip_prefix("\r\n").unwrap_or("");
-    }
-    out
 }
 
 /// Checks whether the RoundSense HUD backend is listening and healthy on 127.0.0.1:3100.
@@ -86,7 +61,7 @@ pub fn is_backend_healthy() -> bool {
     };
     let _ = stream.set_read_timeout(Some(Duration::from_millis(400)));
     let req = format!(
-        "GET /health HTTP/1.1\r\nHost: {WEB_ADDR}\r\nConnection: close\r\n\r\n"
+        "GET /health HTTP/1.0\r\nHost: {WEB_ADDR}\r\nConnection: close\r\n\r\n"
     );
     if stream.write_all(req.as_bytes()).is_err() {
         return false;
@@ -343,14 +318,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parses_content_length_health_response() {
+    fn parses_http10_health_response() {
         let resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 34\r\n\r\n{\"ok\":true,\"product\":\"roundsense\"}";
-        assert!(parse_health_response(resp));
-    }
-
-    #[test]
-    fn parses_chunked_health_response() {
-        let resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n22\r\n{\"ok\":true,\"product\":\"roundsense\"}\r\n0\r\n\r\n";
         assert!(parse_health_response(resp));
     }
 

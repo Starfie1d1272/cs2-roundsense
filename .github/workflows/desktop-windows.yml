@@ -1,0 +1,130 @@
+name: desktop-windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'apps/roundsense/src/hud/**'
+      - 'apps/roundsense/ui/**'
+      - 'scripts/build-desktop-sidecar.mjs'
+      - 'scripts/package-windows-portable.mjs'
+      - '.github/workflows/desktop-windows.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  desktop-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+      - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @roundsense/desktop build:sidecar
+      - run: cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - run: cargo build --release --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - run: pnpm --filter @roundsense/desktop package:win
+      - name: Smoke-test extracted portable ZIP (window, HTTP, PID & port cleanup)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $env:TEMP 'roundsense-smoke'
+          if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+          Expand-Archive -Path 'apps/desktop/dist/RoundSense-win64-portable.zip' -DestinationPath $stage
+          $bundleDir = Join-Path $stage 'RoundSense-win64'
+          $exe = Join-Path $bundleDir 'RoundSense.exe'
+          $sidecarNode = Join-Path $bundleDir 'sidecar\node.exe'
+          foreach ($required in @($exe, $sidecarNode, (Join-Path $bundleDir 'LICENSE.txt'), (Join-Path $bundleDir 'THIRD-PARTY-NOTICES.txt'))) {
+            if (-not (Test-Path $required)) { throw "Missing required portable file: $required" }
+          }
+
+          $proc = Start-Process -FilePath $exe -PassThru
+          $sidecarPid = $null
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 50; $i++) {
+              if ($proc.HasExited) {
+                $log = Join-Path $env:LOCALAPPDATA 'RoundSense\logs\sidecar.log'
+                if (Test-Path $log) { Get-Content $log }
+                throw "RoundSense.exe exited prematurely with code $($proc.ExitCode)"
+              }
+              try {
+                $h = Invoke-RestMethod -Uri 'http://127.0.0.1:3100/health' -TimeoutSec 1
+                if ($h.ok -eq $true -and $h.product -eq 'roundsense') {
+                  $ready = $true
+                  break
+                }
+              } catch {}
+              Start-Sleep -Milliseconds 200
+            }
+            if (-not $ready) { throw 'Timed out waiting for RoundSense.exe /health' }
+
+            # Confirm host passed its own /health check and created the main Settings window.
+            $windowCreated = $false
+            for ($i = 0; $i -lt 50; $i++) {
+              if ($proc.HasExited) { throw "RoundSense.exe exited before creating settings window (code $($proc.ExitCode))" }
+              $proc.Refresh()
+              if ($proc.MainWindowHandle -ne [IntPtr]::Zero) {
+                $windowCreated = $true
+                break
+              }
+              Start-Sleep -Milliseconds 200
+            }
+            if (-not $windowCreated) { throw 'Timed out waiting for RoundSense.exe main settings window' }
+
+            # Record the bundled sidecar node.exe PID for post-termination verification.
+            $expectedNodePath = (Resolve-Path $sidecarNode).Path
+            $sidecarProc = Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" |
+              Where-Object { $_.ExecutablePath -and ($_.ExecutablePath -ieq $expectedNodePath) } |
+              Select-Object -First 1
+            if (-not $sidecarProc) { throw "Could not locate bundled sidecar process at $expectedNodePath" }
+            $sidecarPid = [int]$sidecarProc.ProcessId
+            Write-Host "Host window handle=$($proc.MainWindowHandle) title='$($proc.MainWindowTitle)', sidecar PID=$sidecarPid"
+
+            $root = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/' -UseBasicParsing -TimeoutSec 3
+            $overlay = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/overlay' -UseBasicParsing -TimeoutSec 3
+            $preview = Invoke-RestMethod -Uri 'http://127.0.0.1:3100/preview?scenario=ct-mid' -TimeoutSec 3
+            $svg = Invoke-WebRequest -Uri 'http://127.0.0.1:3100/assets/cs2/ak47.svg' -UseBasicParsing -TimeoutSec 3
+            if ($root.StatusCode -ne 200 -or $overlay.StatusCode -ne 200 -or $svg.StatusCode -ne 200) {
+              throw 'Unexpected HTTP status from bundled sidecar'
+            }
+            if ($preview.version -ne 2 -or $preview.options.Count -lt 1) {
+              throw 'Invalid Policy V3 preview response'
+            }
+            Write-Host "Smoke test HTTP checks passed (preview options: $($preview.options.Count))"
+          } finally {
+            if (-not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+              $proc.WaitForExit(5000) | Out-Null
+            }
+          }
+
+          Start-Sleep -Seconds 2
+          if ($sidecarPid -and (Get-Process -Id $sidecarPid -ErrorAction SilentlyContinue)) {
+            throw "Sidecar node.exe PID $sidecarPid is still alive after RoundSense.exe terminated"
+          }
+          $leakedPorts = Get-NetTCPConnection -LocalPort 3100,3001 -State Listen -ErrorAction SilentlyContinue
+          if ($leakedPorts) {
+            throw "Listening ports leaked after RoundSense.exe terminated: $($leakedPorts.LocalPort -join ', ')"
+          }
+          Write-Host "Verified clean shutdown: sidecar PID $sidecarPid exited and ports 3001/3100 released."
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: RoundSense-win64-portable
+          path: apps/desktop/dist/RoundSense-win64-portable.zip
+          retention-days: 14

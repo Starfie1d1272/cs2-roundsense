@@ -7,6 +7,7 @@
   let latest = null;
   let lastMessage = -Infinity;
   let nativePending = false;
+  let lastReportedVisible = null;
   let staleTimer = null;
 
   function hide() {
@@ -16,22 +17,26 @@
 
   async function syncNative() {
     if (!invoke || nativePending || !hud) return;
+    const visible = Boolean(latest && latest.visible && performance.now() - lastMessage < 2000);
+    // Avoid sending 2/s hidden-state IPC pings when the native overlay is already hidden.
+    if (!visible && lastReportedVisible === false) return;
     nativePending = true;
-    const valid = latest && latest.visible && performance.now() - lastMessage < 2000;
     const rect = hud.getBoundingClientRect();
     const scale = latest?.settings?.scale ?? 1;
     try {
       await invoke('set_overlay_state', {
         request: {
-          visible: Boolean(valid),
+          visible,
           width: Math.ceil(rect.width / scale || 264),
           height: Math.ceil(rect.height / scale || 84),
           scale,
           position: latest?.settings?.position ?? 'below-radar',
         },
       });
+      lastReportedVisible = visible;
     } catch {
       hud.hidden = true;
+      lastReportedVisible = false;
     } finally {
       nativePending = false;
     }

@@ -21,23 +21,36 @@ async function assertFile(path, label) {
   }
 }
 
+const projectLicenseSrc = resolve(rootDir, 'LICENSE');
+
 await assertFile(hostExeSrc, 'Tauri release executable');
 await assertFile(resolve(sidecarSrc, 'roundsense-server.mjs'), 'sidecar bundle');
 await assertFile(nodeExeSrc, 'Node executable');
+await assertFile(projectLicenseSrc, 'project LICENSE');
 
 await rm(stageDir, { recursive: true, force: true });
 await mkdir(resolve(stageDir, 'sidecar'), { recursive: true });
 
 await cp(hostExeSrc, resolve(stageDir, 'RoundSense.exe'));
+await cp(projectLicenseSrc, resolve(stageDir, 'LICENSE.txt'));
 await cp(sidecarSrc, resolve(stageDir, 'sidecar'), { recursive: true });
 await cp(nodeExeSrc, resolve(stageDir, 'sidecar/node.exe'));
 
-const nodeLicenseSrc = resolve(dirname(nodeExeSrc), 'LICENSE');
-try {
-  const s = await stat(nodeLicenseSrc);
-  if (s.isFile()) await cp(nodeLicenseSrc, resolve(stageDir, 'sidecar/NODE-LICENSE.txt'));
-} catch {
-  // optional if runner node layout omits sibling LICENSE
+const nodeLicenseCandidates = [
+  resolve(dirname(nodeExeSrc), 'LICENSE'),
+  resolve(dirname(nodeExeSrc), '../LICENSE'),
+  resolve(dirname(nodeExeSrc), '../share/doc/node/LICENSE'),
+];
+for (const candidate of nodeLicenseCandidates) {
+  try {
+    const s = await stat(candidate);
+    if (s.isFile()) {
+      await cp(candidate, resolve(stageDir, 'sidecar/NODE-LICENSE.txt'));
+      break;
+    }
+  } catch {
+    // try next candidate
+  }
 }
 
 await writeFile(
