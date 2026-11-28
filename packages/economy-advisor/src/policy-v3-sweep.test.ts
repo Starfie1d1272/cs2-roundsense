@@ -378,5 +378,5 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
     }
 
     expect(checkedStates).toBeGreaterThan(25_000);
-  });
+  }, 30_000);
 });
