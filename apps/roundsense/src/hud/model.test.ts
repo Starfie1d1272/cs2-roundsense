@@ -317,4 +317,32 @@ describe('live HUD semantics', () => {
       prefer.snapshot(100_000_000n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady,
     ).toBe(false);
   });
+
+  it('classifies T-side lossWithPlantCapability across tiers and leaves CT null', () => {
+    const tRuntime = new HudRuntime();
+    tRuntime.observe(
+      receipt(
+        payload({
+          player: {
+            ...payload().player,
+            team: 'T',
+            state: { money: 1900, armor: 0, helmet: false, defusekit: false },
+            weapons: {},
+          },
+        }),
+      ),
+    );
+    const tEco = tRuntime.snapshot(0n).options.find((o) => o.mode === 'PRESERVE');
+    expect(tEco?.lossNextMoney).toBe(3800);
+    expect(tEco?.futureCapability).toBe('RIFLE_ARMOR');
+    expect(tEco?.lossWithPlantNextMoney).toBe(4400);
+    expect(tEco?.lossWithPlantCapability).toBe('RIFLE_ARMOR_BASIC_UTILITY');
+
+    const ctRuntime = new HudRuntime();
+    ctRuntime.observe(receipt(payload()));
+    for (const opt of ctRuntime.snapshot(0n).options) {
+      expect(opt.lossWithPlantNextMoney).toBeNull();
+      expect(opt.lossWithPlantCapability).toBeNull();
+    }
+  });
 });
