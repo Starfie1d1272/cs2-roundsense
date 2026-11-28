@@ -71,7 +71,7 @@ function makeState(params: {
         : { integrity: 'COMPLETE', previousRounds: [] },
     opponent: { status: 'UNKNOWN', inputsAsOfSeq: 1 },
     preference: {
-      source: 'DEFAULT',
+      source: params.awpPriority && params.awpPriority !== 'NEUTRAL' ? 'USER_DECLARED' : 'DEFAULT',
       awpPriority: params.awpPriority ?? 'NEUTRAL',
     },
   };
@@ -290,6 +290,8 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
     ];
 
     let checkedStates = 0;
+    let awpPathSeen = 0;
+    let saveForAwpSeen = 0;
 
     // 1. Monotonicity of empty-inventory FULL across $0..$16,000 ($50 step)
     for (const side of sides) {
@@ -363,8 +365,13 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
                   expect(opt.resultingInventory.grenades.filter(isFire).length).toBeLessThanOrEqual(
                     1,
                   );
-                  // (4) Never downgrade retained rifle or AWP
-                  if (retainedCls === 'rifle' || inventory.primary === 'awp') {
+                  if (opt.mode === 'AWP_PATH') awpPathSeen++;
+                  if (opt.reasons.some((r) => r.code === 'SAVE_FOR_AWP_HORIZON')) saveForAwpSeen++;
+                  // (4) Never downgrade retained rifle or AWP (explicit AWP_PATH upgrade is allowed)
+                  if (
+                    (retainedCls === 'rifle' || inventory.primary === 'awp') &&
+                    opt.mode !== 'AWP_PATH'
+                  ) {
                     expect(opt.resultingInventory.primary).toBe(inventory.primary);
                   }
                   // (5) No duplicate purchase sets
@@ -444,5 +451,7 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
     }
 
     expect(checkedStates).toBeGreaterThan(25_000);
+    expect(awpPathSeen).toBeGreaterThan(0);
+    expect(saveForAwpSeen).toBeGreaterThan(0);
   }, 30_000);
 });
