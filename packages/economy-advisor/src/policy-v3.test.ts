@@ -926,13 +926,12 @@ describe('Policy V3 deterministic core', () => {
         purchases: [],
       },
       {
-        id: 'force-m4a41-kevlar1-smoke1-incendiary1-flash1-he1-kevlar_helmet1',
+        id: 'force-m4a41-smoke1-incendiary1-flash1-he1-kevlar_helmet1',
         mode: 'FORCE',
         adviceStrength: 'SUPPORTED',
-        bundleSpend: 5850,
+        bundleSpend: 5200,
         purchases: [
           { item: 'm4a4', quantity: 1 },
-          { item: 'kevlar', quantity: 1 },
           { item: 'smoke', quantity: 1 },
           { item: 'incendiary', quantity: 1 },
           { item: 'flash', quantity: 1 },

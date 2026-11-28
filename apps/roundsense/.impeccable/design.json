@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "name": "RoundSense",
+  "mode": "operate",
+  "direction": "Swiss Timetable Precision",
+  "seedReference": "seed:7b5074c25636ae22",
+  "motion": {
+    "durationMs": 90,
+    "easing": "linear",
+    "policy": "Crisp 90ms state transitions only; no decorative entrance choreography."
+  },
+  "focusRing": {
+    "outline": "2px solid #34D399",
+    "offset": "2px"
+  },
+  "assets": {
+    "cs2IconsDir": "ui/assets/cs2",
+    "previewAssetsDir": "ui/assets/preview",
+    "optionalScreenshotSlots": [
+      "ui/assets/preview/bright.webp",
+      "ui/assets/preview/dark.webp"
+    ]
+  }
+}

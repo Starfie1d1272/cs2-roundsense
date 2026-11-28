@@ -1,162 +1,63 @@
 # RoundSense
 
-**面向 CS2 玩家的本地、只读回合决策助手。**
+**只读、零内存注入的 CS2 冻结时间经济决策 HUD**。  
+通过 CS2 官方 Game State Integration（GSI）实时读取你自己的局内经济与装备，在每回合冻结时间于雷达下方展示简洁的购买方案、本局投入与败后下局现金预测，回合开始后自动隐藏。
 
-RoundSense 读取 CS2 Game State Integration（GSI），在冻结时间结合你的现金、装备、
-败方奖励和回合上下文，帮助你判断这局该 eco、半起、强起还是全起，投入应控制在什么
-范围，以及如果输掉，下一局还能买什么。
+## 核心特点
 
-当前原型通过本地 CLI 展示结果；策略引擎与 presentation 解耦，后续可以接入更低认知
-负担的展示方式。
+- **解压即用**：Windows 便携 ZIP 内置完整 Node 运行时与后端服务，无需安装 Node、pnpm 或 Rust。
+- **官方只读接口**：仅使用 CS2 官方本地 HTTP GSI（`127.0.0.1:3001`）与只读 Win32 窗口几何定位，**绝不读取或修改游戏内存**。
+- **实时策略引擎（Policy V3）**：基于真实 CS2 竞技经济规则计算全起 / 强起 / 半起 / ECO / AWP 路线，支持「步枪手 / 狙击手 / Jame 攒狙」三种经济角色。
+- **一键 GSI 配置**：自动发现 Steam / CS2 目录（亦支持手动选择文件夹），自动检测同端口冲突并安全备份原配置。
+- **安静的桌面体验**：单实例运行、关闭设置窗口隐藏至系统托盘、透明鼠标穿透且不抢游戏焦点、退出或异常关闭时通过 Windows Job Object 自动回收后台进程。
 
-## 为什么需要 RoundSense
+## 使用方法（Windows 10 / 11）
 
-多数购买辅助首先回答“买什么”。RoundSense 更先回答一个影响整场经济的问题：
+> 运行环境要求：Windows 10 / 11（64 位）与系统内置的 Microsoft Edge WebView2 Runtime（Windows 11 默认自带），CS2 需运行在**全屏窗口化（Fullscreen Windowed）**或窗口模式下以显示透明叠层。
 
-> **这一局值得投入到什么程度？**
+1. 从 GitHub Actions / Releases 下载 `RoundSense-win64-portable.zip` 并完整解压到任意目录。
+2. 双击运行 `RoundSense.exe`，打开设置窗口。
+3. 在右侧「游戏集成与连接」卡片中点击 **一键安装 GSI 配置**（若未自动找到目录，点击 **浏览…** 选择 CS2 安装目录）。
+4. 按需调整 HUD 显示位置、缩放比例、背景不透明度与经济角色，所有修改即时生效并自动保存。
+5. 启动或重启 CS2 进入竞技模式，每回合冻结时间 HUD 将自动出现，回合开始或 Alt+Tab 切出游戏后自动隐藏。
+6. 平时可直接关闭设置窗口使其驻留系统托盘；需要完全退出时，右键托盘图标选择 **退出 RoundSense**。
 
-它按“经济策略 → 投入边界 → 败后影响 → 具体购买”的顺序组织建议。枪械和道具组合很
-重要，但它们服务于回合策略，而不是替代策略本身。
+## 本地数据与日志位置
 
-## 目标展示示例
+- Windows：`%LOCALAPPDATA%\RoundSense\`（包含 `hud-settings.json`、`gsi-token`、`gsi-backups\`、`logs\sidecar.log`）
+- macOS / Linux（开发模式）：`~/.config/RoundSense/`
 
-> 以下是 Policy V3 structured output 的目标展示示例，不是当前 CLI 的逐字输出。
-
-```text
-CT · Round 8 · $3,450
-
-半起
-建议投入 ≤ $1,250
-激进上限 $1,750
-
-推荐：
-半甲 + 烟 + 闪
-
-如果输掉：
-下一局预计 $4,200
-✓ 可保持长枪 + 甲
-✗ 长枪 + 甲 + 基础道具
-
-对手经济：未知
-```
-
-## 核心能力
-
-- **经济策略**：区分 eco、半起、强起与全起，先决定投入程度，再规划购买组合。
-- **投入边界**：同时表达建议投入和最多投入，半起不是固定的一套枪甲模板。
-- **败后经济**：给出输掉当前回合后的现金情景，以及下一局关键购买能力是否仍可达。
-- **装备感知建议**：根据已有主武器、护甲、头盔、钳子和道具，只补真正需要购买的内容。
-- **手枪局后策略**：区分手枪局赢家的 conversion 与输家的独立策略，不套用普通回合模板。
-- **C4 状态检测**：安全支持 bomb-state observation 与状态转换检测；数值剩余时间仍等待
-  Windows controlled calibration，当前不提供精确实时倒计时。
-
-## 工作方式
-
-```text
-CS2 GSI
-  → 当前可见状态与安全连续追踪的历史
-  → Policy V3
-  → 投入建议 / 未来经济 / 购买组合
-  → 当前 CLI / 未来 presentation
-```
-
-RoundSense 的实时建议只使用普通玩家 GSI 可见的信息，以及从连续 GSI payload 中安全
-追踪得到的上一回合状态。策略引擎输出结构化结果，CLI 只是当前的验证和展示界面。
-
-## 快速开始
-
-### 前置要求
-
-- Node.js 24.21.0（24 LTS 系列）
-- pnpm 12.9.1
-- CS2 与 RoundSense 运行在同一台电脑上
-
-### 1. 安装依赖
+## 开发者指南
 
 ```bash
+# 安装依赖（Node >= 24.21, pnpm 12.9.1）
 pnpm install
-```
 
-### 2. 生成并安装 GSI 配置
+# 启动本地 HUD 服务（浏览器调试设置页 http://127.0.0.1:3100/）
+pnpm hud
 
-选择一个本地 token，并生成与 RoundSense 默认端口一致的配置：
-
-```bash
-pnpm --filter @roundsense/gsi-recorder start --cfg --port 3001 --token roundsense-local
-```
-
-将命令输出的配置正文保存为 `gamestate_integration_roundsense.cfg`（UTF-8、无 BOM），
-放入 CS2 配置目录：
-
-```text
-<Steam>/steamapps/common/Counter-Strike 2/game/csgo/cfg/
-```
-
-### 3. 启动 RoundSense
-
-使用与 cfg 相同的 token：
-
-```bash
-pnpm --filter @roundsense/roundsense start --token roundsense-local --port 3001
-```
-
-服务默认只监听 [http://127.0.0.1:3001](http://127.0.0.1:3001)。进入游戏后，
-RoundSense 会在可验证的购买窗口（当前为 freezetime）输出经济建议。
-
-## 数据边界与安全性
-
-- 完全本地运行，HTTP receiver 绑定 loopback 地址。
-- 只读消费 CS2 官方提供的 GSI payload。
-- 不读取游戏内存，不向游戏进程注入代码，也不修改游戏状态。
-- 实时推荐不使用只有 demo 或 spectator 才能看到的对手隐藏经济与装备信息。
-- 信息缺失时保留“未知”，不会为了给出完整答案而伪造确定值。
-
-## 验证
-
-Policy V3 使用冻结的 IEM Cologne Major 2026 corpus 做 behavioral conformance
-validation：
-
-- 43,620 条 raw player-rounds
-- 23,552 条 eligible player-rounds
-- 202 个 map packages
-- 所有 Policy V3 mechanical invariant violations = 0
-
-职业比赛行为在这里是 expert behavioral reference，不是唯一正确或最优策略的真值。
-
-完整方法、限制与结果见：
-
-- [Policy V3 最终产品行为验收](docs/experiments/policy-v3-final-acceptance.md)
-- [Policy V3 architecture](docs/policy-v3-architecture.md)
-
-## 开发与仓库结构
-
-```text
-apps/
-  roundsense/          # 当前 CLI 与 runtime orchestration
-  gsi-recorder/        # GSI cfg 生成、录制与调试
-packages/
-  economy-advisor/     # Policy V3 与购买 mechanics
-  gsi-protocol/        # GSI schema、receiver 与 cfg
-  c4-estimator/        # C4 状态与 timing contract
-  shared-types/        # 跨包共享类型
-  replay-harness/      # 离线 replay 测试辅助
-scripts/
-  policy-v3-final-acceptance.ts
-```
-
-常用验证命令：
-
-```bash
-pnpm test
+# 格式化、Lint、类型检查与全量测试
+pnpm format:check
+pnpm lint
 pnpm typecheck
-pnpm --filter @roundsense/tools validate -- ../fixtures/demo-format/tiny-v3.zip
+pnpm test
+
+# 构建桌面端单文件 Sidecar
+pnpm --filter @roundsense/desktop build:sidecar
+
+# 编译桌面宿主并打包 Windows 便携 ZIP（在 Windows 上运行）
+cargo build --release --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+pnpm --filter @roundsense/desktop package:win
 ```
 
-云环境新任务开始时，在修改代码前执行 `bash scripts/cloud-start.sh`：先用
-`git pull --ff-only origin main` 同步当前任务分支，再按锁文件安装依赖。脚本使用
-环境安装阶段保留在 `/workspace/.roundsense-tools` 的工具链；发现本地改动、分支
-分叉或工具链版本不匹配时停止，不重置或覆盖已有工作。环境快照本身不会自动拉取
-Git 更新，需要在环境的启动说明中要求每个新任务执行此脚本。
+## 仓库结构
 
-完整研究资产已通过 `archive/*` Git 标签归档，详见 [研究归档索引](docs/research-index.md)；
-mainline 保留生产代码、权威结论与可复现验收入口。
+- `apps/desktop/` — Tauri v2 原生桌面宿主（单实例、系统托盘、Node Sidecar 生命周期、Win32 CS2 叠层定位）
+- `apps/roundsense/` — 本地 HUD/GSI HTTP+SSE 服务、CS2 GSI 自动配置与共享 HUD/设置页 UI
+- `packages/economy-advisor/` — CS2 竞技经济规则表与 Policy V3 推荐引擎
+- `packages/gsi-protocol/` — CS2 GSI HTTP 接收器、Token 认证与协议解析
+- `packages/c4-estimator/`、`packages/replay-harness/`、`packages/shared-types/` — 共享类型与回放测试基础设施
+
+## License
+
+MIT

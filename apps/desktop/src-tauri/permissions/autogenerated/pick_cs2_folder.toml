@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pick-cs2-folder"
+description = "Enables the pick_cs2_folder command without any pre-configured scope."
+commands.allow = ["pick_cs2_folder"]
+
+[[permission]]
+identifier = "deny-pick-cs2-folder"
+description = "Denies the pick_cs2_folder command without any pre-configured scope."
+commands.deny = ["pick_cs2_folder"]

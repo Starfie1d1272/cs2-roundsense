@@ -1,0 +1,31 @@
+[package]
+name = "roundsense-desktop"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "RoundSense desktop host: Settings window, system tray, Node sidecar lifecycle, and non-interactive CS2 freeze-time HUD overlay"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Security",
+  "Win32_System_JobObjects",
+  "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 16
