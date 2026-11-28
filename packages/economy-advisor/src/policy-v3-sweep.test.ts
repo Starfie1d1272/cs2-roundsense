@@ -134,6 +134,46 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
     expect(out.options[0]?.trajectory).toEqual([]);
   });
 
+  it('handles MR3 overtime half-end (r27/r30) and overtime match point (oppScore >= 15) cleanly', () => {
+    const otHalfEnd = recommendPolicyV3(
+      makeState({
+        side: 'CT',
+        money: 3200,
+        lossIndex: 1,
+        inventory: EMPTY_INV,
+        context: 'OVERTIME',
+        roundNumber: 27,
+        score: { ct: 13, t: 13 },
+      }),
+    );
+    expect(otHalfEnd.futureAffordability).toEqual({
+      status: 'NOT_APPLICABLE',
+      boundaries: [],
+      reason: 'HALF_END_RESET',
+    });
+    expect(otHalfEnd.options.some((o) => o.mode === 'LIGHT')).toBe(false);
+    expect(otHalfEnd.options[0]?.trajectory).toEqual([]);
+
+    const otMatchPoint = recommendPolicyV3(
+      makeState({
+        side: 'T',
+        money: 3100,
+        lossIndex: 1,
+        inventory: EMPTY_INV,
+        context: 'OVERTIME',
+        roundNumber: 29,
+        score: { ct: 15, t: 13 },
+      }),
+    );
+    expect(otMatchPoint.futureAffordability).toEqual({
+      status: 'NOT_APPLICABLE',
+      boundaries: [],
+      reason: 'MATCH_POINT_AGAINST',
+    });
+    expect(otMatchPoint.options.some((o) => o.mode === 'LIGHT')).toBe(false);
+    expect(otMatchPoint.options[0]?.trajectory).toEqual([]);
+  });
+
   it('ranks PRESERVE ahead of LIGHT when PRESERVE secures full basic utility but LIGHT downgrades to bare rifle', () => {
     // CT $1,650 + $2,400 loss bonus (lossIndex=2) = $4,050 -> PRESERVE reaches RIFLE_ARMOR_BASIC_UTILITY;
     // LIGHT can only spend up to $500 under RIFLE_ARMOR ($3,550), downgrading next round.

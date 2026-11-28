@@ -564,17 +564,19 @@ function buildConditionalAlternatives(
 function economyResetReason(state: PolicyV3State): 'HALF_END_RESET' | 'MATCH_POINT_AGAINST' | null {
   if (known(state.round.number)) {
     const r = state.round.number.value;
-    if (r === 12 || r === 24) return 'HALF_END_RESET';
+    // Regulation half-end (r12), regulation end (r24), and MR3 OT half-ends (r27, r30, r33, ...)
+    if (r === 12 || r === 24 || (r > 24 && (r - 24) % 3 === 0)) return 'HALF_END_RESET';
   }
-  if (
-    known(state.round.context) &&
-    state.round.context.value === 'NORMAL' &&
-    known(state.round.score) &&
-    known(state.round.side)
-  ) {
+  if (known(state.round.context) && known(state.round.score) && known(state.round.side)) {
+    const ctx = state.round.context.value;
     const oppScore =
       state.round.side.value === 'CT' ? state.round.score.value.t : state.round.score.value.ct;
-    if (oppScore >= 12) return 'MATCH_POINT_AGAINST';
+    if (ctx === 'NORMAL' && oppScore >= 12) return 'MATCH_POINT_AGAINST';
+    if (ctx === 'OVERTIME' && known(state.round.number) && state.round.number.value > 24) {
+      const otBlock = Math.floor((state.round.number.value - 25) / 6) + 1;
+      const otMatchPoint = 12 + 3 * otBlock; // OT1: 15 (to 16), OT2: 18 (to 19), ...
+      if (oppScore >= otMatchPoint) return 'MATCH_POINT_AGAINST';
+    }
   }
   return null;
 }
@@ -743,16 +745,16 @@ function futureAffordability(state: PolicyV3State): FutureAffordabilitySet {
       boundaries: [],
       reason: 'PISTOL_UNSUPPORTED',
     };
+  const resetReason = economyResetReason(state);
+  if (resetReason !== null) {
+    return { status: 'NOT_APPLICABLE', boundaries: [], reason: resetReason };
+  }
   if (context === 'OVERTIME')
     return {
       status: 'NOT_APPLICABLE',
       boundaries: [],
       reason: 'OVERTIME_UNSUPPORTED',
     };
-  const resetReason = economyResetReason(state);
-  if (resetReason !== null) {
-    return { status: 'NOT_APPLICABLE', boundaries: [], reason: resetReason };
-  }
   if (!known(state.player.money) || !known(state.player.lossIndex) || !known(state.round.side)) {
     return {
       status: 'UNKNOWN',
