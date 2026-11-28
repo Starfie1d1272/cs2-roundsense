@@ -42,15 +42,15 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 Every CS2 player asks the same question: **"Is this actually better than buying by gut feel?"**
 
-To test it honestly, we studied pro buying habits across **IEM Cologne Major 2026** (202 maps, 28,594 rounds), **froze the production strategy (`dc1c84a`)**, and then ran it untouched—zero tuning—on a completely separate Major: **PGL Singapore Major 2026 · Stage 1** (53 maps, 7,062 rounds), feeding it only the cash and gear a normal player can see in freezetime:
+To test it honestly, we studied pro buying habits across **IEM Cologne Major 2026** (202 maps), **froze the rules**, and then ran them untouched—zero tuning—on a completely separate Major: **PGL Singapore Major 2026 · Stage 1** (53 new maps, 7,062 rounds), feeding it only the cash and gear a normal player sees in freezetime:
 
 ![RoundSense Cross-Event Out-of-Sample Validation (Cologne vs Singapore Stage 1)](docs/assets/cross-event-validation.png)
 
-Three things a player actually feels in-game (all numbers from the **Singapore Stage 1 blind test**, comparing only the #1 top option):
+Three things you actually feel in-game (from the **Singapore Major blind test**, comparing only the #1 top suggestion):
 
-- **Closer to pro spending**: Within **$460** of actual pro spend on average ($87 closer than "buy the best gun you can afford", beating both standard economy heuristics at $461 and legacy V3 at $527), landing within one grenade (**$400**) on **74.4%** of rounds (**+7.0pp** over standard heuristics)—and within **$272** when carrying gear over.
-- **Balances current firepower with next-round continuity**: Keeps **87.6%** current-round rifle/AWP firepower (vs. 78.3% for aggressive-saving heuristics) while raising next-round full-buy readiness after a loss to **45.6%** (**+9.9pp** over naive buying and **+10.4pp** over legacy V3).
-- **Smarter weapon & helmet calls, zero bad math**: **77.4%** primary weapon-family agreement, **83.9%** CT helmet-vs-utility agreement, and **0** illegal/over-cap, **0** duplicate, and **0** light-floor violations across the entire tournament (averaging 1.52 concise options per round).
+- **Buys closer to pro habits**: **74.4%** of rounds land within one grenade (**$400**) of actual pro spend ($460 average gap overall, and just **$272** when carrying gear over).
+- **Far less likely to break next round**: After losing a normal round, you can still full-buy next round **45.6%** of the time (**+9.9 percentage points** over "buy the best gun you can afford") while keeping rifle/AWP firepower on **87.6%** of rounds.
+- **Smarter helmet & utility calls, zero bad math**: **77.4%** main weapon match, **83.9%** CT helmet-vs-utility match, and **0** over-budget, wrong-side, or duplicate suggestions across the entire event.
 
 What does that look like in a real match?
 
