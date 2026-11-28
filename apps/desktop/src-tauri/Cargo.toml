@@ -1,6 +1,6 @@
 [package]
 name = "roundsense-desktop"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 description = "RoundSense desktop host: Settings window, system tray, Node sidecar lifecycle, and non-interactive CS2 freeze-time HUD overlay"
