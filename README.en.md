@@ -38,13 +38,24 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 ---
 
-## Cross-Event Out-of-Sample Validation (Cologne → Singapore Stage 1)
+## Does This Buy Advice Actually Hold Up? (Two-Major Blind Replay)
 
-We studied pro economy habits on **IEM Cologne Major 2026** (202 maps, 28,594 eligible decisions), **froze production Policy V3 (`dc1c84a`)**, and then ran the exact same replay pipeline and four-way baseline comparison (`B0` naive buy-what-you-can / `B1` standard economy-aware heuristic / `B2` pre-refactor Policy V3 / frozen `RoundSense`) untouched on **PGL Singapore Major 2026 · Stage 1** (53 maps, 7,062 decisions) using validated `replay.json` end-of-round state recovery and normal-player GSI inputs only:
+Every CS2 player asks the same question: **"Is this actually better than buying by gut feel?"**
+
+To test it honestly, we studied pro buying habits across **IEM Cologne Major 2026** (202 maps, 28,594 rounds), **froze the production strategy (`dc1c84a`)**, and then ran it untouched—zero tuning—on a completely separate Major: **PGL Singapore Major 2026 · Stage 1** (53 maps, 7,062 rounds), feeding it only the cash and gear a normal player can see in freezetime:
 
 ![RoundSense Cross-Event Out-of-Sample Validation (Cologne vs Singapore Stage 1)](docs/assets/cross-event-validation.png)
 
-| Strict 1-vs-1 Lead Metric (All Eligible Rounds) | Cologne Study Set (`n=28,594`) | Singapore S1 Out-of-Sample (`n=7,062`) |
+Three things a player actually feels in-game (all numbers from the **Singapore Stage 1 blind test**, comparing only the #1 top option):
+
+- **Closer to pro spending**: Within **$460** of actual pro spend on average ($87 closer than "buy the best gun you can afford" and $27 closer than a standard economy-aware heuristic), landing within one grenade (**$400**) on **74.4%** of rounds—and within **$272** when carrying gear over.
+- **Far less likely to break your next round**: Even after losing a normal round, following RoundSense leaves you able to full-buy next round **45.6%** of the time (**+9.9pp** over naive buying and **+6.2pp** over standard economy heuristics) while still keeping rifle/AWP firepower on **87.6%** of rounds.
+- **Smarter weapon & helmet calls, zero bad math**: **77.4%** primary weapon-family agreement, **83.9%** CT helmet-vs-utility agreement, and **0** over-budget, side-illegal, or duplicate suggestions across the entire tournament (averaging just 1.52 concise options per round).
+
+<details>
+<summary>Full technical cross-event table (4 strategies · Cologne study set vs. Singapore S1 blind test)</summary>
+
+| Strict 1-vs-1 Lead Metric (All Eligible Rounds) | Cologne Study Set (`n=28,594`) | Singapore S1 Blind Test (`n=7,062`) |
 | :--- | ---: | ---: |
 | **Lead spend MAE** (vs. B0 / B1 / B2) | **$472** (vs. $555 / $506 / $538) | **$460** (vs. $547 / $487 / $527) |
 | **Lead spend within $400** | **73.2%** (vs. 66.7% / 59.1% / 72.0%) | **74.4%** (vs. 68.1% / 62.0% / 74.0%) |
@@ -54,9 +65,12 @@ We studied pro economy habits on **IEM Cologne Major 2026** (202 maps, 28,594 el
 | **Option-set within $400 / avg options** | **81.8% / 1.55** | **82.6% / 1.52** |
 | **9-check mechanical invariant violations** (incl. alternatives & LIGHT floors) | **0** (legacy V3: 10,232) | **0** (legacy V3: 2,530) |
 
-- Reproducible unified script: [cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
+- Reproducible unified script (`replay.json` end-of-round state recovery): [cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
 - Machine-readable reports: [cologne-cross-event-benchmark.json](docs/data/cologne-cross-event-benchmark.json) · [singapore-s1-cross-event-benchmark.json](docs/data/singapore-s1-cross-event-benchmark.json)
-- *Note: Historical freezetime decision replay. Singapore Stage 1 was never used to tune any policy rule; results are reported verbatim with no win-rate guarantees.*
+
+</details>
+
+- *Note: Historical freezetime decision replay. Singapore Stage 1 was never used to tune any policy rule; results are reported verbatim and measure decision quality & economy continuity rather than win-rate guarantees.*
 
 ---
 
