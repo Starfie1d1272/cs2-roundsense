@@ -1,19 +1,19 @@
 import {
   DEFAULT_RULES,
   fullUtilityTargetCash,
-  price,
-  recommendPolicyV3,
   type PolicyMode,
   type PolicyV3Output,
   type PolicyV3State,
+  price,
   type RecommendationOption,
   type RoundContext,
+  recommendPolicyV3,
   type SpendingGuidance,
 } from '@roundsense/economy-advisor';
 import type { GsiReceipt } from '@roundsense/gsi-protocol';
 import type { ItemId } from '@roundsense/shared-types';
-import { PolicyStateTracker } from '../policy-state.js';
 import { inventoryFrom } from '../inventory.js';
+import { PolicyStateTracker } from '../policy-state.js';
 
 export interface HudSettings {
   awpPriority: 'NEUTRAL' | 'PREFER' | 'SAVE_FOR_AWP';
@@ -49,7 +49,13 @@ export interface HudConditionalAlternative {
 }
 
 export type HudFutureCapability =
-  'FULL_UTILITY' | 'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
+  | 'FULL_UTILITY'
+  | 'RIFLE_ARMOR_BASIC_UTILITY'
+  | 'RIFLE_ARMOR'
+  | 'INSUFFICIENT'
+  | 'HALF_END_RESET'
+  | 'MATCH_POINT_AGAINST'
+  | 'NOT_EVALUATED';
 
 export interface HudOption {
   id: string;
@@ -137,7 +143,11 @@ export function optionForRecommendation(
           ? 'RIFLE_ARMOR'
           : policy.futureAffordability.status === 'PROJECTED'
             ? 'INSUFFICIENT'
-            : 'NOT_EVALUATED';
+            : policy.futureAffordability.status === 'NOT_APPLICABLE' &&
+                (policy.futureAffordability.reason === 'HALF_END_RESET' ||
+                  policy.futureAffordability.reason === 'MATCH_POINT_AGAINST')
+              ? policy.futureAffordability.reason
+              : 'NOT_EVALUATED';
 
   return {
     id: option.id,

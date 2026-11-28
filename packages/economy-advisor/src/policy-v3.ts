@@ -1,12 +1,16 @@
 import type { ItemId, Side } from '@roundsense/shared-types';
 import {
+  type PostLoadout,
+  type PurchasePlan,
   planPurchases,
   resultingLoadout,
   rifleFor,
   smgFor,
-  type PostLoadout,
-  type PurchasePlan,
 } from './advisor.js';
+import {
+  inferOpponentEconomy as inferFromCalibration,
+  type OpponentFeatureInput,
+} from './opponent-economy.js';
 import { projectNextRoundMoney } from './projection.js';
 import {
   DEFAULT_RULES,
@@ -16,10 +20,6 @@ import {
   price,
   weaponClassOf,
 } from './rules.js';
-import {
-  inferOpponentEconomy as inferFromCalibration,
-  type OpponentFeatureInput,
-} from './opponent-economy.js';
 import type { InventoryState, PurchaseItem } from './types.js';
 
 export type FactStatus = 'OBSERVED' | 'TRACKED' | 'UNKNOWN';
@@ -59,17 +59,34 @@ export interface FutureAffordabilityBoundary {
 }
 
 export type FutureAffordabilitySet =
-  | { status: 'PROJECTED'; context: 'NORMAL'; boundaries: readonly FutureAffordabilityBoundary[] }
+  | {
+      status: 'PROJECTED';
+      context: 'NORMAL';
+      boundaries: readonly FutureAffordabilityBoundary[];
+    }
   | { status: 'UNKNOWN'; boundaries: readonly []; reason: string }
   | {
       status: 'NOT_APPLICABLE';
       boundaries: readonly [];
-      reason: 'POST_PISTOL_STRATEGY' | 'PISTOL_UNSUPPORTED' | 'OVERTIME_UNSUPPORTED';
+      reason:
+        | 'POST_PISTOL_STRATEGY'
+        | 'PISTOL_UNSUPPORTED'
+        | 'OVERTIME_UNSUPPORTED'
+        | 'HALF_END_RESET'
+        | 'MATCH_POINT_AGAINST';
     };
 
 export type SpendingGuidance =
-  | { layer: 'ADVICE'; kind: 'MINIMIZE'; protectedCapability?: ProtectedNextBuyCapability }
-  | { layer: 'ADVICE'; kind: 'BOUNDED'; protectedCapability: ProtectedNextBuyCapability }
+  | {
+      layer: 'ADVICE';
+      kind: 'MINIMIZE';
+      protectedCapability?: ProtectedNextBuyCapability;
+    }
+  | {
+      layer: 'ADVICE';
+      kind: 'BOUNDED';
+      protectedCapability: ProtectedNextBuyCapability;
+    }
   | { layer: 'ADVICE'; kind: 'CURRENT_ROUND_PRIORITY' }
   | { layer: 'ADVICE'; kind: 'COMPLETE_CURRENT_BUY' };
 
@@ -158,7 +175,10 @@ export interface PolicyV3Output {
   opponent: Inference<OpponentEconomyClass>;
 }
 
-const DEFAULT_PREFERENCE: UserPreference = { source: 'DEFAULT', awpPriority: 'NEUTRAL' };
+const DEFAULT_PREFERENCE: UserPreference = {
+  source: 'DEFAULT',
+  awpPriority: 'NEUTRAL',
+};
 const MAIN_RIFLES = new Set<ItemId>(['ak47', 'm4a4', 'm4a1s', 'aug', 'sg553']);
 const ECO_RIFLES = new Set<ItemId>(['galil', 'famas']);
 const EFFECTIVE_GRENADES = new Set<ItemId>(['smoke', 'flash', 'he', 'molotov', 'incendiary']);
@@ -272,13 +292,16 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
     const desired = [...existing];
     let cost = 0;
     let added = 0;
+    const isFire = (g: ItemId) => g === 'molotov' || g === 'incendiary';
+    const effectiveCount = (list: readonly ItemId[], g: ItemId) =>
+      isFire(g) ? list.filter(isFire).length : count(list, g);
     for (const item of combo) {
       if (desired.length >= MAX_GRENADE_CARRY) break;
       const cap = grenadeCarryCap(item) ?? 0;
-      const needed = count(combo, item) - count(desired, item);
+      const needed = count(combo, item) - effectiveCount(desired, item);
       if (needed <= 0) continue;
       for (let i = 0; i < needed; i++) {
-        if (desired.length >= MAX_GRENADE_CARRY || count(desired, item) >= cap) break;
+        if (desired.length >= MAX_GRENADE_CARRY || effectiveCount(desired, item) >= cap) break;
         const unit = price(DEFAULT_RULES, item);
         if (cost + unit > budget) break;
         desired.push(item);
@@ -290,7 +313,8 @@ export function utilityBundle(side: Side, inventory: InventoryState, budget: num
     // Prefer the first combo that satisfies the full target combo within budget;
     // otherwise keep the partial fill that adds the most effective utility.
     const fullComboMet = combo.every(
-      (item) => count(desired, item) >= Math.min(count(combo, item), grenadeCarryCap(item) ?? 0),
+      (item) =>
+        effectiveCount(desired, item) >= Math.min(count(combo, item), grenadeCarryCap(item) ?? 0),
     );
     if (fullComboMet) return desired;
     if (added > bestAddedCount) {
@@ -531,7 +555,32 @@ function buildConditionalAlternatives(
   return alternatives;
 }
 
+/**
+ * Detect rounds where current-round money will NOT carry over into a normal next round:
+ * - Round 12 (end of 1st half -> side swap & $800 pistol reset)
+ * - Round 24 (end of regulation -> match end or OT reset)
+ * - Regulation match point against us (opponent score >= 12 -> a loss ends the match)
+ */
+function economyResetReason(state: PolicyV3State): 'HALF_END_RESET' | 'MATCH_POINT_AGAINST' | null {
+  if (known(state.round.number)) {
+    const r = state.round.number.value;
+    if (r === 12 || r === 24) return 'HALF_END_RESET';
+  }
+  if (
+    known(state.round.context) &&
+    state.round.context.value === 'NORMAL' &&
+    known(state.round.score) &&
+    known(state.round.side)
+  ) {
+    const oppScore =
+      state.round.side.value === 'CT' ? state.round.score.value.t : state.round.score.value.ct;
+    if (oppScore >= 12) return 'MATCH_POINT_AGAINST';
+  }
+  return null;
+}
+
 function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
+  if (economyResetReason(state) !== null) return [];
   if (!known(state.player.money) || !known(state.player.lossIndex) || !known(state.round.side))
     return [];
   const side = state.round.side.value;
@@ -675,15 +724,35 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
  */
 function futureAffordability(state: PolicyV3State): FutureAffordabilitySet {
   if (!known(state.round.context)) {
-    return { status: 'UNKNOWN', boundaries: [], reason: 'round context is UNKNOWN' };
+    return {
+      status: 'UNKNOWN',
+      boundaries: [],
+      reason: 'round context is UNKNOWN',
+    };
   }
   const context = state.round.context.value;
   if (context === 'POST_PISTOL')
-    return { status: 'NOT_APPLICABLE', boundaries: [], reason: 'POST_PISTOL_STRATEGY' };
+    return {
+      status: 'NOT_APPLICABLE',
+      boundaries: [],
+      reason: 'POST_PISTOL_STRATEGY',
+    };
   if (context === 'PISTOL')
-    return { status: 'NOT_APPLICABLE', boundaries: [], reason: 'PISTOL_UNSUPPORTED' };
+    return {
+      status: 'NOT_APPLICABLE',
+      boundaries: [],
+      reason: 'PISTOL_UNSUPPORTED',
+    };
   if (context === 'OVERTIME')
-    return { status: 'NOT_APPLICABLE', boundaries: [], reason: 'OVERTIME_UNSUPPORTED' };
+    return {
+      status: 'NOT_APPLICABLE',
+      boundaries: [],
+      reason: 'OVERTIME_UNSUPPORTED',
+    };
+  const resetReason = economyResetReason(state);
+  if (resetReason !== null) {
+    return { status: 'NOT_APPLICABLE', boundaries: [], reason: resetReason };
+  }
   if (!known(state.player.money) || !known(state.player.lossIndex) || !known(state.round.side)) {
     return {
       status: 'UNKNOWN',
@@ -737,7 +806,11 @@ function preserveGuidance(boundaries: FutureAffordabilitySet): SpendingGuidance 
     ) ??
     boundaries.boundaries.find((b) => b.capability === 'RIFLE_ARMOR' && b.reachableWithNoSpend);
   return strongest
-    ? { layer: 'ADVICE', kind: 'MINIMIZE', protectedCapability: strongest.capability }
+    ? {
+        layer: 'ADVICE',
+        kind: 'MINIMIZE',
+        protectedCapability: strongest.capability,
+      }
     : { layer: 'ADVICE', kind: 'MINIMIZE' };
 }
 
@@ -754,7 +827,10 @@ function buildOption(
   const side = state.round.side.value!;
   const inventory = state.player.inventory.value!;
   const reasons: PolicyReason[] = [
-    { code: `MODE_${mode}`, detail: 'unified inventory-aware legal loadout plan' },
+    {
+      code: `MODE_${mode}`,
+      detail: 'unified inventory-aware legal loadout plan',
+    },
     ...extraReasons,
   ];
   if (state.opponent.status === 'INFERRED') {
@@ -828,7 +904,10 @@ function postPistolWinOptions(
     code: 'POST_PISTOL_CONVERSION',
     detail: 'pistol winner conversion is team-level FULL with vesthelm priority',
   };
-  const guidance: SpendingGuidance = { layer: 'ADVICE', kind: 'COMPLETE_CURRENT_BUY' };
+  const guidance: SpendingGuidance = {
+    layer: 'ADVICE',
+    kind: 'COMPLETE_CURRENT_BUY',
+  };
   const emptyHold: PurchasePlan = {
     purchases: [],
     totalCost: 0,
@@ -840,7 +919,10 @@ function postPistolWinOptions(
     buildOption(state, 'FULL', plan, guidance, s, money, [reason], prefix);
 
   if (retained) {
-    const plan = planLoadout(side, inventory, money, { preferVesthelm: true, requireArmor: false });
+    const plan = planLoadout(side, inventory, money, {
+      preferVesthelm: true,
+      requireArmor: false,
+    });
     return [make(plan ?? emptyHold, plan ? 'post-pistol-retained' : 'post-pistol-hold', strength)];
   }
 
@@ -951,7 +1033,11 @@ function normalRoundOptions(
           state,
           'LIGHT',
           lightPlan,
-          { layer: 'ADVICE', kind: 'BOUNDED', protectedCapability: boundary.capability },
+          {
+            layer: 'ADVICE',
+            kind: 'BOUNDED',
+            protectedCapability: boundary.capability,
+          },
           'SUPPORTED',
           boundary.maxSpendNow,
           [
@@ -982,15 +1068,36 @@ function normalRoundOptions(
     nextFullReachable && !hasRifleForce ? 'SUPPORTED' : 'ALTERNATIVE',
   );
 
+  // Preserve higher next-round capability: if PRESERVE secures RIFLE_ARMOR_BASIC_UTILITY
+  // while LIGHT downgrades next round to bare RIFLE_ARMOR, rank PRESERVE ahead of LIGHT.
+  const lightProtectsFull =
+    lightOptions.length > 0 &&
+    lightOptions[0]!.spendingGuidance.kind === 'BOUNDED' &&
+    lightOptions[0]!.spendingGuidance.protectedCapability === 'RIFLE_ARMOR_BASIC_UTILITY';
+
+  const rankedSaveOptions: RecommendationOption[] =
+    nextFullReachable && !lightProtectsFull
+      ? [
+          preserveOpt,
+          ...lightOptions.map((opt) => ({
+            ...opt,
+            adviceStrength: 'ALTERNATIVE' as const,
+          })),
+        ]
+      : [...lightOptions, preserveOpt];
+
   let ordered: RecommendationOption[];
   if (!forceOpt) {
-    ordered = [...lightOptions, preserveOpt];
+    ordered = rankedSaveOptions;
   } else if (nextFullReachable && !hasRifleForce) {
-    ordered = [...lightOptions, preserveOpt, { ...forceOpt, adviceStrength: 'ALTERNATIVE' }];
+    ordered = [...rankedSaveOptions, { ...forceOpt, adviceStrength: 'ALTERNATIVE' }];
   } else {
     ordered = [
       forceOpt,
-      ...lightOptions.map((opt) => ({ ...opt, adviceStrength: 'ALTERNATIVE' as const })),
+      ...lightOptions.map((opt) => ({
+        ...opt,
+        adviceStrength: 'ALTERNATIVE' as const,
+      })),
       preserveOpt,
     ];
   }
