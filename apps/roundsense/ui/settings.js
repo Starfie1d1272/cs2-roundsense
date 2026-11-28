@@ -84,6 +84,7 @@
   let gsiBusy = false;
   let gameGeometry = null;
   let geometrySeq = 0;
+  let lastGeometryKey = null;
 
   function applyBackdrop() {
     stageEl.style.backgroundImage = 'url("' + BACKDROP_URLS[activeBackdrop] + '")';
@@ -97,7 +98,7 @@
     const fit = stageEl.clientWidth / width;
     hudAnchor.style.setProperty(
       '--preview-hud-scale',
-      String(currentSettings.scale * window.RoundSenseHud.BASE_SCALE * fit * (game?.dpi ?? 1)),
+      String(window.RoundSenseHud.effectiveScale(currentSettings.scale) * fit * (game?.dpi ?? 1)),
     );
     hudAnchor.classList.toggle('is-game-position', Boolean(game));
     if (game) {
@@ -110,17 +111,21 @@
     if (previewViewport.textContent !== label) previewViewport.textContent = label;
   }
 
-  async function refreshGameGeometry() {
+  async function refreshGameGeometry(force = false) {
     if (!tauriInvoke || activeAspect !== 'game' || !hudPreview.firstElementChild) return;
-    const seq = ++geometrySeq;
     const { width, height } = window.RoundSenseHud.measure(hudPreview);
+    const scale = window.RoundSenseHud.effectiveScale(currentSettings.scale);
+    const key = `${width}x${height}@${scale}:${currentSettings.position}`;
+    if (!force && key === lastGeometryKey) return;
+    lastGeometryKey = key;
+    const seq = ++geometrySeq;
     try {
       const geometry = await tauriInvoke('preview_overlay_geometry', {
         request: {
           visible: true,
           width,
           height,
-          scale: currentSettings.scale,
+          scale,
           position: currentSettings.position,
         },
       });
@@ -128,6 +133,7 @@
       gameGeometry = geometry;
       layoutPreview();
     } catch {
+      lastGeometryKey = null;
       // Browser previews and older desktop hosts use the reference frame.
     }
   }
@@ -164,7 +170,9 @@
       currentSettings.awpPriority !== 'SAVE_FOR_AWP';
     const effectiveSettings = previewSaveAwpOverride
       ? { ...currentSettings, awpPriority: 'SAVE_FOR_AWP' }
-      : { ...currentSettings };
+      : useLive && !liveSnapshot?.visible && baseSnap.settings?.awpPriority
+        ? { ...currentSettings, awpPriority: baseSnap.settings.awpPriority }
+        : { ...currentSettings };
     const snap = { ...baseSnap, settings: effectiveSettings };
     window.RoundSenseHud.render(hudPreview, snap, { forceShow: true, skipRootVars: true });
 
@@ -470,7 +478,7 @@
       }
       applyBackdrop();
       layoutPreview();
-      void refreshGameGeometry();
+      void refreshGameGeometry(true);
     });
   }
 
@@ -584,6 +592,6 @@
   }
 
   new ResizeObserver(layoutPreview).observe(stageEl);
-  window.addEventListener('focus', () => void refreshGameGeometry());
+  window.addEventListener('focus', () => void refreshGameGeometry(true));
   void boot();
 })();

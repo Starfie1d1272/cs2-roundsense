@@ -2,7 +2,7 @@ use crate::placement::{place, Rect};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, State, WebviewWindow};
+use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow};
 
 #[derive(Clone, Deserialize)]
 pub struct OverlayRequest {
@@ -50,7 +50,7 @@ pub fn set_overlay_state(
 fn validate_geometry(request: &OverlayRequest) -> Result<(), String> {
     if !(100.0..=420.0).contains(&request.width)
         || !(40.0..=640.0).contains(&request.height)
-        || !(0.8..=1.5).contains(&request.scale)
+        || !(0.5..=2.5).contains(&request.scale)
         || !["below-radar", "lower-left", "lower-right"].contains(&request.position.as_str())
     {
         return Err("invalid overlay geometry".into());
@@ -58,16 +58,9 @@ fn validate_geometry(request: &OverlayRequest) -> Result<(), String> {
     Ok(())
 }
 
-const HUD_BASE_SCALE: f64 = 1.2;
-
-fn effective_scale(request: &OverlayRequest) -> f64 {
-    request.scale * HUD_BASE_SCALE
-}
-
 fn overlay_geometry(game: Rect, dpi: f64, request: &OverlayRequest) -> (i32, i32, i32, i32) {
-    let scale = effective_scale(request);
-    let width = (request.width * scale * dpi).ceil() as i32;
-    let height = (request.height * scale * dpi).ceil() as i32;
+    let width = (request.width * request.scale * dpi).ceil() as i32;
+    let height = (request.height * request.scale * dpi).ceil() as i32;
     let (x, y) = place(game, width, height, &request.position);
     (x, y, width, height)
 }
@@ -92,15 +85,7 @@ pub fn preview_overlay_geometry(
         return Err("invalid caller".into());
     }
     validate_geometry(&request)?;
-    let live_viewport = find_cs2_window().map(|game| {
-        let dpi = window
-            .app_handle()
-            .get_webview_window("overlay")
-            .and_then(|w| w.scale_factor().ok())
-            .or_else(|| window.scale_factor().ok())
-            .unwrap_or(1.0);
-        (game, dpi)
-    });
+    let live_viewport = find_cs2_window();
     let mut lease = state.0.lock().map_err(|_| "overlay host unavailable")?;
     if let Some(viewport) = live_viewport {
         lease.viewport = Some(viewport);
@@ -118,14 +103,15 @@ pub fn preview_overlay_geometry(
     }))
 }
 
-/// Queries window identity and client geometry only; never reads game memory.
+/// Queries window identity, client geometry, and window DPI only; never reads game memory.
 #[cfg(windows)]
-fn cs2_window_rect(hwnd: windows_sys::Win32::Foundation::HWND) -> Option<Rect> {
+fn cs2_window_viewport(hwnd: windows_sys::Win32::Foundation::HWND) -> Option<(Rect, f64)> {
     use windows_sys::Win32::Foundation::{CloseHandle, POINT, RECT};
     use windows_sys::Win32::Graphics::Gdi::ClientToScreen;
     use windows_sys::Win32::System::Threading::{
         OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
     };
+    use windows_sys::Win32::UI::HiDpi::GetDpiForWindow;
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         GetClientRect, GetWindowThreadProcessId, IsIconic, IsWindowVisible,
     };
@@ -166,54 +152,66 @@ fn cs2_window_rect(hwnd: windows_sys::Win32::Foundation::HWND) -> Option<Rect> {
         if width < 640 || height < 360 {
             return None;
         }
-        Some(Rect {
-            x: origin.x,
-            y: origin.y,
-            width,
-            height,
-        })
+        let raw_dpi = GetDpiForWindow(hwnd);
+        let dpi = if raw_dpi > 0 {
+            raw_dpi as f64 / 96.0
+        } else {
+            1.0
+        };
+        Some((
+            Rect {
+                x: origin.x,
+                y: origin.y,
+                width,
+                height,
+            },
+            dpi,
+        ))
     }
 }
 
-/// Queries foreground window identity and client geometry only; never reads game memory.
+/// Queries foreground window identity, client geometry, and DPI only; never reads game memory.
 #[cfg(windows)]
-fn foreground_cs2() -> Option<Rect> {
+fn foreground_cs2() -> Option<(Rect, f64)> {
     use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
-    unsafe { cs2_window_rect(GetForegroundWindow()) }
+    unsafe { cs2_window_viewport(GetForegroundWindow()) }
 }
 
 /// On-demand lookup of a visible non-minimized CS2 window for Settings preview.
 #[cfg(windows)]
-fn find_cs2_window() -> Option<Rect> {
+fn find_cs2_window() -> Option<(Rect, f64)> {
     use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
     use windows_sys::Win32::UI::WindowsAndMessaging::EnumWindows;
 
     unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
-        let found = &mut *(lparam as *mut Option<Rect>);
-        if let Some(rect) = cs2_window_rect(hwnd) {
-            *found = Some(rect);
+        let found = &mut *(lparam as *mut Option<(Rect, f64)>);
+        if let Some(viewport) = cs2_window_viewport(hwnd) {
+            *found = Some(viewport);
             return 0;
         }
         1
     }
 
-    if let Some(rect) = foreground_cs2() {
-        return Some(rect);
+    if let Some(viewport) = foreground_cs2() {
+        return Some(viewport);
     }
-    let mut found: Option<Rect> = None;
+    let mut found: Option<(Rect, f64)> = None;
     unsafe {
-        EnumWindows(Some(enum_proc), (&mut found as *mut Option<Rect>) as LPARAM);
+        EnumWindows(
+            Some(enum_proc),
+            (&mut found as *mut Option<(Rect, f64)>) as LPARAM,
+        );
     }
     found
 }
 
 #[cfg(not(windows))]
-fn foreground_cs2() -> Option<Rect> {
+fn foreground_cs2() -> Option<(Rect, f64)> {
     None
 }
 
 #[cfg(not(windows))]
-fn find_cs2_window() -> Option<Rect> {
+fn find_cs2_window() -> Option<(Rect, f64)> {
     None
 }
 
@@ -242,20 +240,15 @@ pub fn spawn_tracker(handle: AppHandle) {
                 }
                 continue;
             };
-            if let Some(game) = foreground_cs2() {
-                let dpi = window.scale_factor().unwrap_or(1.0);
+            if let Some((game, dpi)) = foreground_cs2() {
                 if let Ok(mut lease) = state.0.lock() {
                     lease.viewport = Some((game, dpi));
                 }
                 let geometry = overlay_geometry(game, dpi, &request);
                 if last_geometry != Some(geometry) {
-                    let (x, y, _, _) = geometry;
+                    let (x, y, width, height) = geometry;
                     let _ = window.set_position(PhysicalPosition::new(x, y));
-                    let scale = effective_scale(&request);
-                    let _ = window.set_size(LogicalSize::new(
-                        request.width * scale,
-                        request.height * scale,
-                    ));
+                    let _ = window.set_size(PhysicalSize::new(width as u32, height as u32));
                     last_geometry = Some(geometry);
                 }
                 if !shown {

@@ -22,7 +22,7 @@
     if (!visible && lastReportedVisible === false) return;
     nativePending = true;
     const size = visible ? window.RoundSenseHud.measure(hud) : { width: 264, height: 84 };
-    const scale = latest?.settings?.scale ?? 1;
+    const scale = window.RoundSenseHud.effectiveScale(latest?.settings?.scale);
     try {
       await invoke('set_overlay_state', {
         request: {

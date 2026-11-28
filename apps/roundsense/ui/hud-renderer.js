@@ -285,7 +285,10 @@
         '--hud-opacity',
         String(snapshot.settings.opacity),
       );
-      document.documentElement.style.setProperty('--hud-scale', String(snapshot.settings.scale));
+      document.documentElement.style.setProperty(
+        '--hud-scale',
+        String(effectiveScale(snapshot.settings.scale)),
+      );
     }
 
     if (!shouldShow) return;
@@ -478,8 +481,13 @@
     container.append(foot);
   }
 
+  const BASE_SCALE = 1.2;
+  function effectiveScale(scale) {
+    return (scale ?? 1) * BASE_SCALE;
+  }
+
   window.RoundSenseHud = {
-    BASE_SCALE: 1.2,
+    effectiveScale,
     render: renderHud,
     measure(container) {
       if (!container) return { width: 264, height: 84 };

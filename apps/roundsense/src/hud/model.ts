@@ -1,7 +1,6 @@
 import {
   classifyNextBuyCapability,
   DEFAULT_RULES,
-  fullUtilityTargetCash,
   type PolicyMode,
   type PolicyV3Output,
   type PolicyV3State,
@@ -127,37 +126,7 @@ export function optionForRecommendation(
     option.trajectory.find((s) => s.id === 'LOSS_NO_PLANT')?.nextMoney.min ?? null;
   const lossWithPlantNextMoney =
     option.trajectory.find((s) => s.id === 'LOSS_WITH_PLANT')?.nextMoney.min ?? null;
-  const fullUtilityThreshold = side ? fullUtilityTargetCash(side) : null;
-  const classifyCash = (
-    cash: number | null,
-    requireReachableWithNoSpend: boolean,
-  ): HudFutureCapability => {
-    if (
-      cash !== null &&
-      side &&
-      policy.futureAffordability.status === 'NOT_APPLICABLE' &&
-      policy.futureAffordability.reason === 'POST_PISTOL_STRATEGY'
-    ) {
-      return classifyNextBuyCapability(side, cash);
-    }
-    const matched =
-      cash === null
-        ? []
-        : policy.futureAffordability.boundaries.filter(
-            (b) => (!requireReachableWithNoSpend || b.reachableWithNoSpend) && cash >= b.targetCash,
-          );
-    const hasBasic = matched.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
-    if (
-      hasBasic &&
-      fullUtilityThreshold !== null &&
-      cash !== null &&
-      cash >= fullUtilityThreshold
-    ) {
-      return 'FULL_UTILITY';
-    }
-    if (hasBasic) return 'RIFLE_ARMOR_BASIC_UTILITY';
-    if (matched.length > 0) return 'RIFLE_ARMOR';
-    if (policy.futureAffordability.status === 'PROJECTED') return 'INSUFFICIENT';
+  const classifyCash = (cash: number | null): HudFutureCapability => {
     if (
       policy.futureAffordability.status === 'NOT_APPLICABLE' &&
       (policy.futureAffordability.reason === 'HALF_END_RESET' ||
@@ -165,11 +134,20 @@ export function optionForRecommendation(
     ) {
       return policy.futureAffordability.reason;
     }
+    if (
+      cash !== null &&
+      side &&
+      (policy.futureAffordability.status === 'PROJECTED' ||
+        (policy.futureAffordability.status === 'NOT_APPLICABLE' &&
+          policy.futureAffordability.reason === 'POST_PISTOL_STRATEGY'))
+    ) {
+      return classifyNextBuyCapability(side, cash);
+    }
     return 'NOT_EVALUATED';
   };
-  const futureCapability = classifyCash(lossNextMoney, true);
+  const futureCapability = classifyCash(lossNextMoney);
   const lossWithPlantCapability =
-    lossWithPlantNextMoney === null ? null : classifyCash(lossWithPlantNextMoney, false);
+    lossWithPlantNextMoney === null ? null : classifyCash(lossWithPlantNextMoney);
 
   return {
     id: option.id,
@@ -267,8 +245,9 @@ export class HudRuntime {
   }
 
   updateSettings(settings: HudSettings): void {
+    const awpChanged = settings.awpPriority !== this.settings.awpPriority;
     this.settings = { ...settings };
-    if (this.advice) {
+    if (awpChanged && this.advice) {
       this.advice.content = this.buildAdvice(
         this.advice.receipt,
         this.advice.observed,

@@ -246,7 +246,7 @@ export function fullUtilityTargetCash(side: Side): number {
   return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
 }
 
-export function nextBuyTargetCash(side: Side, capability: ProtectedNextBuyCapability): number {
+function nextBuyTargetCash(side: Side, capability: ProtectedNextBuyCapability): number {
   const items: ItemId[] = [rifleFor(side), baseArmorFor(side)];
   if (capability === 'RIFLE_ARMOR_BASIC_UTILITY') items.push('smoke', 'flash');
   return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
