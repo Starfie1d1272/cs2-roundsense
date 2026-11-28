@@ -115,6 +115,8 @@
     RIFLE_ARMOR_BASIC_UTILITY: { text: '基础起枪', cls: 'cap-basic' },
     RIFLE_ARMOR: { text: '仅长枪甲', cls: 'cap-rifle' },
     INSUFFICIENT: { text: '长枪不足', cls: 'cap-low' },
+    HALF_END_RESET: { text: '换边重置', cls: 'cap-muted' },
+    MATCH_POINT_AGAINST: { text: '赛点局', cls: 'cap-muted' },
     NOT_EVALUATED: { text: '未评估', cls: 'cap-muted' },
   };
 
@@ -344,7 +346,8 @@
     const hSpend = document.createElement('span');
     hSpend.textContent = '本局投入';
     const hNext = document.createElement('span');
-    hNext.textContent = '败后现金';
+    hNext.textContent = '常规败局';
+    hNext.title = '常规败局下局现金（不含 T 方超时存活无连败奖励分支）';
     header.append(hMode, hSpend, hNext);
     container.append(header);
 

@@ -56,7 +56,7 @@ export function tick(payload: GsiPayload, opts: EngineOptions): AdviceTick | nul
   const policy = recommendPolicyV3(policyState);
   return {
     side: player.team,
-    roundNumber: map.round,
+    roundNumber: policyState.round.number.value ?? map.round + 1,
     money: state.money,
     policy,
   };

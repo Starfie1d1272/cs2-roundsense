@@ -1,14 +1,14 @@
 import type { ItemId, NextRoundGoal, Side } from '@roundsense/shared-types';
+import { goalTargetCost, type ProjectionInput, projectNextRoundMoney } from './projection.js';
+import { classifyPurchase } from './round-type.js';
 import {
   DEFAULT_RULES,
+  type EconomyRules,
   grenadeCarryCap,
   isItemLegalForSide,
-  type EconomyRules,
   price,
   weaponClassOf,
 } from './rules.js';
-import { goalTargetCost, projectNextRoundMoney, type ProjectionInput } from './projection.js';
-import { classifyPurchase } from './round-type.js';
 import type { AdvisorInput, AdvisorOutput, InventoryState, PurchaseItem, Scheme } from './types.js';
 
 export function rifleFor(side: Side): ItemId {
@@ -169,19 +169,19 @@ export function planPurchases(
   side: Side,
 ): PurchasePlan {
   const rejectedItems: ItemId[] = [];
+  const isFireGrenade = (item: ItemId): boolean => item === 'molotov' || item === 'incendiary';
   const grenadeCounts = new Map<ItemId, number>();
   const targetGrenadeCounts = new Map<ItemId, number>();
   for (const grenade of inventory.grenades)
     grenadeCounts.set(grenade, (grenadeCounts.get(grenade) ?? 0) + 1);
+  const inventoryFireCount = inventory.grenades.filter(isFireGrenade).length;
   const inventoryGrenadesValid =
     inventory.grenades.length <= 4 &&
+    inventoryFireCount <= 1 &&
     [...grenadeCounts].every(([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0));
+  let requestedFireCount = 0;
   for (const target of targetItems) {
-    if (
-      target.quantity <= 0 ||
-      !Number.isInteger(target.quantity) ||
-      !isItemLegalForSide(target.item, side)
-    ) {
+    if (target.quantity <= 0 || !Number.isInteger(target.quantity)) {
       rejectedItems.push(target.item);
       continue;
     }
@@ -190,6 +190,10 @@ export function planPurchases(
       const requested = (targetGrenadeCounts.get(target.item) ?? 0) + target.quantity;
       targetGrenadeCounts.set(target.item, requested);
       if (requested > cap) rejectedItems.push(target.item);
+      if (isFireGrenade(target.item)) {
+        requestedFireCount += target.quantity;
+        if (requestedFireCount > 1) rejectedItems.push(target.item);
+      }
     }
   }
   const requestedGrenades = targetItems.reduce(
@@ -246,8 +250,18 @@ export function planPurchases(
       targetCost += price(rules, item);
     } else if (isGrenade(item)) {
       const owned = ownedGrenades.get(item) ?? 0;
-      if (owned > 0) ownedGrenades.set(item, owned - 1);
-      else add(item);
+      if (owned > 0) {
+        ownedGrenades.set(item, owned - 1);
+      } else if (isFireGrenade(item)) {
+        // CS2 shares a single fire-grenade slot between molotov and incendiary;
+        // an already-carried cross-side fire grenade satisfies the fire slot.
+        const altFire: ItemId = item === 'molotov' ? 'incendiary' : 'molotov';
+        const altOwned = ownedGrenades.get(altFire) ?? 0;
+        if (altOwned > 0) ownedGrenades.set(altFire, altOwned - 1);
+        else add(item);
+      } else {
+        add(item);
+      }
       targetCost += price(rules, item);
     }
     // unknown target item → no guessing, buy nothing, count nothing
@@ -255,6 +269,20 @@ export function planPurchases(
 
   for (const t of targetItems) {
     for (let i = 0; i < t.quantity; i++) consume(t.item);
+  }
+
+  // Enforce side buy legality only on actual net new purchases, not already-owned gear.
+  for (const [item] of purchases) {
+    if (!isItemLegalForSide(item, side)) rejectedItems.push(item);
+  }
+  if (rejectedItems.length > 0) {
+    return {
+      purchases: [],
+      totalCost: 0,
+      targetCost: 0,
+      isComplete: false,
+      rejectedItems: [...new Set(rejectedItems)],
+    };
   }
 
   let totalCost = 0;
@@ -271,13 +299,23 @@ export function planPurchases(
     resultingGrenadeCounts.set(grenade, (resultingGrenadeCounts.get(grenade) ?? 0) + 1);
   const resultingValid =
     resulting.grenades.length <= 4 &&
+    resulting.grenades.filter(isFireGrenade).length <= 1 &&
     [...resultingGrenadeCounts].every(
       ([item, quantity]) => quantity <= (grenadeCarryCap(item) ?? 0),
     );
   if (!resultingValid)
-    return { purchases: [], totalCost: 0, targetCost: 0, isComplete: false, rejectedItems: [] };
+    return {
+      purchases: [],
+      totalCost: 0,
+      targetCost: 0,
+      isComplete: false,
+      rejectedItems: [],
+    };
   return {
-    purchases: [...purchases.entries()].map(([item, quantity]) => ({ item, quantity })),
+    purchases: [...purchases.entries()].map(([item, quantity]) => ({
+      item,
+      quantity,
+    })),
     totalCost,
     targetCost,
     isComplete: true,
@@ -293,22 +331,46 @@ interface BundleTemplate {
 
 const BUNDLES: Record<NextRoundGoal, BundleTemplate[]> = {
   rifle_armor: [
-    { id: 'rifle-helmet', label: '长枪 + 全甲', items: ['ak47', 'kevlar_helmet'] },
+    {
+      id: 'rifle-helmet',
+      label: '长枪 + 全甲',
+      items: ['ak47', 'kevlar_helmet'],
+    },
     { id: 'rifle-kevlar', label: '长枪 + 半甲', items: ['ak47', 'kevlar'] },
     {
       id: 'rifle-helmet-util',
       label: '长枪 + 全甲 + 基础道具',
       items: ['ak47', 'kevlar_helmet', 'smoke', 'flash'],
     },
-    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
-    { id: 'half-smg', label: '半起（冲锋枪 + 甲）', items: ['mac10', 'kevlar'] },
+    {
+      id: 'force-deagle',
+      label: '强起（沙鹰 + 甲 + 闪）',
+      items: ['deagle', 'kevlar', 'flash'],
+    },
+    {
+      id: 'half-smg',
+      label: '半起（冲锋枪 + 甲）',
+      items: ['mac10', 'kevlar'],
+    },
     { id: 'save', label: '全保存（只买手枪/不买）', items: [] },
   ],
   awp: [
-    { id: 'awp-helmet', label: 'AWP + 全甲（目标提前达成）', items: ['awp', 'kevlar_helmet'] },
+    {
+      id: 'awp-helmet',
+      label: 'AWP + 全甲（目标提前达成）',
+      items: ['awp', 'kevlar_helmet'],
+    },
     { id: 'awp-kevlar', label: 'AWP + 半甲', items: ['awp', 'kevlar'] },
-    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
-    { id: 'rifle-bridge', label: '过渡步枪 + 甲（推迟 AWP）', items: ['ak47', 'kevlar'] },
+    {
+      id: 'force-deagle',
+      label: '强起（沙鹰 + 甲 + 闪）',
+      items: ['deagle', 'kevlar', 'flash'],
+    },
+    {
+      id: 'rifle-bridge',
+      label: '过渡步枪 + 甲（推迟 AWP）',
+      items: ['ak47', 'kevlar'],
+    },
     { id: 'save', label: '节省（保证下回合 AWP）', items: [] },
   ],
   rifle_util: [
@@ -322,8 +384,16 @@ const BUNDLES: Record<NextRoundGoal, BundleTemplate[]> = {
       label: '长枪 + 全甲 + 烟闪雷',
       items: ['ak47', 'kevlar_helmet', 'smoke', 'flash', 'he'],
     },
-    { id: 'rifle-kevlar', label: '长枪 + 甲（无道具）', items: ['ak47', 'kevlar'] },
-    { id: 'force-deagle', label: '强起（沙鹰 + 甲 + 闪）', items: ['deagle', 'kevlar', 'flash'] },
+    {
+      id: 'rifle-kevlar',
+      label: '长枪 + 甲（无道具）',
+      items: ['ak47', 'kevlar'],
+    },
+    {
+      id: 'force-deagle',
+      label: '强起（沙鹰 + 甲 + 闪）',
+      items: ['deagle', 'kevlar', 'flash'],
+    },
     { id: 'save', label: '全保存', items: [] },
   ],
   max_combat_now: [
@@ -332,7 +402,11 @@ const BUNDLES: Record<NextRoundGoal, BundleTemplate[]> = {
       label: '满配长枪 + 全道具',
       items: ['ak47', 'kevlar_helmet', 'smoke', 'flash', 'he'],
     },
-    { id: 'max-util', label: '长枪 + 甲 + 烟 + 闪', items: ['ak47', 'kevlar', 'smoke', 'flash'] },
+    {
+      id: 'max-util',
+      label: '长枪 + 甲 + 烟 + 闪',
+      items: ['ak47', 'kevlar', 'smoke', 'flash'],
+    },
     {
       id: 'force-deagle',
       label: '强起（沙鹰 + 甲 + 闪 + 烟）',

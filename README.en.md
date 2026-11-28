@@ -29,7 +29,7 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 - **Mode column**: Shows only the most meaningful buy options (`Full`, `Force`, `Light`, `ECO`, `AWP`) alongside their next-round consequences—no redundant force row when a clean full buy is available.
 - **Spend column**: Shows exact cost for fixed buys, or a **spend cap (e.g. `≤ $1,300`)** paired with a suggested loadout cost (`$1,150`) for flexible light buys so you can adapt to your spawn and team call.
 - **Gear silhouettes**: Native CS2 weapon, armor (including standalone `+helmet` upgrades), defuse kit, and utility icons, plus dashed conditional notes when relevant (e.g. swapping a utility slot or picking up a kit if teammates lack one).
-- **Post-loss cash & next-round capability**: Projects your conservative next-round cash (loss without plant or extra kills) and color-codes what you can afford:
+- **Standard post-loss cash & next-round capability**: Projects your standard loss-no-plant next-round cash (no extra kills; excludes the T-side timeout-alive zero-loss-bonus branch, and marks halftime/match-point resets explicitly) and color-codes what you can afford:
   - **Emerald (Full Utility / AWP Ready)**: Enough for a full-utility rifle buy (or AWP + Kevlar) next round even if you lose.
   - **Teal (Basic Rifle Buy)**: Enough for rifle, armor, and basic smoke/flash, though full utility/kit/helmet will be tight.
   - **Amber (Rifle + Armor)**: Enough for rifle + armor only, with almost no utility budget.
