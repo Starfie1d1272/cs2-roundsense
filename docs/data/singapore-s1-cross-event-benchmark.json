@@ -1,6 +1,6 @@
 {
   "event": "PGL Singapore Major 2026 Stage 1",
-  "generatedAt": "2026-11-28T07:57:18.746Z",
+  "generatedAt": "2026-11-28T08:06:40.195Z",
   "methodology": {
     "pipeline": "replay.json end-of-round state recovery + utility coherence + drop/pickup exclusion",
     "frozenCurrentPolicyCommit": "dc1c84a",
@@ -50,17 +50,19 @@
   },
   "mechanicalViolations": {
     "B2_legacy_v3": {
-      "total": 2530,
+      "total": 2893,
       "breakdown": {
         "over_budget": 0,
         "side_illegal": 0,
         "grenade_slots_over_4": 0,
         "flash_over_2": 0,
+        "fire_grenade_over_1": 0,
         "retained_rifle_or_awp_downgrade": 0,
-        "duplicate_option": 2527,
-        "light_breaks_protected_next_buy": 3,
+        "duplicate_option": 2524,
+        "light_breaks_protected_next_buy": 369,
         "conditional_alt_over_budget": 0,
-        "conditional_alt_illegal_or_overcap": 0
+        "conditional_alt_illegal_or_overcap": 0,
+        "conditional_alt_breaks_light_floor": 0
       }
     },
     "Current_roundsense": {
@@ -70,11 +72,13 @@
         "side_illegal": 0,
         "grenade_slots_over_4": 0,
         "flash_over_2": 0,
+        "fire_grenade_over_1": 0,
         "retained_rifle_or_awp_downgrade": 0,
         "duplicate_option": 0,
         "light_breaks_protected_next_buy": 0,
         "conditional_alt_over_budget": 0,
-        "conditional_alt_illegal_or_overcap": 0
+        "conditional_alt_illegal_or_overcap": 0,
+        "conditional_alt_breaks_light_floor": 0
       }
     }
   },
@@ -334,28 +338,28 @@
         "n": 7062,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 487,
-          "spendMedianAe": 150,
-          "spendSignedMean": 103,
-          "within0Pct": 32,
-          "within200Pct": 53.3,
-          "within400Pct": 62,
-          "within800Pct": 76.5,
-          "within1000Pct": 81.9,
-          "weaponFamilyMatchPct": 76.8,
-          "armorMatchPct": 76.6,
-          "ctNormalHelmetMatchPct": 82.6
+          "spendMae": 461,
+          "spendMedianAe": 100,
+          "spendSignedMean": 31,
+          "within0Pct": 35,
+          "within200Pct": 57.4,
+          "within400Pct": 67.4,
+          "within800Pct": 79.7,
+          "within1000Pct": 83.5,
+          "weaponFamilyMatchPct": 77.6,
+          "armorMatchPct": 78.3,
+          "ctNormalHelmetMatchPct": 82.7
         },
         "optionSet": {
-          "spendMae": 487,
-          "within400Pct": 62,
-          "weaponFamilyMatchPct": 76.8
+          "spendMae": 461,
+          "within400Pct": 67.4,
+          "weaponFamilyMatchPct": 77.6
         },
         "continuityNonResetNormal": {
           "n": 5370,
-          "leadNextFullReadyPct": 39.4,
+          "leadNextFullReadyPct": 51.3,
           "leadRifleOrSniperPct": 78.3,
-          "leadAvgSpend": 3033,
+          "leadAvgSpend": 2992,
           "proActualNextFullReadyPct": 51.9,
           "proActualRifleOrSniperPct": 76.4,
           "proActualAvgSpend": 2816
@@ -365,28 +369,28 @@
         "n": 4962,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 586,
-          "spendMedianAe": 350,
-          "spendSignedMean": 129,
-          "within0Pct": 25.2,
-          "within200Pct": 47,
-          "within400Pct": 53,
-          "within800Pct": 70.3,
-          "within1000Pct": 76.9,
-          "weaponFamilyMatchPct": 72.2,
-          "armorMatchPct": 68.7,
+          "spendMae": 551,
+          "spendMedianAe": 150,
+          "spendSignedMean": 29,
+          "within0Pct": 29.3,
+          "within200Pct": 52.6,
+          "within400Pct": 60.6,
+          "within800Pct": 74.7,
+          "within1000Pct": 78.9,
+          "weaponFamilyMatchPct": 73.2,
+          "armorMatchPct": 71,
           "ctNormalHelmetMatchPct": 77.2
         },
         "optionSet": {
-          "spendMae": 586,
-          "within400Pct": 53,
-          "weaponFamilyMatchPct": 72.2
+          "spendMae": 551,
+          "within400Pct": 60.6,
+          "weaponFamilyMatchPct": 73.2
         },
         "continuityNonResetNormal": {
           "n": 3629,
-          "leadNextFullReadyPct": 20.9,
+          "leadNextFullReadyPct": 37.8,
           "leadRifleOrSniperPct": 71.2,
-          "leadAvgSpend": 3901,
+          "leadAvgSpend": 3844,
           "proActualNextFullReadyPct": 36.6,
           "proActualRifleOrSniperPct": 68.1,
           "proActualAvgSpend": 3642
@@ -396,28 +400,28 @@
         "n": 2100,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 252,
+          "spendMae": 246,
           "spendMedianAe": 100,
-          "spendSignedMean": 43,
-          "within0Pct": 48.3,
-          "within200Pct": 68.4,
-          "within400Pct": 83.1,
-          "within800Pct": 91,
-          "within1000Pct": 93.5,
-          "weaponFamilyMatchPct": 87.5,
+          "spendSignedMean": 35,
+          "within0Pct": 48.4,
+          "within200Pct": 68.7,
+          "within400Pct": 83.5,
+          "within800Pct": 91.5,
+          "within1000Pct": 94.4,
+          "weaponFamilyMatchPct": 87.9,
           "armorMatchPct": 95.5,
           "ctNormalHelmetMatchPct": 91.7
         },
         "optionSet": {
-          "spendMae": 252,
-          "within400Pct": 83.1,
-          "weaponFamilyMatchPct": 87.5
+          "spendMae": 246,
+          "within400Pct": 83.5,
+          "weaponFamilyMatchPct": 87.9
         },
         "continuityNonResetNormal": {
           "n": 1741,
-          "leadNextFullReadyPct": 78.1,
+          "leadNextFullReadyPct": 79.5,
           "leadRifleOrSniperPct": 93.2,
-          "leadAvgSpend": 1223,
+          "leadAvgSpend": 1215,
           "proActualNextFullReadyPct": 83.7,
           "proActualRifleOrSniperPct": 93.5,
           "proActualAvgSpend": 1094
@@ -427,28 +431,28 @@
         "n": 3242,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 545,
-          "spendMedianAe": 400,
-          "spendSignedMean": 192,
-          "within0Pct": 27.2,
-          "within200Pct": 43.6,
-          "within400Pct": 57.2,
-          "within800Pct": 73.5,
-          "within1000Pct": 79.3,
-          "weaponFamilyMatchPct": 77,
-          "armorMatchPct": 72.2,
-          "ctNormalHelmetMatchPct": 82.6
+          "spendMae": 516,
+          "spendMedianAe": 300,
+          "spendSignedMean": 130,
+          "within0Pct": 28.5,
+          "within200Pct": 46,
+          "within400Pct": 61.7,
+          "within800Pct": 77.6,
+          "within1000Pct": 82.3,
+          "weaponFamilyMatchPct": 78,
+          "armorMatchPct": 73.7,
+          "ctNormalHelmetMatchPct": 82.7
         },
         "optionSet": {
-          "spendMae": 545,
-          "within400Pct": 57.2,
-          "weaponFamilyMatchPct": 77
+          "spendMae": 516,
+          "within400Pct": 61.7,
+          "weaponFamilyMatchPct": 78
         },
         "continuityNonResetNormal": {
           "n": 2476,
-          "leadNextFullReadyPct": 40.2,
+          "leadNextFullReadyPct": 51.8,
           "leadRifleOrSniperPct": 80.3,
-          "leadAvgSpend": 3047,
+          "leadAvgSpend": 3011,
           "proActualNextFullReadyPct": 57.3,
           "proActualRifleOrSniperPct": 76.5,
           "proActualAvgSpend": 2713
@@ -458,28 +462,28 @@
         "n": 3820,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 437,
+          "spendMae": 413,
           "spendMedianAe": 100,
-          "spendSignedMean": 28,
-          "within0Pct": 36.1,
-          "within200Pct": 61.6,
-          "within400Pct": 66,
-          "within800Pct": 79,
-          "within1000Pct": 84,
-          "weaponFamilyMatchPct": 76.6,
-          "armorMatchPct": 80.4,
+          "spendSignedMean": -54,
+          "within0Pct": 40.5,
+          "within200Pct": 67,
+          "within400Pct": 72.2,
+          "within800Pct": 81.5,
+          "within1000Pct": 84.6,
+          "weaponFamilyMatchPct": 77.2,
+          "armorMatchPct": 82.2,
           "ctNormalHelmetMatchPct": 0
         },
         "optionSet": {
-          "spendMae": 437,
-          "within400Pct": 66,
-          "weaponFamilyMatchPct": 76.6
+          "spendMae": 413,
+          "within400Pct": 72.2,
+          "weaponFamilyMatchPct": 77.2
         },
         "continuityNonResetNormal": {
           "n": 2894,
-          "leadNextFullReadyPct": 38.7,
+          "leadNextFullReadyPct": 50.8,
           "leadRifleOrSniperPct": 76.6,
-          "leadAvgSpend": 3020,
+          "leadAvgSpend": 2975,
           "proActualNextFullReadyPct": 47.2,
           "proActualRifleOrSniperPct": 76.3,
           "proActualAvgSpend": 2904
@@ -489,28 +493,28 @@
         "n": 5957,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 454,
+          "spendMae": 422,
           "spendMedianAe": 100,
-          "spendSignedMean": 168,
-          "within0Pct": 36.2,
-          "within200Pct": 58.8,
-          "within400Pct": 66.7,
-          "within800Pct": 78.7,
-          "within1000Pct": 83.6,
-          "weaponFamilyMatchPct": 80,
-          "armorMatchPct": 77.3,
-          "ctNormalHelmetMatchPct": 82.6
+          "spendSignedMean": 127,
+          "within0Pct": 37.5,
+          "within200Pct": 61.1,
+          "within400Pct": 70.2,
+          "within800Pct": 82.1,
+          "within1000Pct": 85.8,
+          "weaponFamilyMatchPct": 80.9,
+          "armorMatchPct": 78.7,
+          "ctNormalHelmetMatchPct": 82.7
         },
         "optionSet": {
-          "spendMae": 454,
-          "within400Pct": 66.7,
-          "weaponFamilyMatchPct": 80
+          "spendMae": 422,
+          "within400Pct": 70.2,
+          "weaponFamilyMatchPct": 80.9
         },
         "continuityNonResetNormal": {
           "n": 5370,
-          "leadNextFullReadyPct": 39.4,
+          "leadNextFullReadyPct": 51.3,
           "leadRifleOrSniperPct": 78.3,
-          "leadAvgSpend": 3033,
+          "leadAvgSpend": 2992,
           "proActualNextFullReadyPct": 51.9,
           "proActualRifleOrSniperPct": 76.4,
           "proActualAvgSpend": 2816
@@ -520,21 +524,21 @@
         "n": 960,
         "avgOptions": 1,
         "lead": {
-          "spendMae": 698,
-          "spendMedianAe": 700,
-          "spendSignedMean": -297,
-          "within0Pct": 7.3,
-          "within200Pct": 19.5,
-          "within400Pct": 32.7,
-          "within800Pct": 62.3,
-          "within1000Pct": 70.6,
+          "spendMae": 701,
+          "spendMedianAe": 350,
+          "spendSignedMean": -579,
+          "within0Pct": 20.7,
+          "within200Pct": 35,
+          "within400Pct": 51.4,
+          "within800Pct": 65.6,
+          "within1000Pct": 69.3,
           "weaponFamilyMatchPct": 55.1,
-          "armorMatchPct": 71.7,
+          "armorMatchPct": 75.2,
           "ctNormalHelmetMatchPct": 0
         },
         "optionSet": {
-          "spendMae": 698,
-          "within400Pct": 32.7,
+          "spendMae": 701,
+          "within400Pct": 51.4,
           "weaponFamilyMatchPct": 55.1
         },
         "continuityNonResetNormal": {
@@ -586,8 +590,8 @@
         "lead": {
           "spendMae": 527,
           "spendMedianAe": 100,
-          "spendSignedMean": 252,
-          "within0Pct": 36.8,
+          "spendSignedMean": 250,
+          "within0Pct": 36.7,
           "within200Pct": 64.6,
           "within400Pct": 74,
           "within800Pct": 77.3,
@@ -603,9 +607,9 @@
         },
         "continuityNonResetNormal": {
           "n": 5370,
-          "leadNextFullReadyPct": 35.1,
+          "leadNextFullReadyPct": 35.2,
           "leadRifleOrSniperPct": 83.3,
-          "leadAvgSpend": 3191,
+          "leadAvgSpend": 3189,
           "proActualNextFullReadyPct": 51.9,
           "proActualRifleOrSniperPct": 76.4,
           "proActualAvgSpend": 2816
@@ -644,30 +648,30 @@
       },
       "retainedGear": {
         "n": 2100,
-        "avgOptions": 2,
+        "avgOptions": 2.01,
         "lead": {
-          "spendMae": 298,
+          "spendMae": 297,
           "spendMedianAe": 0,
-          "spendSignedMean": 155,
+          "spendSignedMean": 151,
           "within0Pct": 53,
-          "within200Pct": 75.6,
+          "within200Pct": 75.5,
           "within400Pct": 85.3,
           "within800Pct": 89.5,
-          "within1000Pct": 91.5,
+          "within1000Pct": 91.6,
           "weaponFamilyMatchPct": 91.9,
           "armorMatchPct": 95,
-          "ctNormalHelmetMatchPct": 90.6
+          "ctNormalHelmetMatchPct": 90.5
         },
         "optionSet": {
-          "spendMae": 263,
+          "spendMae": 261,
           "within400Pct": 87.4,
           "weaponFamilyMatchPct": 94
         },
         "continuityNonResetNormal": {
           "n": 1741,
-          "leadNextFullReadyPct": 77.6,
-          "leadRifleOrSniperPct": 98,
-          "leadAvgSpend": 1290,
+          "leadNextFullReadyPct": 77.8,
+          "leadRifleOrSniperPct": 97.9,
+          "leadAvgSpend": 1285,
           "proActualNextFullReadyPct": 83.7,
           "proActualRifleOrSniperPct": 93.5,
           "proActualAvgSpend": 1094
@@ -677,9 +681,9 @@
         "n": 3242,
         "avgOptions": 2.16,
         "lead": {
-          "spendMae": 575,
+          "spendMae": 574,
           "spendMedianAe": 100,
-          "spendSignedMean": 307,
+          "spendSignedMean": 304,
           "within0Pct": 32.4,
           "within200Pct": 56.8,
           "within400Pct": 72.2,
@@ -690,15 +694,15 @@
           "ctNormalHelmetMatchPct": 74.2
         },
         "optionSet": {
-          "spendMae": 328,
+          "spendMae": 327,
           "within400Pct": 82.1,
           "weaponFamilyMatchPct": 87.9
         },
         "continuityNonResetNormal": {
           "n": 2476,
-          "leadNextFullReadyPct": 40.9,
-          "leadRifleOrSniperPct": 82.1,
-          "leadAvgSpend": 3084,
+          "leadNextFullReadyPct": 41,
+          "leadRifleOrSniperPct": 82,
+          "leadAvgSpend": 3080,
           "proActualNextFullReadyPct": 57.3,
           "proActualRifleOrSniperPct": 76.5,
           "proActualAvgSpend": 2713
@@ -739,9 +743,9 @@
         "n": 5957,
         "avgOptions": 2.24,
         "lead": {
-          "spendMae": 529,
+          "spendMae": 528,
           "spendMedianAe": 100,
-          "spendSignedMean": 320,
+          "spendSignedMean": 319,
           "within0Pct": 36.4,
           "within200Pct": 64.4,
           "within400Pct": 73.8,
@@ -752,15 +756,15 @@
           "ctNormalHelmetMatchPct": 74.2
         },
         "optionSet": {
-          "spendMae": 309,
-          "within400Pct": 82.2,
+          "spendMae": 308,
+          "within400Pct": 82.3,
           "weaponFamilyMatchPct": 89.1
         },
         "continuityNonResetNormal": {
           "n": 5370,
-          "leadNextFullReadyPct": 35.1,
+          "leadNextFullReadyPct": 35.2,
           "leadRifleOrSniperPct": 83.3,
-          "leadAvgSpend": 3191,
+          "leadAvgSpend": 3189,
           "proActualNextFullReadyPct": 51.9,
           "proActualRifleOrSniperPct": 76.4,
           "proActualAvgSpend": 2816
@@ -770,12 +774,12 @@
         "n": 960,
         "avgOptions": 1.83,
         "lead": {
-          "spendMae": 545,
+          "spendMae": 546,
           "spendMedianAe": 100,
-          "spendSignedMean": -98,
-          "within0Pct": 39.6,
-          "within200Pct": 66,
-          "within400Pct": 74.1,
+          "spendSignedMean": -99,
+          "within0Pct": 39.5,
+          "within200Pct": 65.9,
+          "within400Pct": 74,
           "within800Pct": 78,
           "within1000Pct": 79.3,
           "weaponFamilyMatchPct": 62.2,
@@ -783,8 +787,8 @@
           "ctNormalHelmetMatchPct": 0
         },
         "optionSet": {
-          "spendMae": 116,
-          "within400Pct": 94,
+          "spendMae": 117,
+          "within400Pct": 93.9,
           "weaponFamilyMatchPct": 85.1
         },
         "continuityNonResetNormal": {
@@ -1110,7 +1114,7 @@
     },
     "midMoney2000_3400_nextFullProtection": {
       "n": 835,
-      "protectsNextFullPct": 70.1
+      "protectsNextFullPct": 67.9
     },
     "retainedPrimary_keepRate": {
       "n": 1460,

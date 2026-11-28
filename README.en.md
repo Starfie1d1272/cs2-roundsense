@@ -48,22 +48,30 @@ To test it honestly, we studied pro buying habits across **IEM Cologne Major 202
 
 Three things a player actually feels in-game (all numbers from the **Singapore Stage 1 blind test**, comparing only the #1 top option):
 
-- **Closer to pro spending**: Within **$460** of actual pro spend on average ($87 closer than "buy the best gun you can afford" and $27 closer than a standard economy-aware heuristic), landing within one grenade (**$400**) on **74.4%** of rounds—and within **$272** when carrying gear over.
-- **Far less likely to break your next round**: Even after losing a normal round, following RoundSense leaves you able to full-buy next round **45.6%** of the time (**+9.9pp** over naive buying and **+6.2pp** over standard economy heuristics) while still keeping rifle/AWP firepower on **87.6%** of rounds.
-- **Smarter weapon & helmet calls, zero bad math**: **77.4%** primary weapon-family agreement, **83.9%** CT helmet-vs-utility agreement, and **0** over-budget, side-illegal, or duplicate suggestions across the entire tournament (averaging just 1.52 concise options per round).
+- **Closer to pro spending**: Within **$460** of actual pro spend on average ($87 closer than "buy the best gun you can afford", beating both standard economy heuristics at $461 and legacy V3 at $527), landing within one grenade (**$400**) on **74.4%** of rounds (**+7.0pp** over standard heuristics)—and within **$272** when carrying gear over.
+- **Balances current firepower with next-round continuity**: Keeps **87.6%** current-round rifle/AWP firepower (vs. 78.3% for aggressive-saving heuristics) while raising next-round full-buy readiness after a loss to **45.6%** (**+9.9pp** over naive buying and **+10.4pp** over legacy V3).
+- **Smarter weapon & helmet calls, zero bad math**: **77.4%** primary weapon-family agreement, **83.9%** CT helmet-vs-utility agreement, and **0** illegal/over-cap, **0** duplicate, and **0** light-floor violations across the entire tournament (averaging 1.52 concise options per round).
+
+What does that look like in a real match?
+
+| Common Round | Typical Pitfall | What RoundSense Suggests |
+| :--- | :--- | :--- |
+| **T · $3,850** (normal) | Forcing bare AK + Vesthelm with 0 grenades | **Galil + Vesthelm + Smoke/Molotov/Flash** for a full execute |
+| **CT · $4,850** (normal) | Auto-buying helmet and running dry on utility | **M4 + Kevlar + 4 grenades** (tops up helmet with spare cash; optional kit note) |
+| **CT · $3,450** (1 loss) | Spending everything and breaking next round, or AFK $0 | **Light buy cap `≤ $1,300`** (protects next full buy) alongside ECO / Force |
 
 <details>
 <summary>Full technical cross-event table (4 strategies · Cologne study set vs. Singapore S1 blind test)</summary>
 
 | Strict 1-vs-1 Lead Metric (All Eligible Rounds) | Cologne Study Set (`n=28,594`) | Singapore S1 Blind Test (`n=7,062`) |
 | :--- | ---: | ---: |
-| **Lead spend MAE** (vs. B0 / B1 / B2) | **$472** (vs. $555 / $506 / $538) | **$460** (vs. $547 / $487 / $527) |
-| **Lead spend within $400** | **73.2%** (vs. 66.7% / 59.1% / 72.0%) | **74.4%** (vs. 68.1% / 62.0% / 74.0%) |
-| **Lead primary weapon family match** | **76.8%** (vs. 69.2% / 76.6% / 72.1%) | **77.4%** (vs. 69.6% / 76.8% / 72.7%) |
-| **CT normal-round helmet match** | **83.0%** (vs. 71.7% / 80.8% / 76.7%) | **83.9%** (vs. 68.6% / 82.6% / 74.2%) |
-| **Next-round full-buy continuity after loss** (pro actual 51.6% / 51.9%) | **44.3%** (vs. 33.3% / 37.8% / 33.0%) | **45.6%** (vs. 35.7% / 39.4% / 35.1%) |
+| **Lead spend MAE** (vs. B0 / B1 / B2) | **$472** (vs. $555 / $490 / $539) | **$460** (vs. $547 / $461 / $527) |
+| **Lead spend within $400** | **73.2%** (vs. 66.7% / 64.2% / 72.0%) | **74.4%** (vs. 68.1% / 67.4% / 74.0%) |
+| **Lead primary weapon family match** | **76.8%** (vs. 69.2% / 77.5% / 72.1%) | **77.4%** (vs. 69.6% / 77.6% / 72.7%) |
+| **CT normal-round helmet match** | **83.0%** (vs. 71.7% / 80.8% / 76.7%) | **83.9%** (vs. 68.6% / 82.7% / 74.2%) |
+| **Current rifle/AWP · Next-round full-buy** (pro: 73.1%·51.6% / 76.4%·51.9%) | **86.4% · 44.3%** (B0 86.7%·33.3% / B1 75.3%·51.6%) | **87.6% · 45.6%** (B0 88.8%·35.7% / B1 78.3%·51.3%) |
 | **Option-set within $400 / avg options** | **81.8% / 1.55** | **82.6% / 1.52** |
-| **9-check mechanical invariant violations** (incl. alternatives & LIGHT floors) | **0** (legacy V3: 10,232) | **0** (legacy V3: 2,530) |
+| **Mechanical audit (illegal/cap / duplicate / light-floor)** | **0 / 0 / 0** (legacy V3: 0 / 10,208 / 1,904) | **0 / 0 / 0** (legacy V3: 0 / 2,524 / 369) |
 
 - Reproducible unified script (`replay.json` end-of-round state recovery): [cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
 - Machine-readable reports: [cologne-cross-event-benchmark.json](docs/data/cologne-cross-event-benchmark.json) · [singapore-s1-cross-event-benchmark.json](docs/data/singapore-s1-cross-event-benchmark.json)
