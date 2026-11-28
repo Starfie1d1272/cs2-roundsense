@@ -351,6 +351,12 @@
     header.append(hMode, hSpend, hNext);
     container.append(header);
 
+    const hasForceBranch = list.some((opt) => opt.mode === 'FORCE');
+    const hasSaveBranch = list.some(
+      (opt) => opt.mode === 'LIGHT' || (opt.mode === 'PRESERVE' && !opt.awpNextReady),
+    );
+    const showTeamForkCue = hasForceBranch && hasSaveBranch;
+
     for (const opt of list) {
       const row = document.createElement('section');
       row.className = opt.isDefault ? 'rs-opt rs-opt-default' : 'rs-opt';
@@ -358,17 +364,40 @@
       const top = document.createElement('div');
       top.className = 'rs-opt-top';
 
+      const hasPlantSub =
+        snapshot.side === 'T' &&
+        opt.lossWithPlantNextMoney !== null &&
+        opt.lossWithPlantNextMoney !== undefined;
+
       const modeEl = document.createElement('div');
-      modeEl.className = 'rs-opt-mode';
+      modeEl.className = hasPlantSub ? 'rs-opt-mode rs-opt-mode-stacked' : 'rs-opt-mode';
+      const modeMain = document.createElement('span');
+      modeMain.className = 'rs-opt-mode-main';
       if (opt.isDefault) {
         const dot = document.createElement('span');
         dot.className = 'rs-default-dot';
         dot.setAttribute('aria-label', '优先');
-        modeEl.append(dot);
+        modeMain.append(dot);
       }
       const modeLabel = document.createElement('span');
       modeLabel.textContent = MODE_NAMES[opt.mode] ?? opt.mode;
-      modeEl.append(modeLabel);
+      modeMain.append(modeLabel);
+      modeEl.append(modeMain);
+
+      if (showTeamForkCue) {
+        const forkText =
+          opt.mode === 'FORCE'
+            ? '队友起'
+            : opt.mode === 'LIGHT' || (opt.mode === 'PRESERVE' && !opt.awpNextReady)
+              ? '队友 E'
+              : null;
+        if (forkText) {
+          const forkSub = document.createElement('span');
+          forkSub.className = 'rs-opt-fork';
+          forkSub.textContent = forkText;
+          modeEl.append(forkSub);
+        }
+      }
 
       const hasBound =
         opt.maxSpendNow !== null &&
@@ -387,13 +416,11 @@
       nextMain.textContent = formatMoney(opt.lossNextMoney);
       nextEl.append(nextMain);
 
-      if (
-        snapshot.side === 'T' &&
-        opt.lossWithPlantNextMoney !== null &&
-        opt.lossWithPlantNextMoney !== undefined
-      ) {
+      if (hasPlantSub) {
+        const plantCap =
+          CAPABILITY_META[opt.lossWithPlantCapability] ?? CAPABILITY_META.NOT_EVALUATED;
         const plantSub = document.createElement('span');
-        plantSub.className = 'rs-opt-plant';
+        plantSub.className = 'rs-opt-plant ' + plantCap.cls;
         plantSub.textContent = '+包 ' + formatMoney(opt.lossWithPlantNextMoney);
         nextEl.append(plantSub);
       }

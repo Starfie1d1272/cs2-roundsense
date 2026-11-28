@@ -68,6 +68,7 @@ export interface HudOption {
   purchases: HudPurchaseItem[];
   lossNextMoney: number | null;
   lossWithPlantNextMoney: number | null;
+  lossWithPlantCapability: HudFutureCapability | null;
   futureCapability: HudFutureCapability;
   awpNextReady: boolean;
   conditionalAlternatives: HudConditionalAlternative[];
@@ -123,31 +124,41 @@ export function optionForRecommendation(
     option.trajectory.find((s) => s.id === 'LOSS_NO_PLANT')?.nextMoney.min ?? null;
   const lossWithPlantNextMoney =
     option.trajectory.find((s) => s.id === 'LOSS_WITH_PLANT')?.nextMoney.min ?? null;
-  const affordable =
-    lossNextMoney === null
-      ? []
-      : policy.futureAffordability.boundaries.filter(
-          (b) => b.reachableWithNoSpend && lossNextMoney >= b.targetCash,
-        );
   const fullUtilityThreshold = side ? fullUtilityTargetCash(side) : null;
-  const hasBasicUtility = affordable.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
-  const futureCapability: HudFutureCapability =
-    hasBasicUtility &&
-    fullUtilityThreshold !== null &&
-    lossNextMoney !== null &&
-    lossNextMoney >= fullUtilityThreshold
-      ? 'FULL_UTILITY'
-      : hasBasicUtility
-        ? 'RIFLE_ARMOR_BASIC_UTILITY'
-        : affordable.length > 0
-          ? 'RIFLE_ARMOR'
-          : policy.futureAffordability.status === 'PROJECTED'
-            ? 'INSUFFICIENT'
-            : policy.futureAffordability.status === 'NOT_APPLICABLE' &&
-                (policy.futureAffordability.reason === 'HALF_END_RESET' ||
-                  policy.futureAffordability.reason === 'MATCH_POINT_AGAINST')
-              ? policy.futureAffordability.reason
-              : 'NOT_EVALUATED';
+  const classifyCash = (
+    cash: number | null,
+    requireReachableWithNoSpend: boolean,
+  ): HudFutureCapability => {
+    const matched =
+      cash === null
+        ? []
+        : policy.futureAffordability.boundaries.filter(
+            (b) => (!requireReachableWithNoSpend || b.reachableWithNoSpend) && cash >= b.targetCash,
+          );
+    const hasBasic = matched.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
+    if (
+      hasBasic &&
+      fullUtilityThreshold !== null &&
+      cash !== null &&
+      cash >= fullUtilityThreshold
+    ) {
+      return 'FULL_UTILITY';
+    }
+    if (hasBasic) return 'RIFLE_ARMOR_BASIC_UTILITY';
+    if (matched.length > 0) return 'RIFLE_ARMOR';
+    if (policy.futureAffordability.status === 'PROJECTED') return 'INSUFFICIENT';
+    if (
+      policy.futureAffordability.status === 'NOT_APPLICABLE' &&
+      (policy.futureAffordability.reason === 'HALF_END_RESET' ||
+        policy.futureAffordability.reason === 'MATCH_POINT_AGAINST')
+    ) {
+      return policy.futureAffordability.reason;
+    }
+    return 'NOT_EVALUATED';
+  };
+  const futureCapability = classifyCash(lossNextMoney, true);
+  const lossWithPlantCapability =
+    lossWithPlantNextMoney === null ? null : classifyCash(lossWithPlantNextMoney, false);
 
   return {
     id: option.id,
@@ -160,6 +171,7 @@ export function optionForRecommendation(
     purchases: mapPurchases(option.purchases, armor, helmet),
     lossNextMoney,
     lossWithPlantNextMoney,
+    lossWithPlantCapability,
     futureCapability,
     awpNextReady:
       awpPriority !== 'NEUTRAL' && lossNextMoney !== null && lossNextMoney >= AWP_ARMOR_THRESHOLD,
