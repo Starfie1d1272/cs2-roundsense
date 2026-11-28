@@ -619,6 +619,12 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
           asOfSeq: state.player.lossIndex.asOfSeq,
           reason: 'full win-decrement semantics not calibrated',
         };
+  const nextRoundResets =
+    known(state.round.number) &&
+    (() => {
+      const nextR = state.round.number.value + 1;
+      return nextR === 12 || nextR === 24 || (nextR > 24 && (nextR - 24) % 3 === 0);
+    })();
   const followingRound = (
     nextMoney: { min: number; max: number },
     nextLoss: Fact<number>,
@@ -629,7 +635,7 @@ function trajectory(state: PolicyV3State, spend: number): TrajectoryScenario[] {
       asOfSeq: state.player.inventory.asOfSeq,
       reason: 't+1 inventory, drops, and armor retention are not observable facts',
     };
-    if (!known(nextLoss)) {
+    if (!known(nextLoss) || nextRoundResets) {
       return {
         action: 'PRESERVE',
         outcome: 'LOSS_NO_PLANT',
@@ -1088,9 +1094,13 @@ function normalRoundOptions(
         ]
       : [...lightOptions, preserveOpt];
 
+  const isResetRound = economyResetReason(state) !== null;
   let ordered: RecommendationOption[];
   if (!forceOpt) {
     ordered = rankedSaveOptions;
+  } else if (isResetRound) {
+    // No carryover economy after this round: omit pointless $0 save-for-next PRESERVE.
+    ordered = [forceOpt];
   } else if (nextFullReachable && !hasRifleForce) {
     ordered = [...rankedSaveOptions, { ...forceOpt, adviceStrength: 'ALTERNATIVE' }];
   } else {
@@ -1203,6 +1213,7 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
   } else if (
     preference.source === 'USER_DECLARED' &&
     preference.awpPriority === 'SAVE_FOR_AWP' &&
+    economyResetReason(state) === null &&
     known(state.player.lossIndex)
   ) {
     const awpWithArmorCost = price(DEFAULT_RULES, 'awp') + price(DEFAULT_RULES, 'kevlar');

@@ -281,7 +281,7 @@ export class HudRuntime {
       visible,
       hiddenReason,
       side,
-      round: payload?.map?.round ?? null,
+      round: this.state?.round.number.value ?? null,
       money:
         visible && moneyFact?.status !== 'UNKNOWN' && moneyFact?.value !== undefined
           ? moneyFact.value

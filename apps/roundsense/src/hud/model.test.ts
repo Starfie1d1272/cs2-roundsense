@@ -35,14 +35,14 @@ function receipt(data: GsiPayload = payload(), seq = 0, timeMs = 0): GsiReceipt 
 }
 function lifecycle(runtime: HudRuntime, skip = false) {
   const pistol = payload();
-  pistol.map!.round = 1;
+  pistol.map!.round = 0; // Real CS2 GSI 0-based completed rounds -> active Round 1 pistol
   runtime.observe(receipt(pistol, 0));
   runtime.observe(receipt({ ...pistol, round: { phase: 'live' } }, 1, 100));
   runtime.observe(
     receipt(
       {
         ...pistol,
-        map: { ...pistol.map, round: 2 },
+        map: { ...pistol.map, round: 1 },
         player: undefined,
         round: { phase: 'over', win_team: 'CT' },
       },
@@ -51,7 +51,7 @@ function lifecycle(runtime: HudRuntime, skip = false) {
     ),
   );
   const after = payload();
-  after.map!.round = 2;
+  after.map!.round = 1; // Active Round 2 post-pistol
   runtime.observe(receipt(after, skip ? 4 : 3, 300));
 }
 
@@ -215,7 +215,7 @@ describe('live HUD semantics', () => {
     expect(missingSnap.options.every((o) => o.lossNextMoney === null)).toBe(true);
 
     const pistol = new HudRuntime();
-    pistol.observe(receipt(payload({ map: { ...payload().map, round: 1 } })));
+    pistol.observe(receipt(payload({ map: { ...payload().map, round: 0 } })));
     expect(pistol.snapshot(0n)).toMatchObject({
       visible: true,
       roundContext: 'PISTOL',
@@ -254,7 +254,7 @@ describe('live HUD semantics', () => {
       lifecycle(runtime);
       expect(runtime.snapshot(300_000_000n).options.some((o) => o.mode === 'FULL')).toBe(true);
       const next = payload();
-      next.map!.round = 2;
+      next.map!.round = 1;
       runtime.observe(receipt(next, 4, timeMs));
       expect(runtime.snapshot(BigInt(timeMs) * 1_000_000n).options.map((o) => o.mode)).toEqual([
         'PRESERVE',

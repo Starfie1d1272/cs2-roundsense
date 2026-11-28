@@ -403,12 +403,38 @@ describe('Policy V3 rule-correctness & exhaustive state-space sweep', () => {
                       2,
                     );
                     expect(altRes.grenades.filter(isFire).length).toBeLessThanOrEqual(1);
+                    if (
+                      opt.mode === 'LIGHT' &&
+                      opt.spendingGuidance.kind === 'BOUNDED' &&
+                      lossIndex !== 'UNKNOWN'
+                    ) {
+                      const reward = lossBonus(DEFAULT_RULES, lossIndex);
+                      const floor =
+                        opt.spendingGuidance.protectedCapability === 'RIFLE_ARMOR_BASIC_UTILITY'
+                          ? side === 'CT'
+                            ? 4050
+                            : 4200
+                          : side === 'CT'
+                            ? 3550
+                            : 3700;
+                      expect(money - alt.bundleSpend + reward).toBeGreaterThanOrEqual(floor);
+                    }
                   }
                 }
 
-                // (8) Halftime / regulation end / opponent match point never emits LIGHT
+                // (8) Halftime / regulation end / opponent match point never emits LIGHT or SAVE_FOR_AWP_HORIZON
                 if (out.futureAffordability.status === 'NOT_APPLICABLE') {
                   expect(out.options.some((o) => o.mode === 'LIGHT')).toBe(false);
+                  if (
+                    out.futureAffordability.reason === 'HALF_END_RESET' ||
+                    out.futureAffordability.reason === 'MATCH_POINT_AGAINST'
+                  ) {
+                    expect(
+                      out.options.some((o) =>
+                        o.reasons.some((r) => r.code === 'SAVE_FOR_AWP_HORIZON'),
+                      ),
+                    ).toBe(false);
+                  }
                 }
               }
             }

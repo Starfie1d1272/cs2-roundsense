@@ -7,7 +7,7 @@ const basePayload = (over: Partial<GsiPayload> = {}): GsiPayload => ({
   map: {
     name: 'de_mirage',
     mode: 'competitive',
-    round: 2,
+    round: 1, // Real CS2 GSI 0-based completed rounds -> active Round 2 (POST_PISTOL)
     team_ct: { score: 1, consecutive_round_losses: 1 },
     team_t: { score: 0, consecutive_round_losses: 0 },
   },
@@ -55,26 +55,26 @@ function lifecyclePayload({
 function runPistolLifecycle(side: 'CT' | 'T', winner: 'CT' | 'T') {
   const tracker = new PolicyStateTracker();
   expect(
-    tick(lifecyclePayload({ side, roundNumber: 1, phase: 'freezetime', money: 800 }), {
+    tick(lifecyclePayload({ side, roundNumber: 0, phase: 'freezetime', money: 800 }), {
       tracker,
       seq: 1,
     }),
   ).not.toBeNull();
   expect(
-    tick(lifecyclePayload({ side, roundNumber: 1, phase: 'live', money: 800 }), {
+    tick(lifecyclePayload({ side, roundNumber: 0, phase: 'live', money: 800 }), {
       tracker,
       seq: 2,
     }),
   ).toBeNull();
-  // Terminal receipts may already carry the next map.round and do not need
-  // the fields required to produce current-round purchase advice.
+  // Terminal `over` increments raw map.round (0 -> 1 completed round) and may
+  // omit player fields.
   expect(
-    tick(lifecyclePayload({ side, roundNumber: 2, phase: 'over', winner, includePlayer: false }), {
+    tick(lifecyclePayload({ side, roundNumber: 1, phase: 'over', winner, includePlayer: false }), {
       tracker,
       seq: 3,
     }),
   ).toBeNull();
-  return tick(lifecyclePayload({ side, roundNumber: 2, phase: 'freezetime' }), { tracker, seq: 4 });
+  return tick(lifecyclePayload({ side, roundNumber: 1, phase: 'freezetime' }), { tracker, seq: 4 });
 }
 
 describe('V3 engine integration', () => {
@@ -128,40 +128,40 @@ describe('V3 engine integration', () => {
     [
       'a mid-round cold start',
       [
-        { side: 'CT' as const, roundNumber: 1, phase: 'live' as const },
+        { side: 'CT' as const, roundNumber: 0, phase: 'live' as const },
         {
           side: 'CT' as const,
-          roundNumber: 2,
+          roundNumber: 1,
           phase: 'over' as const,
           winner: 'T' as const,
           includePlayer: false,
         },
-        { side: 'CT' as const, roundNumber: 2, phase: 'freezetime' as const },
+        { side: 'CT' as const, roundNumber: 1, phase: 'freezetime' as const },
       ],
       [1, 2, 3],
     ],
     [
       'a missing terminal receipt',
       [
+        { side: 'CT' as const, roundNumber: 0, phase: 'freezetime' as const },
+        { side: 'CT' as const, roundNumber: 0, phase: 'live' as const },
         { side: 'CT' as const, roundNumber: 1, phase: 'freezetime' as const },
-        { side: 'CT' as const, roundNumber: 1, phase: 'live' as const },
-        { side: 'CT' as const, roundNumber: 2, phase: 'freezetime' as const },
       ],
       [1, 2, 3],
     ],
     [
       'a sequence gap',
       [
-        { side: 'CT' as const, roundNumber: 1, phase: 'freezetime' as const },
-        { side: 'CT' as const, roundNumber: 1, phase: 'live' as const },
+        { side: 'CT' as const, roundNumber: 0, phase: 'freezetime' as const },
+        { side: 'CT' as const, roundNumber: 0, phase: 'live' as const },
         {
           side: 'CT' as const,
-          roundNumber: 2,
+          roundNumber: 1,
           phase: 'over' as const,
           winner: 'T' as const,
           includePlayer: false,
         },
-        { side: 'CT' as const, roundNumber: 2, phase: 'freezetime' as const },
+        { side: 'CT' as const, roundNumber: 1, phase: 'freezetime' as const },
       ],
       [1, 2, 4, 5],
     ],

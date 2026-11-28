@@ -51,11 +51,26 @@ function roundContext(round: number | undefined, seq: number): Fact<RoundContext
   );
 }
 
+/**
+ * Normalize CS2 GSI `map.round` (0-based count of completed rounds) to a
+ * 1-based match round number:
+ * - During `freezetime` / `live`: active match round is `rawRound + 1` (0 -> R1 pistol, 11 -> R12, 12 -> R13 pistol, 24 -> R25 OT1).
+ * - During `over`: CS2 increments `map.round` to the completed count, which equals the 1-based round that just ended.
+ */
+function normalizeGsiMatchRound(
+  rawRound: number | undefined,
+  phase: string | undefined,
+): number | undefined {
+  if (rawRound === undefined) return undefined;
+  return phase === 'over' ? rawRound : rawRound + 1;
+}
+
 /** Session owner for payload sequence, lifecycle, and fact integrity. */
 export class PolicyStateTracker {
   private lastSeq: number | null = null;
   private mapName: string | undefined;
-  private roundNumber: number | undefined;
+  /** Raw 0-based GSI map.round tracked for lifecycle / terminal transition detection. */
+  private rawRound: number | undefined;
   private integrity: PolicyV3State['history']['integrity'] = 'COLD_START';
   private previousRounds: RoundHistoryFact[] = [];
   private roundBaseline = false;
@@ -70,13 +85,11 @@ export class PolicyStateTracker {
   ): PolicyV3State {
     const map = payload.map;
     const round = payload.round;
-    const currentRound = map?.round;
+    const rawCurrent = map?.round;
     const mapChanged = this.mapName !== undefined && map?.name !== this.mapName;
     const sequenceGap = this.lastSeq !== null && seq !== this.lastSeq + 1;
     const restart =
-      currentRound !== undefined &&
-      this.roundNumber !== undefined &&
-      currentRound < this.roundNumber;
+      rawCurrent !== undefined && this.rawRound !== undefined && rawCurrent < this.rawRound;
     if (mapChanged || restart || sequenceGap) {
       this.lastCompleteInventory = undefined;
       this.roundBaseline = false;
@@ -90,37 +103,39 @@ export class PolicyStateTracker {
       }
     }
 
-    // Terminal `over` can carry the next map.round. Record only a round whose
-    // freezetime baseline and continuous payload stream were actually seen.
+    // Terminal `over` increments raw map.round (completed rounds). Record the
+    // 1-based match round (`this.rawRound + 1`) whose freezetime baseline was seen.
     if (
       round?.phase === 'over' &&
-      this.roundNumber !== undefined &&
-      currentRound !== undefined &&
-      currentRound !== this.roundNumber &&
+      this.rawRound !== undefined &&
+      rawCurrent !== undefined &&
+      rawCurrent !== this.rawRound &&
       this.roundBaseline &&
-      this.terminalRecordedFor !== this.roundNumber &&
+      this.terminalRecordedFor !== this.rawRound &&
       this.integrity !== 'PARTIAL'
     ) {
       const terminalWinner = winner(round.win_team, seq);
       const planted = tracked(this.sawPlanted, 'continuous normal-player GSI round.bomb', seq);
       this.previousRounds = [
         ...this.previousRounds.slice(-5),
-        { roundNumber: this.roundNumber, winner: terminalWinner, planted },
+        { roundNumber: this.rawRound + 1, winner: terminalWinner, planted },
       ];
-      this.terminalRecordedFor = this.roundNumber;
+      this.terminalRecordedFor = this.rawRound;
       if (terminalWinner.status !== 'UNKNOWN') this.integrity = 'COMPLETE';
     }
 
-    if (currentRound !== undefined && round?.phase !== 'over') {
-      if (this.roundNumber !== currentRound) {
+    if (rawCurrent !== undefined && round?.phase !== 'over') {
+      if (this.rawRound !== rawCurrent) {
         this.roundBaseline = false;
         this.sawPlanted = false;
         this.terminalRecordedFor = undefined;
       }
-      this.roundNumber = currentRound;
+      this.rawRound = rawCurrent;
       if (round?.phase === 'freezetime') this.roundBaseline = true;
       if (round?.bomb === 'planted') this.sawPlanted = true;
     }
+
+    const currentRound = normalizeGsiMatchRound(rawCurrent, round?.phase);
 
     const playerSide = side(payload.player?.team, seq);
     const score =

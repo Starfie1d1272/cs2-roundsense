@@ -110,4 +110,26 @@ describe('normal-player-only state', () => {
     expect(observed.player).toEqual(normal.player);
     expect(observed.opponent).toEqual(normal.opponent);
   });
+
+  it.each([
+    [0, 'freezetime', 1, 'PISTOL'],
+    [1, 'freezetime', 2, 'POST_PISTOL'],
+    [11, 'freezetime', 12, 'NORMAL'],
+    [12, 'freezetime', 13, 'PISTOL'],
+    [23, 'freezetime', 24, 'NORMAL'],
+    [24, 'freezetime', 25, 'OVERTIME'],
+    [26, 'freezetime', 27, 'OVERTIME'],
+    [27, 'freezetime', 28, 'OVERTIME'],
+  ] as const)(
+    'normalizes real CS2 GSI 0-based map.round=%i (%s) to 1-based match round %i (%s)',
+    (rawRound, phase, expectedMatchRound, expectedContext) => {
+      const tracker = new PolicyStateTracker();
+      const p = payload();
+      p.map!.round = rawRound;
+      p.round!.phase = phase;
+      const out = tracker.observe(p, 1);
+      expect(out.round.number.value).toBe(expectedMatchRound);
+      expect(out.round.context.value).toBe(expectedContext);
+    },
+  );
 });
