@@ -1,0 +1,364 @@
+{
+  "corpus": "IEM Cologne Major 2026 (202 maps, cs2df v3.1.0 / demoparser2 0.41.3)",
+  "methodology": "Offline freeze-time replay using normal-player GSI observable fields only (excludes pistol rounds, overtime, and weapon-drop outliers). Historical replay validation on the study corpus, not an out-of-sample win-rate proof.",
+  "mapsEvaluated": 202,
+  "subsets": {
+    "all": {
+      "roundSense": {
+        "n": 25748,
+        "primarySpendMae": 655,
+        "primaryErrorCoveragePct": {
+          "exact": 25.4,
+          "within200": 45.2,
+          "within400": 54.6,
+          "within800": 67.9,
+          "within1000": 73.6
+        },
+        "setWithin400Pct": 65.3,
+        "weaponFamilyMatchPct": 70.9,
+        "helmetMatchPct": 82.6,
+        "utilityCountMae": 0.62,
+        "avgOptions": 1.62,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      },
+      "naive": {
+        "n": 25748,
+        "primarySpendMae": 716,
+        "primaryErrorCoveragePct": {
+          "exact": 21,
+          "within200": 46.1,
+          "within400": 54.7,
+          "within800": 64.7,
+          "within1000": 69.9
+        },
+        "setWithin400Pct": 54.7,
+        "weaponFamilyMatchPct": 61.2,
+        "helmetMatchPct": 72.9,
+        "utilityCountMae": 0.72,
+        "avgOptions": 1,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      }
+    },
+    "ct": {
+      "roundSense": {
+        "n": 11727,
+        "primarySpendMae": 656,
+        "primaryErrorCoveragePct": {
+          "exact": 20.1,
+          "within200": 37,
+          "within400": 51.4,
+          "within800": 68.6,
+          "within1000": 75.3
+        },
+        "setWithin400Pct": 60.9,
+        "weaponFamilyMatchPct": 74.1,
+        "helmetMatchPct": 80.9,
+        "utilityCountMae": 0.58,
+        "avgOptions": 1.52,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      },
+      "naive": {
+        "n": 11727,
+        "primarySpendMae": 721,
+        "primaryErrorCoveragePct": {
+          "exact": 16.9,
+          "within200": 40,
+          "within400": 53.3,
+          "within800": 66.1,
+          "within1000": 71.7
+        },
+        "setWithin400Pct": 53.3,
+        "weaponFamilyMatchPct": 68.6,
+        "helmetMatchPct": 66.8,
+        "utilityCountMae": 0.63,
+        "avgOptions": 1,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      }
+    },
+    "t": {
+      "roundSense": {
+        "n": 14021,
+        "primarySpendMae": 655,
+        "primaryErrorCoveragePct": {
+          "exact": 29.8,
+          "within200": 52.1,
+          "within400": 57.3,
+          "within800": 67.3,
+          "within1000": 72.2
+        },
+        "setWithin400Pct": 68.9,
+        "weaponFamilyMatchPct": 68.3,
+        "helmetMatchPct": 84.1,
+        "utilityCountMae": 0.65,
+        "avgOptions": 1.71,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      },
+      "naive": {
+        "n": 14021,
+        "primarySpendMae": 712,
+        "primaryErrorCoveragePct": {
+          "exact": 24.4,
+          "within200": 51.2,
+          "within400": 55.9,
+          "within800": 63.6,
+          "within1000": 68.4
+        },
+        "setWithin400Pct": 55.9,
+        "weaponFamilyMatchPct": 55,
+        "helmetMatchPct": 77.9,
+        "utilityCountMae": 0.8,
+        "avgOptions": 1,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      }
+    },
+    "freshBuy": {
+      "roundSense": {
+        "n": 17353,
+        "primarySpendMae": 577,
+        "primaryErrorCoveragePct": {
+          "exact": 33.4,
+          "within200": 57.1,
+          "within400": 66.3,
+          "within800": 74.2,
+          "within1000": 76.3
+        },
+        "setWithin400Pct": 81.2,
+        "weaponFamilyMatchPct": 65.4,
+        "helmetMatchPct": 77.9,
+        "utilityCountMae": 0.76,
+        "avgOptions": 1.84,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      },
+      "naive": {
+        "n": 17353,
+        "primarySpendMae": 661,
+        "primaryErrorCoveragePct": {
+          "exact": 27,
+          "within200": 58.6,
+          "within400": 66.5,
+          "within800": 69.8,
+          "within1000": 71.2
+        },
+        "setWithin400Pct": 66.5,
+        "weaponFamilyMatchPct": 51.2,
+        "helmetMatchPct": 63.7,
+        "utilityCountMae": 0.9,
+        "avgOptions": 1,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      }
+    },
+    "retainedGear": {
+      "roundSense": {
+        "n": 8395,
+        "primarySpendMae": 817,
+        "primaryErrorCoveragePct": {
+          "exact": 8.8,
+          "within200": 20.5,
+          "within400": 30.5,
+          "within800": 54.9,
+          "within1000": 68.1
+        },
+        "setWithin400Pct": 32.4,
+        "weaponFamilyMatchPct": 82.2,
+        "helmetMatchPct": 92.4,
+        "utilityCountMae": 0.33,
+        "avgOptions": 1.17,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      },
+      "naive": {
+        "n": 8395,
+        "primarySpendMae": 830,
+        "primaryErrorCoveragePct": {
+          "exact": 8.6,
+          "within200": 20.5,
+          "within400": 30.4,
+          "within800": 54.2,
+          "within1000": 67.2
+        },
+        "setWithin400Pct": 30.4,
+        "weaponFamilyMatchPct": 82.1,
+        "helmetMatchPct": 91.8,
+        "utilityCountMae": 0.35,
+        "avgOptions": 1,
+        "mechanicalViolations": {
+          "overBudget": 0,
+          "illegalItem": 0,
+          "overNadeCap": 0,
+          "duplicateOptions": 0
+        }
+      }
+    }
+  },
+  "realCases": [
+    {
+      "category": "T Galil+道具 优于裸 AK",
+      "map": "de_mirage",
+      "roundNumber": 10,
+      "player": "FalleN",
+      "side": "T",
+      "startMoney": 3850,
+      "retained": "empty",
+      "proActual": {
+        "spend": 3700,
+        "primary": "Galil AR",
+        "helmet": true,
+        "nades": 4
+      },
+      "roundSense": {
+        "mode": "FORCE",
+        "spend": 3700,
+        "purchases": "galil+kevlar_helmet+smoke+molotov+flash",
+        "optionCount": 3
+      },
+      "naive": {
+        "spend": 3700,
+        "summary": "ak47+kevlar_helmet"
+      }
+    },
+    {
+      "category": "CT 常规局道具优先于头盔",
+      "map": "de_dust2",
+      "roundNumber": 4,
+      "player": "YEKINDAR",
+      "side": "CT",
+      "startMoney": 4850,
+      "retained": "empty",
+      "proActual": {
+        "spend": 4850,
+        "primary": "M4A4",
+        "helmet": false,
+        "nades": 4
+      },
+      "roundSense": {
+        "mode": "FULL",
+        "spend": 4850,
+        "purchases": "m4a4+kevlar+smoke+incendiary+he+flash",
+        "optionCount": 1
+      },
+      "naive": {
+        "spend": 4700,
+        "summary": "m4a4+kevlar_helmet+smoke+incendiary"
+      }
+    },
+    {
+      "category": "半起保下局经济 vs 简单策略无脑花光",
+      "map": "de_overpass",
+      "roundNumber": 18,
+      "player": "HUASOPEEK",
+      "side": "CT",
+      "startMoney": 2300,
+      "retained": "empty",
+      "proActual": {
+        "spend": 300,
+        "primary": "P250",
+        "helmet": false,
+        "nades": 0
+      },
+      "roundSense": {
+        "mode": "LIGHT",
+        "spend": 500,
+        "purchases": "fiveseven",
+        "optionCount": 3
+      },
+      "naive": {
+        "spend": 2250,
+        "summary": "mp9+kevlar_helmet"
+      }
+    },
+    {
+      "category": "保枪增量补齐装备",
+      "map": "de_dust2",
+      "roundNumber": 3,
+      "player": "MAJ3R",
+      "side": "CT",
+      "startMoney": 3550,
+      "retained": "m4a1s+K",
+      "proActual": {
+        "spend": 1300,
+        "primary": "M4A1-S",
+        "helmet": false,
+        "nades": 4
+      },
+      "roundSense": {
+        "mode": "FULL",
+        "spend": 1450,
+        "purchases": "smoke+incendiary+he+kevlar_helmet",
+        "optionCount": 1
+      },
+      "naive": {
+        "spend": 1450,
+        "summary": "kevlar_helmet+smoke+incendiary+he"
+      }
+    },
+    {
+      "category": "真实差异案例：队伍协同 ECO vs 单人可见信息",
+      "map": "de_mirage",
+      "roundNumber": 20,
+      "player": "karrigan",
+      "side": "T",
+      "startMoney": 3500,
+      "retained": "empty",
+      "proActual": {
+        "spend": 0,
+        "primary": "Glock-18",
+        "helmet": false,
+        "nades": 0
+      },
+      "roundSense": {
+        "mode": "FORCE",
+        "spend": 3500,
+        "purchases": "galil+kevlar_helmet+smoke+flashx2",
+        "optionCount": 3
+      },
+      "naive": {
+        "spend": 3350,
+        "summary": "ak47+kevlar"
+      }
+    }
+  ]
+}

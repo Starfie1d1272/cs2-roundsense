@@ -111,7 +111,8 @@
   };
 
   const CAPABILITY_META = {
-    RIFLE_ARMOR_BASIC_UTILITY: { text: '下局全起', cls: 'cap-full' },
+    FULL_UTILITY: { text: '满配全起', cls: 'cap-full' },
+    RIFLE_ARMOR_BASIC_UTILITY: { text: '基础起枪', cls: 'cap-basic' },
     RIFLE_ARMOR: { text: '仅长枪甲', cls: 'cap-rifle' },
     INSUFFICIENT: { text: '长枪不足', cls: 'cap-low' },
     NOT_EVALUATED: { text: '未评估', cls: 'cap-muted' },
@@ -172,7 +173,8 @@
   }
 
   const CONDITION_LABELS = {
-    'T fourth utility slot': '第 4 格换双闪',
+    'T fourth utility slot': '手雷换闪',
+    若队友暂无钳子: '若队友无钳',
     'teammate lacks defuse kit': '若队友无钳',
     'if no teammate has a defuse kit': '若队友无钳',
   };
@@ -190,25 +192,26 @@
     const baseMap = new Map();
     for (const p of basePurchases || []) {
       const k = purchaseKey(p);
-      baseMap.set(k, (baseMap.get(k) || 0) + (p.quantity || 1));
+      const prev = baseMap.get(k);
+      baseMap.set(k, { ...p, quantity: (prev?.quantity || 0) + (p.quantity || 1) });
     }
-    const added = [];
     const altMap = new Map();
     for (const p of altPurchases || []) {
       const k = purchaseKey(p);
-      altMap.set(k, { ...p, quantity: (altMap.get(k)?.quantity || 0) + (p.quantity || 1) });
+      const prev = altMap.get(k);
+      altMap.set(k, { ...p, quantity: (prev?.quantity || 0) + (p.quantity || 1) });
     }
-    let hasRemoved = false;
-    for (const [k, qty] of baseMap.entries()) {
-      if ((altMap.get(k)?.quantity || 0) < qty) hasRemoved = true;
+    const removed = [];
+    const added = [];
+    for (const [k, p] of baseMap.entries()) {
+      const altQty = altMap.get(k)?.quantity || 0;
+      if (p.quantity > altQty) removed.push({ ...p, quantity: p.quantity - altQty });
     }
     for (const [k, p] of altMap.entries()) {
-      const baseQty = baseMap.get(k) || 0;
-      if (p.quantity > baseQty) {
-        added.push(hasRemoved ? p : { ...p, quantity: p.quantity - baseQty });
-      }
+      const baseQty = baseMap.get(k)?.quantity || 0;
+      if (p.quantity > baseQty) added.push({ ...p, quantity: p.quantity - baseQty });
     }
-    return { added: sortPurchases(added), isSwap: hasRemoved };
+    return { removed: sortPurchases(removed), added: sortPurchases(added) };
   }
 
   function createConditionalRow(alt, basePurchases) {
@@ -221,26 +224,39 @@
     line.append(condText);
 
     if (Array.isArray(alt.purchases) && alt.purchases.length > 0) {
-      const { added, isSwap } = diffPurchases(basePurchases, alt.purchases);
-      const displayList = added.length > 0 ? added : sortPurchases(alt.purchases);
-
-      const op = document.createElement('span');
-      op.className = isSwap ? 'rs-cond-op is-swap' : 'rs-cond-op is-add';
-      op.textContent = added.length > 0 ? (isSwap ? '换' : '+') : '→';
-      line.append(op);
-
+      const { removed, added } = diffPurchases(basePurchases, alt.purchases);
       const icons = document.createElement('span');
       icons.className = 'rs-cond-icons';
-      for (const p of displayList) {
-        icons.append(createGearNode(p, false));
+
+      if (removed.length > 0 && added.length > 0) {
+        for (const p of removed) icons.append(createGearNode(p, false));
+        const arrow = document.createElement('span');
+        arrow.className = 'rs-cond-op is-swap';
+        arrow.textContent = '→';
+        icons.append(arrow);
+        for (const p of added) icons.append(createGearNode(p, false));
+      } else if (added.length > 0) {
+        const plus = document.createElement('span');
+        plus.className = 'rs-cond-op is-add';
+        plus.textContent = '+';
+        icons.append(plus);
+        for (const p of added) icons.append(createGearNode(p, false));
+      } else {
+        for (const p of sortPurchases(alt.purchases)) icons.append(createGearNode(p, false));
       }
       line.append(icons);
     }
 
     if (typeof alt.spendDelta === 'number' && alt.spendDelta !== 0) {
+      const sep = document.createElement('span');
+      sep.className = 'rs-cond-sep';
+      sep.textContent = '·';
+      line.append(sep);
+
       const delta = document.createElement('span');
       delta.className = 'rs-cond-delta' + (alt.spendDelta < 0 ? ' is-save' : '');
-      delta.textContent = (alt.spendDelta > 0 ? '+' : '-') + formatMoney(Math.abs(alt.spendDelta));
+      delta.textContent =
+        (alt.spendDelta < 0 ? '省 ' : '多花 ') + formatMoney(Math.abs(alt.spendDelta));
       line.append(delta);
     }
 

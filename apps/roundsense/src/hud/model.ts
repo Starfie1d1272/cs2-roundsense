@@ -1,5 +1,6 @@
 import {
   DEFAULT_RULES,
+  fullUtilityTargetCash,
   price,
   recommendPolicyV3,
   type PolicyMode,
@@ -48,7 +49,7 @@ export interface HudConditionalAlternative {
 }
 
 export type HudFutureCapability =
-  'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
+  'FULL_UTILITY' | 'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
 
 export interface HudOption {
   id: string;
@@ -103,6 +104,7 @@ export function optionForRecommendation(
   armor: number,
   helmet: boolean,
   awpPriority: HudSettings['awpPriority'] = 'NEUTRAL',
+  side?: 'CT' | 'T',
 ): HudOption {
   const capabilityToProtect =
     'protectedCapability' in option.spendingGuidance
@@ -121,15 +123,21 @@ export function optionForRecommendation(
       : policy.futureAffordability.boundaries.filter(
           (b) => b.reachableWithNoSpend && lossNextMoney >= b.targetCash,
         );
-  const futureCapability: HudFutureCapability = affordable.some(
-    (b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY',
-  )
-    ? 'RIFLE_ARMOR_BASIC_UTILITY'
-    : affordable.length > 0
-      ? 'RIFLE_ARMOR'
-      : policy.futureAffordability.status === 'PROJECTED'
-        ? 'INSUFFICIENT'
-        : 'NOT_EVALUATED';
+  const fullUtilityThreshold = side ? fullUtilityTargetCash(side) : null;
+  const hasBasicUtility = affordable.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
+  const futureCapability: HudFutureCapability =
+    hasBasicUtility &&
+    fullUtilityThreshold !== null &&
+    lossNextMoney !== null &&
+    lossNextMoney >= fullUtilityThreshold
+      ? 'FULL_UTILITY'
+      : hasBasicUtility
+        ? 'RIFLE_ARMOR_BASIC_UTILITY'
+        : affordable.length > 0
+          ? 'RIFLE_ARMOR'
+          : policy.futureAffordability.status === 'PROJECTED'
+            ? 'INSUFFICIENT'
+            : 'NOT_EVALUATED';
 
   return {
     id: option.id,
@@ -249,7 +257,7 @@ export class HudRuntime {
     const options =
       visible && p && side
         ? p.options.map((option) =>
-            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority),
+            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority, side),
           )
         : [];
 

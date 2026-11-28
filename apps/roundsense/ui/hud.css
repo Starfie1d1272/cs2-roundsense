@@ -16,9 +16,10 @@
   --accent-ink: #07130E;
   --accent-tint: rgba(52, 211, 153, 0.1);
   --cap-full: #34D399;
+  --cap-basic: #5EEAD4;
   --cap-rifle: #F59E0B;
-  --cap-low: #98A3B3;
-  --cap-muted: #768292;
+  --cap-low: #B0BAC9;
+  --cap-muted: #8C98A8;
   --danger: #F87171;
   --hud-opacity: 0.84;
   --hud-scale: 1;
@@ -26,6 +27,10 @@
 
 *, *::before, *::after {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 ::selection {
@@ -83,7 +88,7 @@ html, body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 10px;
   font-weight: 500;
-  color: #A2ADBC;
+  color: #B4BECA;
   letter-spacing: 0.04em;
 }
 
@@ -150,7 +155,7 @@ html, body {
   margin-top: 1px;
   font-size: 10px;
   font-weight: 500;
-  color: #A6B1C0;
+  color: #B8C3D1;
 }
 
 .rs-opt-gear {
@@ -226,7 +231,7 @@ html, body {
 
 .rs-gear-none {
   font-size: 11px;
-  color: #8D99A9;
+  color: #A8B3C2;
 }
 
 .rs-actual-spend {
@@ -244,6 +249,7 @@ html, body {
 }
 
 .cap-full { color: var(--cap-full); }
+.cap-basic { color: var(--cap-basic); }
 .cap-rifle { color: var(--cap-rifle); }
 .cap-low { color: var(--cap-low); }
 .cap-muted { color: var(--cap-muted); }
@@ -278,8 +284,11 @@ html, body {
   gap: 4px;
 }
 
+.rs-cond-sep {
+  color: #6B7787;
+}
+
 .rs-cond-delta {
-  margin-left: auto;
   font-size: 10.5px;
   font-weight: 600;
   color: #CBD5E1;
@@ -320,7 +329,7 @@ html, body {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.24);
   font-size: 10px;
-  color: #94A0B0;
+  color: #AAB5C4;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -342,11 +351,11 @@ html, body {
 }
 
 .rs-stage-col {
-  padding: 20px 26px;
+  padding: 16px 22px;
   border-right: 1px solid var(--border-rule);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -355,7 +364,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-rule);
 }
 
@@ -406,6 +415,11 @@ html, body {
   color: var(--accent);
 }
 
+.rs-source-badge.is-preview-override {
+  border-color: rgba(245, 158, 11, 0.55);
+  color: var(--cap-rifle);
+}
+
 .rs-link-subtle {
   font-size: 12px;
   color: var(--ink-secondary);
@@ -437,7 +451,7 @@ html, body {
   background: var(--bg-inset);
   color: var(--ink-secondary);
   border: 1px solid var(--border-rule);
-  padding: 5px 10px;
+  padding: 4px 9px;
   font: inherit;
   font-size: 12px;
   cursor: pointer;
@@ -467,7 +481,7 @@ html, body {
 .rs-cs2-stage {
   position: relative;
   width: auto;
-  height: min(calc(100vh - 172px), 740px);
+  height: min(calc(100vh - 152px), 740px);
   max-width: 100%;
   aspect-ratio: 4 / 3;
   border: 1px solid var(--border-rule);
@@ -481,7 +495,7 @@ html, body {
 .rs-cs2-stage.aspect-16-10 {
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 172px);
+  max-height: calc(100vh - 152px);
   aspect-ratio: 16 / 10;
   background-size: cover;
   background-position: center top;
@@ -490,7 +504,7 @@ html, body {
 .rs-cs2-stage.aspect-16-9 {
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 172px);
+  max-height: calc(100vh - 152px);
   aspect-ratio: 16 / 9;
   background-size: cover;
   background-position: center top;
@@ -545,20 +559,20 @@ html, body {
    ========================================================= */
 .rs-rail {
   background: var(--bg-rail);
-  padding: 22px 24px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 }
 
 .rs-rail-sec {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .rs-sec-head {
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-rule);
 }
 
@@ -573,10 +587,10 @@ html, body {
 .rs-status-panel {
   background: var(--bg-inset);
   border: 1px solid var(--border-rule);
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .rs-status-row {
@@ -718,7 +732,7 @@ html, body {
 .rs-ctrl {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .rs-ctrl-head {
