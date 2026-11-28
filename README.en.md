@@ -9,14 +9,16 @@ During every 15-second freezetime, RoundSense appears below your radar so you ca
 
 ## Why RoundSense?
 
-Most CS2 buy helpers either dictate a single rigid loadout or hook into the game process. RoundSense distills its buy logic from **IEM Cologne Major 2026 pro match demos (200+ maps, 20,000+ valid player-rounds)** and lays out every viable route side by side with its next-round consequences:
+In CS2, plenty of rounds are lost before the barrier even drops—forcing when you should save, overspending on a light buy, or breaking your economy during a close half.
 
-1. **Help newer players truly understand CS2 economy**  
-   No more memorizing rigid rules of thumb. See how pro players actually navigate full buys, forces, light buys, and ecos—and immediately understand *why* a round calls for a light buy cap or a full save.
-2. **Keep experienced players & IGLs from tilt-forcing**  
-   In close matches or loss streaks, it is easy to impulse-force without doing the math. RoundSense puts the **exact cost of forcing** right in front of you—what your bank and next-round buy capability will look like if you lose—so you and your team can make calm calls within 15 seconds.
+RoundSense builds its buy rules from **IEM Cologne Major 2026** (202 pro maps, 28,000+ player buy decisions). Instead of dictating a single loadout, it lays out your viable routes side by side right below the radar so you can see the trade-off immediately:
 
-> Curious about the methodology and validation data? See the [Research Archive Index](docs/research-index.md) (in Chinese).
+1. **Learn CS2 economy naturally**  
+   Skip memorizing rigid charts. Seeing full buy, force, light buy, and eco options next to their next-round outcomes makes it obvious *why* a round has a spend cap or needs a save.
+2. **Avoid tilt-forcing in close games**  
+   During loss streaks or tight halves, it is easy to force on impulse. Putting your **post-loss next-round bank** right in front of you helps you and your teammates make a calm call in 15 seconds.
+
+> Want the full methodology and validation archive? See the [Research Archive Index](docs/research-index.md) (in Chinese).
 
 ---
 
@@ -24,7 +26,7 @@ Most CS2 buy helpers either dictate a single rigid loadout or hook into the game
 
 ![RoundSense In-Match HUD Showcase](docs/assets/hud-showcase.png)
 
-The live overlay contains only what you need to decide in a glance—zero prose, zero clutter:
+The overlay keeps only what you need at a glance:
 
 - **Mode column**: Shows only the most meaningful buy options (`Full`, `Force`, `Light`, `ECO`, `AWP`) alongside their next-round consequences—no redundant force row when a clean full buy is available.
 - **Spend column**: Shows exact cost for fixed buys, or a **spend cap (e.g. `≤ $1,300`)** paired with a suggested loadout cost (`$1,150`) for flexible light buys so you can adapt to your spawn and team call.
@@ -38,17 +40,47 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 ---
 
-## Pro Match Replay Validation (IEM Cologne Major 2026)
+## Does This Advice Hold Up? (Two-Major Blind Replay)
 
-We replayed RoundSense offline across **202 maps and 25,748 valid freezetime decisions** from IEM Cologne Major 2026 (covering both fresh buys and retained-gear rounds, using only normal-player GSI observable fields) and compared it against a naive buy-what-you-can baseline:
+These rules are grounded in pro match data, not guesswork. We built and froze the rules on **IEM Cologne Major 2026** (202 maps), then ran them untouched—zero tuning—on a separate Major, **PGL Singapore Major 2026 · Stage 1** (53 new maps, 7,062 player buy decisions), using only the cash and gear a normal player sees in freezetime:
 
-![RoundSense IEM Cologne Major 2026 Offline Replay Validation](docs/assets/cologne-validation.png)
+![RoundSense Cross-Event Out-of-Sample Validation (Cologne vs Singapore Stage 1)](docs/assets/cross-event-validation.png)
 
-- **Main weapon family match**: **70.9%** vs. 61.2% naive (**+9.7%** overall; **+14.2%** on fresh buys).
-- **CT helmet vs. utility match**: **80.9%** vs. 66.8% naive (**+14.1%**).
-- **Fresh-buy primary spend MAE**: **$577** vs. $661 naive (**−$84 / −12.7%**), with **0** over-budget, illegal, or duplicate suggestions and an average of **1.62** options per round.
-- Reproducible script: [cologne-replay-benchmark.ts](scripts/cologne-replay-benchmark.ts) · Machine-readable metrics & real pro cases: [cologne-replay-benchmark.json](docs/data/cologne-replay-benchmark.json).
-- *Note: Historical freezetime replay on the study corpus; behavioral alignment measures decision proximity rather than win-rate guarantees.*
+RoundSense isn’t trying to be the stingiest eco bot—it balances **having a real gun this round** against **not breaking next round** (Singapore Major blind test, comparing only the #1 top suggestion):
+
+- **Spend stays close to pro decisions**: **74.4%** of decisions land within **$400** of actual pro spend ($460 average gap overall, **$272** when carrying gear over), with **41.8%** exact spend matches.
+- **Keep rifles now, still protect next round**: **87.6%** of normal non-reset rounds have a rifle or AWP (nearly matching "buy everything" at 88.8%), while **assuming a round loss, next-round cash still covers a basic full buy** **45.6%** of the time (**+9.9 percentage points** over "buy everything" at 35.7%).
+- **Cleaner helmet calls, zero illegal buys**: **77.4%** primary weapon family match, **83.9%** CT helmet decision match, and **0** illegal, over-budget, or duplicate buys across all evaluated samples.
+
+What does that look like in a real match?
+
+| Common Round | Typical Pitfall | What RoundSense Suggests |
+| :--- | :--- | :--- |
+| **T · $3,850** (normal) | Forcing bare AK + Vesthelm with 0 grenades | **Galil + Vesthelm + Smoke/Molotov/Flash** for a full execute |
+| **CT · $4,850** (normal) | Auto-buying helmet and running dry on utility | **M4 + Kevlar + 4 grenades** (uses the exact $4,850; skips helmet vs. AKs to bring full utility) |
+| **CT · $3,450** (1 loss) | Spending everything and breaking next round, or AFK $0 | **Light buy cap `≤ $1,300`** (assuming a loss, next round still full-buys) alongside ECO / Force |
+
+<details>
+<summary>Full technical cross-event table (4 strategies · Cologne study set vs. Singapore S1 blind test)</summary>
+
+| Strict 1-vs-1 Lead Metric (All Eligible Decisions) | Cologne Study Set (`n=28,594`) | Singapore S1 Blind Test (`n=7,062`) |
+| :--- | ---: | ---: |
+| **Lead spend MAE** (vs. B0 / B1 / B2) | **$472** (vs. $555 / $490 / $539) | **$460** (vs. $547 / $461 / $527) |
+| **Lead spend within $400** | **73.2%** (vs. 66.7% / 64.2% / 72.0%) | **74.4%** (vs. 68.1% / 67.4% / 74.0%) |
+| **Lead exact spend match** (vs. B0 / B1 / B2) | **39.7%** (vs. 28.3% / 32.9% / 35.4%) | **41.8%** (vs. 28.7% / 35.0% / 36.7%) |
+| **Lead primary weapon family match** | **76.8%** (vs. 69.2% / 77.5% / 72.1%) | **77.4%** (vs. 69.6% / 77.6% / 72.7%) |
+| **CT normal-round helmet decision match** | **83.0%** (vs. 71.7% / 80.8% / 76.7%) | **83.9%** (vs. 68.6% / 82.7% / 74.2%) |
+| **Current rifle/AWP · Post-loss next-round full-buy** (pro: 73.1%·51.6% / 76.4%·51.9%) | **86.4% · 44.3%** (B0 86.7%·33.3% / B1 75.3%·51.6%) | **87.6% · 45.6%** (B0 88.8%·35.7% / B1 78.3%·51.3%) |
+| **Option-set within $400 / avg options** | **81.8% / 1.55** | **82.6% / 1.52** |
+| **Mechanical audit (illegal/cap / duplicate / light-floor)** | **0 / 0 / 0** (legacy V3: 0 / 10,208 / 1,904) | **0 / 0 / 0** (legacy V3: 0 / 2,524 / 369) |
+
+- Reproducible unified script (`replay.json` end-of-round alive/armor/kit/grenade recovery): [cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
+- Machine-readable reports: [cologne-cross-event-benchmark.json](docs/data/cologne-cross-event-benchmark.json) · [singapore-s1-cross-event-benchmark.json](docs/data/singapore-s1-cross-event-benchmark.json)
+- **Known corpus recovery approximations**: (1) `rounds.json` does not store the engine's internal loss-bonus counter directly, so loss index is reconstructed via the standard MR12 win-decrement / loss-increment rule; (2) `replay.json` only records the active held weapon at round end rather than full inventory, so surviving players' carried primary weapon and helmet fall back to the prior freeze-time snapshot (large mid-round pickup value jumps are filtered out via the `>$800` equipment delta check).
+
+</details>
+
+- *Note: Historical freezetime decision replay. Singapore Stage 1 was never used to tune any policy rule; results are reported verbatim and measure equipment & cash continuity rather than win-rate guarantees.*
 
 ---
 
