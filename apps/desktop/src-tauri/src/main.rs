@@ -4,7 +4,7 @@ mod overlay;
 mod placement;
 mod sidecar;
 
-use overlay::{set_overlay_state, spawn_tracker, OverlayHost};
+use overlay::{preview_overlay_geometry, set_overlay_state, spawn_tracker, OverlayHost};
 use sidecar::{logs_dir, SidecarState, WEB_ORIGIN};
 use std::{fs, path::Path, process::Command};
 use tauri::{
@@ -169,6 +169,7 @@ fn main() {
         .manage(SidecarState::empty())
         .invoke_handler(tauri::generate_handler![
             set_overlay_state,
+            preview_overlay_geometry,
             pick_cs2_folder,
             open_directory,
             open_logs_dir,

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-preview-overlay-geometry"
+description = "Enables the preview_overlay_geometry command without any pre-configured scope."
+commands.allow = ["preview_overlay_geometry"]
+
+[[permission]]
+identifier = "deny-preview-overlay-geometry"
+description = "Denies the preview_overlay_geometry command without any pre-configured scope."
+commands.deny = ["preview_overlay_geometry"]

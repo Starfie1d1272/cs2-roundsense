@@ -31,7 +31,8 @@
           </div>
           <div class="rs-toolbar-group">
             <div class="rs-toolbar-group" id="aspect-tabs">
-              <button type="button" class="rs-chip is-active" data-aspect="4-3">4:3</button>
+              <button type="button" class="rs-chip is-active" data-aspect="game">跟随游戏</button>
+              <button type="button" class="rs-chip" data-aspect="4-3">4:3</button>
               <button type="button" class="rs-chip" data-aspect="16-10">16:10</button>
               <button type="button" class="rs-chip" data-aspect="16-9">16:9</button>
             </div>
@@ -43,7 +44,7 @@
         </div>
 
         <section class="rs-stage-wrap" aria-label="局内 HUD 实景预览">
-          <div id="cs2-stage" class="rs-cs2-stage has-photo map-bright aspect-4-3">
+          <div id="cs2-stage" class="rs-cs2-stage">
             <div id="hud-anchor" class="rs-hud-anchor pos-below-radar">
               <article id="hud-preview" class="rs-hud" aria-live="polite"></article>
             </div>
@@ -51,7 +52,7 @@
         </section>
 
         <footer class="rs-stage-footer">
-          <span>读法：≤ 为本局投入上限 · 败后现金按保底测算（未下包/无额外击杀） · 官方只读 GSI，仅冻结时间显现</span>
+          <span id="preview-viewport">1920 × 1080 示意 · 等待检测游戏窗口</span>
           <span id="save-status" class="rs-save-status" role="status" aria-live="polite">自动保存已开启</span>
         </footer>
       </main>

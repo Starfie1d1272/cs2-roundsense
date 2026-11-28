@@ -285,7 +285,10 @@
         '--hud-opacity',
         String(snapshot.settings.opacity),
       );
-      document.documentElement.style.setProperty('--hud-scale', String(snapshot.settings.scale));
+      document.documentElement.style.setProperty(
+        '--hud-scale',
+        String(effectiveScale(snapshot.settings.scale)),
+      );
     }
 
     if (!shouldShow) return;
@@ -332,7 +335,7 @@
       const left = document.createElement('span');
       left.textContent = anchorText;
       const right = document.createElement('span');
-      right.textContent = '回合开始后自动隐藏';
+      right.textContent = '解冻 5 秒后隐藏';
       foot.append(left, right);
 
       container.append(empty, foot);
@@ -478,8 +481,23 @@
     container.append(foot);
   }
 
+  const BASE_SCALE = 1.2;
+  function effectiveScale(scale) {
+    return (scale ?? 1) * BASE_SCALE;
+  }
+
   window.RoundSenseHud = {
+    effectiveScale,
     render: renderHud,
+    measure(container) {
+      if (!container) return { width: 264, height: 84 };
+      const width = container.offsetWidth || parseFloat(getComputedStyle(container).width);
+      const height = container.offsetHeight || parseFloat(getComputedStyle(container).height);
+      return {
+        width: Number.isFinite(width) && width > 0 ? Math.ceil(width) : 264,
+        height: Number.isFinite(height) && height > 0 ? Math.ceil(height) : 84,
+      };
+    },
     formatMoney,
     MODE_NAMES,
     ITEM_NAMES,

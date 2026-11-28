@@ -16,9 +16,9 @@ const PRIMARY_TYPE_HINTS = ['Rifle', 'Submachine Gun', 'Shotgun', 'Machine Gun',
 
 /**
  * Decode only a complete normal-player inventory observation. GSI payloads
- * are partial; omitted fields are not evidence of an empty slot or false
- * equipment flag. Callers retain a prior complete observation explicitly or
- * expose UNKNOWN.
+ * are partial. Callers retain a prior complete observation explicitly or
+ * expose UNKNOWN. On complete inventory snapshots, CS2 omits `defusekit`
+ * when the player has no kit and sends `true` after the kit is acquired.
  */
 export function inventoryFrom(payload: GsiPayload): InventoryState | undefined {
   const state = payload.player?.state;
@@ -27,8 +27,7 @@ export function inventoryFrom(payload: GsiPayload): InventoryState | undefined {
     state === undefined ||
     weapons === undefined ||
     state.armor === undefined ||
-    state.helmet === undefined ||
-    state.defusekit === undefined
+    state.helmet === undefined
   )
     return undefined;
   let primary: ItemId | null = null;
@@ -55,7 +54,7 @@ export function inventoryFrom(payload: GsiPayload): InventoryState | undefined {
     secondary,
     armor: state.armor,
     hasHelmet: state.helmet,
-    hasDefuseKit: state.defusekit,
+    hasDefuseKit: state.defusekit ?? false,
     grenades,
   };
 }

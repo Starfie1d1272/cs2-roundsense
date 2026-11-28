@@ -246,6 +246,23 @@ export function fullUtilityTargetCash(side: Side): number {
   return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
 }
 
+function nextBuyTargetCash(side: Side, capability: ProtectedNextBuyCapability): number {
+  const items: ItemId[] = [rifleFor(side), baseArmorFor(side)];
+  if (capability === 'RIFLE_ARMOR_BASIC_UTILITY') items.push('smoke', 'flash');
+  return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
+}
+
+export type NextBuyCapabilityTier =
+  'FULL_UTILITY' | 'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT';
+
+export function classifyNextBuyCapability(side: Side, cash: number): NextBuyCapabilityTier {
+  if (cash >= fullUtilityTargetCash(side)) return 'FULL_UTILITY';
+  if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR_BASIC_UTILITY'))
+    return 'RIFLE_ARMOR_BASIC_UTILITY';
+  if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR')) return 'RIFLE_ARMOR';
+  return 'INSUFFICIENT';
+}
+
 function effectiveGrenadeCount(loadout: PostLoadout): number {
   return loadout.grenades.filter((g) => EFFECTIVE_GRENADES.has(g)).length;
 }
@@ -779,13 +796,8 @@ function futureAffordability(state: PolicyV3State): FutureAffordabilitySet {
     'no retained weapon, drop, armor retention, or teammate transfer is asserted',
     'canonical fresh-buy cash boundary; not a future inventory fact',
   ];
-  const capabilityTarget = (capability: ProtectedNextBuyCapability): number => {
-    const items: ItemId[] = [rifleFor(side), baseArmorFor(side)];
-    if (capability === 'RIFLE_ARMOR_BASIC_UTILITY') items.push('smoke', 'flash');
-    return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
-  };
   const boundary = (capability: ProtectedNextBuyCapability): FutureAffordabilityBoundary => {
-    const targetCash = capabilityTarget(capability);
+    const targetCash = nextBuyTargetCash(side, capability);
     const requiredReserveNow = Math.max(0, targetCash - lossReward);
     const reachableWithNoSpend = money >= requiredReserveNow;
     return {

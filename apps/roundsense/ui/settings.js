@@ -23,10 +23,13 @@
     dark: '/assets/preview/dark.webp',
   };
 
+  const PREVIEW_WIDTHS = { game: 1920, '4-3': 1440, '16-10': 1728, '16-9': 1920 };
+
   const stageEl = document.getElementById('cs2-stage');
   const hudAnchor = document.getElementById('hud-anchor');
   const hudPreview = document.getElementById('hud-preview');
   const previewSourceBadge = document.getElementById('preview-source-badge');
+  const previewViewport = document.getElementById('preview-viewport');
   const scenarioLiveBtn = document.getElementById('scenario-live-btn');
 
   const scaleRange = document.getElementById('scale-range');
@@ -66,8 +69,9 @@
   let currentSettings = { ...DEFAULT_SETTINGS };
   let activeScenario = 'ct-mid';
   let activeBackdrop = 'bright';
-  let activeAspect = '4-3';
+  let activeAspect = 'game';
   let liveSnapshot = null;
+  let lastFreezeSnapshot = null;
   let lastGsiHealth = null;
   let lastCfgDirectory = null;
   let lastCfgStatus = null;
@@ -78,12 +82,60 @@
   let saving = false;
   let pendingSave = false;
   let gsiBusy = false;
+  let gameGeometry = null;
+  let geometrySeq = 0;
+  let lastGeometryKey = null;
 
   function applyBackdrop() {
-    stageEl.classList.toggle('aspect-4-3', activeAspect === '4-3');
-    stageEl.classList.toggle('aspect-16-10', activeAspect === '16-10');
-    stageEl.classList.toggle('aspect-16-9', activeAspect === '16-9');
     stageEl.style.backgroundImage = 'url("' + BACKDROP_URLS[activeBackdrop] + '")';
+  }
+
+  function layoutPreview() {
+    const game = activeAspect === 'game' ? gameGeometry : null;
+    const width = game?.gameWidth ?? PREVIEW_WIDTHS[activeAspect];
+    const height = game?.gameHeight ?? 1080;
+    stageEl.style.setProperty('--preview-ratio', String(width / height));
+    const fit = stageEl.clientWidth / width;
+    hudAnchor.style.setProperty(
+      '--preview-hud-scale',
+      String(window.RoundSenseHud.effectiveScale(currentSettings.scale) * fit * (game?.dpi ?? 1)),
+    );
+    hudAnchor.classList.toggle('is-game-position', Boolean(game));
+    if (game) {
+      hudAnchor.style.setProperty('--preview-x', (100 * game.x) / width + '%');
+      hudAnchor.style.setProperty('--preview-y', (100 * game.y) / height + '%');
+    }
+    const source = game ? '游戏窗口' : '示意';
+    const awaiting = !game && activeAspect === 'game' && tauriInvoke ? ' · 等待检测游戏窗口' : '';
+    const label = `${width} × ${height} ${source}${awaiting}`;
+    if (previewViewport.textContent !== label) previewViewport.textContent = label;
+  }
+
+  async function refreshGameGeometry(force = false) {
+    if (!tauriInvoke || activeAspect !== 'game' || !hudPreview.firstElementChild) return;
+    const { width, height } = window.RoundSenseHud.measure(hudPreview);
+    const scale = window.RoundSenseHud.effectiveScale(currentSettings.scale);
+    const key = `${width}x${height}@${scale}:${currentSettings.position}`;
+    if (!force && key === lastGeometryKey) return;
+    lastGeometryKey = key;
+    const seq = ++geometrySeq;
+    try {
+      const geometry = await tauriInvoke('preview_overlay_geometry', {
+        request: {
+          visible: true,
+          width,
+          height,
+          scale,
+          position: currentSettings.position,
+        },
+      });
+      if (seq !== geometrySeq) return;
+      gameGeometry = geometry;
+      layoutPreview();
+    } catch {
+      lastGeometryKey = null;
+      // Browser previews and older desktop hosts use the reference frame.
+    }
   }
 
   function syncSettingsControls() {
@@ -108,8 +160,8 @@
     document.documentElement.style.setProperty('--hud-scale', String(currentSettings.scale));
     document.documentElement.style.setProperty('--hud-opacity', String(currentSettings.opacity));
 
-    const useLive = activeScenario === 'live' && liveSnapshot && liveSnapshot.visible;
-    const baseSnap = useLive ? liveSnapshot : previewSnapshot;
+    const useLive = activeScenario === 'live' && lastFreezeSnapshot;
+    const baseSnap = useLive || previewSnapshot;
     if (!baseSnap) return;
 
     const previewSaveAwpOverride =
@@ -118,17 +170,23 @@
       currentSettings.awpPriority !== 'SAVE_FOR_AWP';
     const effectiveSettings = previewSaveAwpOverride
       ? { ...currentSettings, awpPriority: 'SAVE_FOR_AWP' }
-      : { ...currentSettings };
+      : useLive && !liveSnapshot?.visible && baseSnap.settings?.awpPriority
+        ? { ...currentSettings, awpPriority: baseSnap.settings.awpPriority }
+        : { ...currentSettings };
     const snap = { ...baseSnap, settings: effectiveSettings };
     window.RoundSenseHud.render(hudPreview, snap, { forceShow: true, skipRootVars: true });
 
     previewSourceBadge.textContent = useLive
-      ? '实时对局接入'
+      ? liveSnapshot?.visible
+        ? '实时对局接入'
+        : `最近冻结回合 · R${baseSnap.round ?? '–'}`
       : previewSaveAwpOverride
         ? '按「Jame 攒狙」预览'
         : 'Policy V3 预览';
     previewSourceBadge.classList.toggle('is-live', Boolean(useLive));
     previewSourceBadge.classList.toggle('is-preview-override', Boolean(previewSaveAwpOverride));
+    layoutPreview();
+    void refreshGameGeometry();
   }
 
   async function refreshPreviewSnapshot() {
@@ -342,18 +400,22 @@
 
   function updateLiveStatus(snapshot, offline = false) {
     if (offline) {
+      liveSnapshot = null;
       liveDot.className = 'rs-dot err';
       liveStateLabel.textContent = '本地服务未连接';
       liveStateLabel.className = 'rs-status-val err';
       diagLive.textContent = 'SSE 断开';
+      if (activeScenario === 'live') renderPreview();
       return;
     }
     if (!snapshot) return;
     liveSnapshot = snapshot;
 
     if (snapshot.visible) {
+      lastFreezeSnapshot = snapshot;
       liveDot.className = 'rs-dot ok';
-      liveStateLabel.textContent = '已接入 · 冻结时间';
+      liveStateLabel.textContent =
+        snapshot.displayPhase === 'post-freezetime' ? '已接入 · 保留开局策略' : '已接入 · 冻结时间';
       liveStateLabel.className = 'rs-status-val ok';
       scenarioLiveBtn.hidden = false;
       diagLive.textContent = 'rev ' + snapshot.revision + ' · visible';
@@ -415,6 +477,8 @@
         b.classList.toggle('is-active', b === btn);
       }
       applyBackdrop();
+      layoutPreview();
+      void refreshGameGeometry(true);
     });
   }
 
@@ -527,5 +591,7 @@
     source.onerror = () => updateLiveStatus(null, true);
   }
 
+  new ResizeObserver(layoutPreview).observe(stageEl);
+  window.addEventListener('focus', () => void refreshGameGeometry(true));
   void boot();
 })();
