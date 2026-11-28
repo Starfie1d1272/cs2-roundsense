@@ -6,10 +6,12 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-28
+
 ### 调整
 
-- 重绘桌面端应用图标（`icon.png`、`icon.ico`），补充品牌标识（`logo.svg`）与仓库分享封面（`social-preview.png`）。
-- 重写中英文 README，调整上手指南优先级，补充版本、平台、CI 与下载徽章。
+- 更新桌面端应用与系统托盘图标（`icon.png`、`icon.ico`），补充品牌标识（`logo.svg`）与仓库分享封面（`social-preview.png`）。
+- 重写中英文 README，内嵌产品演示视频，补充更新日志与版本徽章。
 
 ## [0.1.0] - 2026-11-28
 
@@ -25,5 +27,6 @@
 - **一键安装 CS2 GSI 配置**：自动发现 Steam / CS2 目录，备份原有配置并写入本地只读 GSI 配置（`127.0.0.1:3001`）。
 - **Windows 便携桌面包**：基于 Tauri v2 的单实例桌面宿主，内置 Node Sidecar，支持系统托盘驻留、鼠标穿透叠层及退出时自动回收后台进程。
 
-[Unreleased]: https://github.com/Starfie1d1272/cs2-roundsense/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Starfie1d1272/cs2-roundsense/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Starfie1d1272/cs2-roundsense/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Starfie1d1272/cs2-roundsense/releases/tag/v0.1.0

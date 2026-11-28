@@ -1,6 +1,6 @@
 {
   "name": "cs2-roundsense",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "packageManager": "pnpm@12.9.1",
   "description": "RoundSense — read-only real-time decision-assist research for CS2: C4 time estimation and personal economy advisor",
