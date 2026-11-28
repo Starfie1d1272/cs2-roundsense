@@ -9,14 +9,16 @@ During every 15-second freezetime, RoundSense appears below your radar so you ca
 
 ## Why RoundSense?
 
-Most CS2 buy helpers either dictate a single rigid loadout or hook into the game process. RoundSense distills its buy logic from **IEM Cologne Major 2026 pro match demos (200+ maps, 20,000+ valid player-rounds)** and lays out every viable route side by side with its next-round consequences:
+In CS2, plenty of rounds are lost before the barrier even drops—forcing when you should save, overspending on a light buy, or breaking your economy during a close half.
 
-1. **Help newer players truly understand CS2 economy**  
-   No more memorizing rigid rules of thumb. See how pro players actually navigate full buys, forces, light buys, and ecos—and immediately understand *why* a round calls for a light buy cap or a full save.
-2. **Keep experienced players & IGLs from tilt-forcing**  
-   In close matches or loss streaks, it is easy to impulse-force without doing the math. RoundSense puts the **exact cost of forcing** right in front of you—what your bank and next-round buy capability will look like if you lose—so you and your team can make calm calls within 15 seconds.
+RoundSense builds its buy rules from **IEM Cologne Major 2026** (202 pro maps, 28,000+ player buy decisions). Instead of dictating a single loadout, it lays out your viable routes side by side right below the radar so you can see the trade-off immediately:
 
-> Curious about the methodology and validation data? See the [Research Archive Index](docs/research-index.md) (in Chinese).
+1. **Learn CS2 economy naturally**  
+   Skip memorizing rigid charts. Seeing full buy, force, light buy, and eco options next to their next-round outcomes makes it obvious *why* a round has a spend cap or needs a save.
+2. **Avoid tilt-forcing in close games**  
+   During loss streaks or tight halves, it is easy to force on impulse. Putting your **post-loss next-round bank** right in front of you helps you and your teammates make a calm call in 15 seconds.
+
+> Want the full methodology and validation archive? See the [Research Archive Index](docs/research-index.md) (in Chinese).
 
 ---
 
@@ -24,7 +26,7 @@ Most CS2 buy helpers either dictate a single rigid loadout or hook into the game
 
 ![RoundSense In-Match HUD Showcase](docs/assets/hud-showcase.png)
 
-The live overlay contains only what you need to decide in a glance—zero prose, zero clutter:
+The overlay keeps only what you need at a glance:
 
 - **Mode column**: Shows only the most meaningful buy options (`Full`, `Force`, `Light`, `ECO`, `AWP`) alongside their next-round consequences—no redundant force row when a clean full buy is available.
 - **Spend column**: Shows exact cost for fixed buys, or a **spend cap (e.g. `≤ $1,300`)** paired with a suggested loadout cost (`$1,150`) for flexible light buys so you can adapt to your spawn and team call.
@@ -38,11 +40,9 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 ---
 
-## Does This Buy Advice Actually Hold Up? (Two-Major Blind Replay)
+## Does This Advice Hold Up? (Two-Major Blind Replay)
 
-Every CS2 player asks the same question: **"Is this actually better than buying by gut feel?"**
-
-To test it honestly, we studied pro buying habits across **IEM Cologne Major 2026** (202 maps), **froze the rules**, and then ran them untouched—zero tuning—on a completely separate Major: **PGL Singapore Major 2026 · Stage 1** (53 new maps, 7,062 player buy decisions), feeding it only the cash and gear a normal player sees in freezetime:
+These rules are grounded in pro match data, not guesswork. We built and froze the rules on **IEM Cologne Major 2026** (202 maps), then ran them untouched—zero tuning—on a separate Major, **PGL Singapore Major 2026 · Stage 1** (53 new maps, 7,062 player buy decisions), using only the cash and gear a normal player sees in freezetime:
 
 ![RoundSense Cross-Event Out-of-Sample Validation (Cologne vs Singapore Stage 1)](docs/assets/cross-event-validation.png)
 
