@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#151E1A"/>
+      <stop offset="100%" stop-color="#0B100E"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2D4A3E"/>
+      <stop offset="50%" stop-color="#1D2E27"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+  <!-- Base rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg)" stroke="url(#rim)" stroke-width="8"/>
+  <!-- Top precision accent bar -->
+  <rect x="114" y="72" width="60" height="8" rx="4" fill="#10B981" fill-opacity="0.9"/>
+  <!-- Geometric R monogram (path-only, font-independent) -->
+  <path
+    d="M114 124 H252 C311 124 348 159 348 214 C348 255 325 285 285 297 L344 388 H274 L220 304 H174 V388 H114 V124 Z M174 176 V254 H246 C273 254 288 240 288 215 C288 190 273 176 246 176 H174 Z"
+    fill="#F1F6F4"
+    fill-rule="evenodd"
+  />
+  <!-- Emerald square brand mark (matches ▪ ROUNDSENSE) -->
+  <rect x="364" y="340" width="48" height="48" rx="10" fill="#10B981"/>
+</svg>
