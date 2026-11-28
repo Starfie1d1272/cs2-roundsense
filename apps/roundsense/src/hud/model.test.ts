@@ -420,4 +420,50 @@ describe('live HUD semantics', () => {
       expect(opt.lossWithPlantCapability).toBeNull();
     }
   });
+
+  it('recalculates locked opening advice when awpPriority changes during freezetime', () => {
+    const runtime = new HudRuntime();
+    const rich = payload({
+      player: {
+        ...payload().player,
+        state: { money: 7000, armor: 0, helmet: false },
+        weapons: {},
+      },
+    });
+    runtime.observe(receipt(rich, 0, 0));
+    expect(runtime.snapshot(0n).options[0]?.mode).not.toBe('AWP_PATH');
+
+    // Simulate player buying during freezetime; opening money must stay locked at 7000.
+    const bought = payload({
+      player: {
+        ...payload().player,
+        state: { money: 1200, armor: 100, helmet: true },
+        weapons: { rifle: { name: 'weapon_m4a1_silencer', type: 'Rifle' } },
+      },
+    });
+    runtime.observe(receipt(bought, 1, 200));
+    expect(runtime.snapshot(200_000_000n).money).toBe(7000);
+
+    // Changing awpPriority recomputes from the locked opening state, not the post-buy balance.
+    runtime.updateSettings({ ...DEFAULT_HUD_SETTINGS, awpPriority: 'PREFER' });
+    const updated = runtime.snapshot(250_000_000n);
+    expect(updated.money).toBe(7000);
+    expect(updated.options[0]).toMatchObject({ mode: 'AWP_PATH', isDefault: true });
+  });
+
+  it('does not lock advice across frames when round number is unknown', () => {
+    const runtime = new HudRuntime();
+    const first = payload({
+      map: { ...payload().map, round: undefined },
+      player: { ...payload().player, state: { money: 4500, armor: 0, helmet: false } },
+    });
+    const second = payload({
+      map: { ...payload().map, round: undefined },
+      player: { ...payload().player, state: { money: 2200, armor: 0, helmet: false } },
+    });
+    runtime.observe(receipt(first, 0, 0));
+    expect(runtime.snapshot(0n).money).toBe(4500);
+    runtime.observe(receipt(second, 1, 100));
+    expect(runtime.snapshot(100_000_000n).money).toBe(2200);
+  });
 });

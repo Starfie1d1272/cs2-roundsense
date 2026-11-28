@@ -1,7 +1,7 @@
 import {
+  classifyNextBuyCapability,
   DEFAULT_RULES,
   fullUtilityTargetCash,
-  nextBuyTargetCash,
   type PolicyMode,
   type PolicyV3Output,
   type PolicyV3State,
@@ -138,11 +138,7 @@ export function optionForRecommendation(
       policy.futureAffordability.status === 'NOT_APPLICABLE' &&
       policy.futureAffordability.reason === 'POST_PISTOL_STRATEGY'
     ) {
-      if (cash >= fullUtilityTargetCash(side)) return 'FULL_UTILITY';
-      if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR_BASIC_UTILITY'))
-        return 'RIFLE_ARMOR_BASIC_UTILITY';
-      if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR')) return 'RIFLE_ARMOR';
-      return 'INSUFFICIENT';
+      return classifyNextBuyCapability(side, cash);
     }
     const matched =
       cash === null
@@ -227,12 +223,21 @@ function playerSide(payload: GsiPayload | undefined): HudSnapshot['side'] {
   return team === 'CT' || team === 'T' ? team : null;
 }
 
-/** Owns GSI continuity and locks the first usable recommendation for each round. */
+interface LockedOpening {
+  key: string | null;
+  receipt: GsiReceipt;
+  observed: PolicyV3State;
+  side: HudSnapshot['side'];
+  content: RoundAdvice;
+  holdUntilNs: bigint | null;
+}
+
+/** Owns GSI continuity and locks the first usable opening state for each round. */
 export class HudRuntime {
   private tracker = new PolicyStateTracker();
   private receipt: GsiReceipt | null = null;
   private round: number | null = null;
-  private advice: { key: string; content: RoundAdvice; holdUntilNs: bigint | null } | null = null;
+  private advice: LockedOpening | null = null;
   private identity = '';
   private revision = 0;
   private settings: HudSettings = { ...DEFAULT_HUD_SETTINGS };
@@ -263,15 +268,23 @@ export class HudRuntime {
 
   updateSettings(settings: HudSettings): void {
     this.settings = { ...settings };
+    if (this.advice) {
+      this.advice.content = this.buildAdvice(
+        this.advice.receipt,
+        this.advice.observed,
+        this.advice.side,
+      );
+    }
     this.revision++;
   }
 
   private observeRoundAdvice(receipt: GsiReceipt, state: PolicyV3State): void {
     const { payload } = receipt;
     const side = playerSide(payload);
-    const key = JSON.stringify([payload.map?.name, this.round, side]);
+    const key = this.round === null ? null : JSON.stringify([payload.map?.name, this.round, side]);
     const phase = payload.round?.phase;
     if (
+      key === null ||
       this.advice?.key !== key ||
       payload.map?.phase !== 'live' ||
       payload.map.mode !== 'competitive' ||
@@ -285,7 +298,14 @@ export class HudRuntime {
       }
     } else if (phase === 'freezetime' && gameHiddenReason(payload) === null) {
       if (!this.advice || this.advice.content.policyStatus === 'INSUFFICIENT_STATE') {
-        this.advice = { key, content: this.buildAdvice(receipt, state, side), holdUntilNs: null };
+        this.advice = {
+          key,
+          receipt,
+          observed: state,
+          side,
+          content: this.buildAdvice(receipt, state, side),
+          holdUntilNs: null,
+        };
       } else this.advice.holdUntilNs = null;
     }
   }

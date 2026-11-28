@@ -481,8 +481,13 @@
   window.RoundSenseHud = {
     render: renderHud,
     measure(container) {
-      const { width, height } = getComputedStyle(container);
-      return { width: Math.ceil(parseFloat(width)), height: Math.ceil(parseFloat(height)) };
+      if (!container) return { width: 264, height: 84 };
+      const width = container.offsetWidth || parseFloat(getComputedStyle(container).width);
+      const height = container.offsetHeight || parseFloat(getComputedStyle(container).height);
+      return {
+        width: Number.isFinite(width) && width > 0 ? Math.ceil(width) : 264,
+        height: Number.isFinite(height) && height > 0 ? Math.ceil(height) : 84,
+      };
     },
     formatMoney,
     MODE_NAMES,

@@ -252,6 +252,17 @@ export function nextBuyTargetCash(side: Side, capability: ProtectedNextBuyCapabi
   return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
 }
 
+export type NextBuyCapabilityTier =
+  'FULL_UTILITY' | 'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT';
+
+export function classifyNextBuyCapability(side: Side, cash: number): NextBuyCapabilityTier {
+  if (cash >= fullUtilityTargetCash(side)) return 'FULL_UTILITY';
+  if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR_BASIC_UTILITY'))
+    return 'RIFLE_ARMOR_BASIC_UTILITY';
+  if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR')) return 'RIFLE_ARMOR';
+  return 'INSUFFICIENT';
+}
+
 function effectiveGrenadeCount(loadout: PostLoadout): number {
   return loadout.grenades.filter((g) => EFFECTIVE_GRENADES.has(g)).length;
 }

@@ -85,11 +85,20 @@ pub fn preview_overlay_geometry(
         return Err("invalid caller".into());
     }
     validate_geometry(&request)?;
-    let viewport = state
-        .0
-        .lock()
-        .map_err(|_| "overlay host unavailable")?
-        .viewport;
+    let live_viewport = find_cs2_window().map(|game| {
+        let dpi = window
+            .app_handle()
+            .get_webview_window("overlay")
+            .and_then(|w| w.scale_factor().ok())
+            .or_else(|| window.scale_factor().ok())
+            .unwrap_or(1.0);
+        (game, dpi)
+    });
+    let mut lease = state.0.lock().map_err(|_| "overlay host unavailable")?;
+    if let Some(viewport) = live_viewport {
+        lease.viewport = Some(viewport);
+    }
+    let viewport = lease.viewport;
     Ok(viewport.map(|(game, dpi)| {
         let (x, y, _, _) = overlay_geometry(game, dpi, &request);
         PreviewGeometry {
@@ -102,21 +111,20 @@ pub fn preview_overlay_geometry(
     }))
 }
 
-/// Queries foreground window identity and client geometry only; never reads game memory.
+/// Queries window identity and client geometry only; never reads game memory.
 #[cfg(windows)]
-fn foreground_cs2() -> Option<Rect> {
+fn cs2_window_rect(hwnd: windows_sys::Win32::Foundation::HWND) -> Option<Rect> {
     use windows_sys::Win32::Foundation::{CloseHandle, POINT, RECT};
     use windows_sys::Win32::Graphics::Gdi::ClientToScreen;
     use windows_sys::Win32::System::Threading::{
         OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        GetClientRect, GetForegroundWindow, GetWindowThreadProcessId, IsIconic,
+        GetClientRect, GetWindowThreadProcessId, IsIconic, IsWindowVisible,
     };
 
     unsafe {
-        let hwnd = GetForegroundWindow();
-        if hwnd.is_null() || IsIconic(hwnd) != 0 {
+        if hwnd.is_null() || IsWindowVisible(hwnd) == 0 || IsIconic(hwnd) != 0 {
             return None;
         }
         let mut pid = 0u32;
@@ -160,8 +168,45 @@ fn foreground_cs2() -> Option<Rect> {
     }
 }
 
+/// Queries foreground window identity and client geometry only; never reads game memory.
+#[cfg(windows)]
+fn foreground_cs2() -> Option<Rect> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+    unsafe { cs2_window_rect(GetForegroundWindow()) }
+}
+
+/// On-demand lookup of a visible non-minimized CS2 window for Settings preview.
+#[cfg(windows)]
+fn find_cs2_window() -> Option<Rect> {
+    use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
+    use windows_sys::Win32::UI::WindowsAndMessaging::EnumWindows;
+
+    unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        let found = &mut *(lparam as *mut Option<Rect>);
+        if let Some(rect) = cs2_window_rect(hwnd) {
+            *found = Some(rect);
+            return 0;
+        }
+        1
+    }
+
+    if let Some(rect) = foreground_cs2() {
+        return Some(rect);
+    }
+    let mut found: Option<Rect> = None;
+    unsafe {
+        EnumWindows(Some(enum_proc), (&mut found as *mut Option<Rect>) as LPARAM);
+    }
+    found
+}
+
 #[cfg(not(windows))]
 fn foreground_cs2() -> Option<Rect> {
+    None
+}
+
+#[cfg(not(windows))]
+fn find_cs2_window() -> Option<Rect> {
     None
 }
 
