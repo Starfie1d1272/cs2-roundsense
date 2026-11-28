@@ -267,7 +267,7 @@ describe('GSI config inspection, install, backup, and restore', () => {
 
     await installGsiConfig({ cfgDirectory, token: 'tok-1', port: 3001, backupDir });
 
-    const manifestName = (await readdir(backupDir)).find((f) => f.endsWith('.manifest.json'))!;
+    const manifestName = (await readdir(backupDir)).find((f) => f.endsWith('.json'))!;
     const manifestFile = join(backupDir, manifestName);
     const manifest = JSON.parse(await readFile(manifestFile, 'utf8')) as { cfgPath: string };
     manifest.cfgPath = manifest.cfgPath.toUpperCase().replace(/\//g, '\\');

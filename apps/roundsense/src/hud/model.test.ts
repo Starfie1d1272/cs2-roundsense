@@ -126,7 +126,7 @@ describe('live HUD semantics', () => {
           player: {
             ...payload().player,
             team: 'CT',
-            state: { money: 5200, armor: 0, helmet: false, defusekit: false },
+            state: { money: 5600, armor: 0, helmet: false, defusekit: false },
             weapons: {},
           },
         }),
@@ -136,6 +136,11 @@ describe('live HUD semantics', () => {
     const full = out.options.find((o) => o.mode === 'FULL')!;
     expect(Array.isArray(full.conditionalAlternatives)).toBe(true);
     expect(full.conditionalAlternatives.length).toBeGreaterThan(0);
+    const kitAlt = full.conditionalAlternatives.find((alt) =>
+      alt.purchases.some((p) => p.item === 'defuse_kit'),
+    );
+    expect(kitAlt).toBeDefined();
+    expect(kitAlt!.spendDelta).toBe(400);
     for (const alt of full.conditionalAlternatives) {
       expect(typeof alt.condition).toBe('string');
       expect(typeof alt.reason).toBe('string');

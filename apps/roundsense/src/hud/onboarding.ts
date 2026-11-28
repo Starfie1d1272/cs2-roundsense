@@ -343,7 +343,7 @@ async function findConflictingGsiFiles(
 }
 
 function normalizedPathKey(cfgPath: string): string {
-  return normalize(cfgPath).toLowerCase();
+  return normalize(cfgPath).replace(/\\/g, '/').toLowerCase();
 }
 
 function pathHashFor(cfgPath: string): string {
