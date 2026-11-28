@@ -13,21 +13,22 @@
       "capabilities": [
         {
           "identifier": "overlay",
-          "description": "Local HUD overlay only: geometry lease command, no filesystem or dialog access.",
+          "description": "Geometry lease for the HUD window. Match the HTTP IPC origin and the fallback page URL.",
           "windows": ["overlay"],
           "remote": {
-            "urls": ["http://127.0.0.1:3100/overlay"]
+            "urls": ["http://127.0.0.1:3100/", "http://127.0.0.1:3100/overlay"]
           },
           "permissions": ["allow-set-overlay-state"]
         },
         {
           "identifier": "settings",
-          "description": "Local Settings window: native folder picker and directory open commands only.",
+          "description": "Local Settings window: HUD placement preview and native folder commands.",
           "windows": ["settings"],
           "remote": {
             "urls": ["http://127.0.0.1:3100/"]
           },
           "permissions": [
+            "allow-preview-overlay-geometry",
             "allow-pick-cs2-folder",
             "allow-open-directory",
             "allow-open-logs-dir"

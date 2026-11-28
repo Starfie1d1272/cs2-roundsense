@@ -3,6 +3,7 @@ fn main() {
         tauri_build::Attributes::new().app_manifest(
             tauri_build::AppManifest::new().commands(&[
                 "set_overlay_state",
+                "preview_overlay_geometry",
                 "pick_cs2_folder",
                 "open_directory",
                 "open_logs_dir",

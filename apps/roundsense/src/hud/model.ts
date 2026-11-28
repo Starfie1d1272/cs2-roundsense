@@ -1,6 +1,7 @@
 import {
   DEFAULT_RULES,
   fullUtilityTargetCash,
+  nextBuyTargetCash,
   type PolicyMode,
   type PolicyV3Output,
   type PolicyV3State,
@@ -10,7 +11,7 @@ import {
   recommendPolicyV3,
   type SpendingGuidance,
 } from '@roundsense/economy-advisor';
-import type { GsiReceipt } from '@roundsense/gsi-protocol';
+import type { GsiPayload, GsiReceipt } from '@roundsense/gsi-protocol';
 import type { ItemId } from '@roundsense/shared-types';
 import { inventoryFrom } from '../inventory.js';
 import { PolicyStateTracker } from '../policy-state.js';
@@ -30,6 +31,7 @@ export const DEFAULT_HUD_SETTINGS: HudSettings = {
 };
 
 export const HUD_STALE_AFTER_MS = 5_000;
+const POST_FREEZETIME_NS = 5_000_000_000n;
 
 export type HudHiddenReason =
   'awaiting' | 'stale' | 'not-playing' | 'not-self' | 'not-competitive' | 'outside-freezetime';
@@ -79,6 +81,7 @@ export interface HudSnapshot {
   revision: number;
   visible: boolean;
   hiddenReason: HudHiddenReason | null;
+  displayPhase: 'freezetime' | 'post-freezetime' | null;
   side: 'CT' | 'T' | null;
   round: number | null;
   money: number | null;
@@ -129,6 +132,18 @@ export function optionForRecommendation(
     cash: number | null,
     requireReachableWithNoSpend: boolean,
   ): HudFutureCapability => {
+    if (
+      cash !== null &&
+      side &&
+      policy.futureAffordability.status === 'NOT_APPLICABLE' &&
+      policy.futureAffordability.reason === 'POST_PISTOL_STRATEGY'
+    ) {
+      if (cash >= fullUtilityTargetCash(side)) return 'FULL_UTILITY';
+      if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR_BASIC_UTILITY'))
+        return 'RIFLE_ARMOR_BASIC_UTILITY';
+      if (cash >= nextBuyTargetCash(side, 'RIFLE_ARMOR')) return 'RIFLE_ARMOR';
+      return 'INSUFFICIENT';
+    }
     const matched =
       cash === null
         ? []
@@ -184,12 +199,40 @@ export function optionForRecommendation(
   };
 }
 
-/** Owns GSI continuity; never caches a rendered recommendation across a gap. */
+type RoundAdvice = Pick<
+  HudSnapshot,
+  | 'money'
+  | 'lossIndex'
+  | 'roundContext'
+  | 'policyStatus'
+  | 'defaultOptionId'
+  | 'unresolved'
+  | 'options'
+>;
+
+function gameHiddenReason(payload: GsiPayload): HudHiddenReason | null {
+  if (
+    payload.map?.phase !== 'live' ||
+    payload.player?.activity !== 'playing' ||
+    payload.provider?.appid !== 730
+  )
+    return 'not-playing';
+  if (!payload.provider.steamid || payload.player.steamid !== payload.provider.steamid)
+    return 'not-self';
+  return payload.map.mode === 'competitive' ? null : 'not-competitive';
+}
+
+function playerSide(payload: GsiPayload | undefined): HudSnapshot['side'] {
+  const team = payload?.player?.team;
+  return team === 'CT' || team === 'T' ? team : null;
+}
+
+/** Owns GSI continuity and locks the first usable recommendation for each round. */
 export class HudRuntime {
   private tracker = new PolicyStateTracker();
   private receipt: GsiReceipt | null = null;
-  private policy: PolicyV3Output | null = null;
-  private state: PolicyV3State | null = null;
+  private round: number | null = null;
+  private advice: { key: string; content: RoundAdvice; holdUntilNs: bigint | null } | null = null;
   private identity = '';
   private revision = 0;
   private settings: HudSettings = { ...DEFAULT_HUD_SETTINGS };
@@ -205,28 +248,56 @@ export class HudRuntime {
         receipt.receivedAtMonotonicNs < this.receipt.receivedAtMonotonicNs ||
         receipt.receivedAtMonotonicNs - this.receipt.receivedAtMonotonicNs >
           BigInt(this.staleAfterMs) * 1_000_000n);
-    if (gap || id !== this.identity || this.integrityLost) this.tracker = new PolicyStateTracker();
+    if (gap || id !== this.identity || this.integrityLost) {
+      this.tracker = new PolicyStateTracker();
+      this.advice = null;
+    }
     this.identity = id;
     this.integrityLost = false;
     this.receipt = receipt;
-    this.state = this.tracker.observe(receipt.payload, receipt.seq);
-    this.recalculate();
+    const state = this.tracker.observe(receipt.payload, receipt.seq);
+    this.round = state.round.number.value ?? null;
+    this.observeRoundAdvice(receipt, state);
     this.revision++;
   }
 
   updateSettings(settings: HudSettings): void {
     this.settings = { ...settings };
-    this.recalculate();
     this.revision++;
   }
 
-  private recalculate(): void {
-    this.policy = null;
-    if (!this.receipt) return;
-    if (!this.state) return;
+  private observeRoundAdvice(receipt: GsiReceipt, state: PolicyV3State): void {
+    const { payload } = receipt;
+    const side = playerSide(payload);
+    const key = JSON.stringify([payload.map?.name, this.round, side]);
+    const phase = payload.round?.phase;
+    if (
+      this.advice?.key !== key ||
+      payload.map?.phase !== 'live' ||
+      payload.map.mode !== 'competitive' ||
+      phase === 'over'
+    )
+      this.advice = null;
+
+    if (phase === 'live') {
+      if (this.advice && this.advice.content.policyStatus !== 'INSUFFICIENT_STATE') {
+        this.advice.holdUntilNs ??= receipt.receivedAtMonotonicNs + POST_FREEZETIME_NS;
+      }
+    } else if (phase === 'freezetime' && gameHiddenReason(payload) === null) {
+      if (!this.advice || this.advice.content.policyStatus === 'INSUFFICIENT_STATE') {
+        this.advice = { key, content: this.buildAdvice(receipt, state, side), holdUntilNs: null };
+      } else this.advice.holdUntilNs = null;
+    }
+  }
+
+  private buildAdvice(
+    receipt: GsiReceipt,
+    observed: PolicyV3State,
+    side: HudSnapshot['side'],
+  ): RoundAdvice {
     const state = {
-      ...this.state,
-      player: { ...this.state.player },
+      ...observed,
+      player: { ...observed.player },
       preference: {
         source:
           this.settings.awpPriority === 'NEUTRAL'
@@ -237,80 +308,74 @@ export class HudRuntime {
     };
     // A complete current inventory is required for a live purchasing card.
     // Never retain last round's inventory when the current payload omits it.
-    const current = inventoryFrom(this.receipt.payload);
+    const current = inventoryFrom(receipt.payload);
     if (!current)
       state.player.inventory = {
         status: 'UNKNOWN',
         source: 'current inventory',
-        asOfSeq: this.receipt.seq,
+        asOfSeq: receipt.seq,
         reason: 'incomplete current inventory',
       };
-    this.policy = recommendPolicyV3(state);
+    const policy = recommendPolicyV3(state);
+    const armor = current?.armor ?? 0;
+    const helmet = current?.hasHelmet ?? false;
+    const { money, lossIndex } = state.player;
+    const { context } = state.round;
+    return {
+      money: money.status === 'UNKNOWN' ? null : (money.value ?? null),
+      lossIndex: lossIndex.status === 'UNKNOWN' ? null : (lossIndex.value ?? null),
+      roundContext: context.status === 'UNKNOWN' ? null : (context.value ?? null),
+      policyStatus: policy.status,
+      defaultOptionId: policy.defaultOptionId ?? null,
+      unresolved: [...policy.unresolved],
+      options: side
+        ? policy.options.map((option) =>
+            optionForRecommendation(policy, option, armor, helmet, this.settings.awpPriority, side),
+          )
+        : [],
+    };
   }
 
   snapshot(nowNs: bigint): HudSnapshot {
     const payload = this.receipt?.payload;
-    let hiddenReason: HudHiddenReason | null = null;
-    if (!this.receipt) hiddenReason = 'awaiting';
-    else if (
-      nowNs < this.receipt.receivedAtMonotonicNs ||
-      nowNs - this.receipt.receivedAtMonotonicNs > BigInt(this.staleAfterMs) * 1_000_000n
+    let hiddenReason: HudHiddenReason | null = payload ? gameHiddenReason(payload) : 'awaiting';
+    let displayPhase: HudSnapshot['displayPhase'] = null;
+    if (
+      this.receipt &&
+      (nowNs < this.receipt.receivedAtMonotonicNs ||
+        nowNs - this.receipt.receivedAtMonotonicNs > BigInt(this.staleAfterMs) * 1_000_000n)
     ) {
       hiddenReason = 'stale';
       this.integrityLost = true;
-    } else if (
-      payload?.map?.phase !== 'live' ||
-      payload.player?.activity !== 'playing' ||
-      payload.provider?.appid !== 730
-    )
-      hiddenReason = 'not-playing';
-    else if (!payload.provider.steamid || payload.player.steamid !== payload.provider.steamid)
-      hiddenReason = 'not-self';
-    else if (payload.map.mode !== 'competitive') hiddenReason = 'not-competitive';
-    else if (payload.round?.phase !== 'freezetime') hiddenReason = 'outside-freezetime';
-
-    const side =
-      payload?.player?.team === 'CT' || payload?.player?.team === 'T' ? payload.player.team : null;
+    } else if (hiddenReason === null) {
+      if (payload?.round?.phase === 'freezetime') displayPhase = 'freezetime';
+      else if (
+        payload?.round?.phase === 'live' &&
+        this.advice?.holdUntilNs != null &&
+        nowNs < this.advice.holdUntilNs
+      )
+        displayPhase = 'post-freezetime';
+      else hiddenReason = 'outside-freezetime';
+    }
     const visible = hiddenReason === null;
-    const p = visible ? this.policy : null;
-    const armor = payload?.player?.state?.armor ?? 0;
-    const helmet = payload?.player?.state?.helmet ?? false;
-
-    const options =
-      visible && p && side
-        ? p.options.map((option) =>
-            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority, side),
-          )
-        : [];
-
-    const moneyFact = this.state?.player.money;
-    const lossFact = this.state?.player.lossIndex;
-    const contextFact = this.state?.round.context;
+    const content = visible ? this.advice?.content : null;
 
     return {
       version: 2,
       revision: this.revision,
       visible,
       hiddenReason,
-      side,
-      round: this.state?.round.number.value ?? null,
-      money:
-        visible && moneyFact?.status !== 'UNKNOWN' && moneyFact?.value !== undefined
-          ? moneyFact.value
-          : null,
-      lossIndex:
-        visible && lossFact?.status !== 'UNKNOWN' && lossFact?.value !== undefined
-          ? lossFact.value
-          : null,
-      roundContext:
-        visible && contextFact?.status !== 'UNKNOWN' && contextFact?.value !== undefined
-          ? contextFact.value
-          : null,
-      policyStatus: p?.status ?? null,
-      defaultOptionId: p?.defaultOptionId ?? null,
-      unresolved: p ? [...p.unresolved] : [],
+      displayPhase,
+      side: playerSide(payload),
+      round: this.round,
+      money: content?.money ?? null,
+      lossIndex: content?.lossIndex ?? null,
+      roundContext: content?.roundContext ?? null,
+      policyStatus: content?.policyStatus ?? null,
+      defaultOptionId: content?.defaultOptionId ?? null,
+      unresolved: content?.unresolved ?? [],
       settings: { ...this.settings },
-      options,
+      options: content?.options ?? [],
     };
   }
 }

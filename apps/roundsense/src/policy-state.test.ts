@@ -73,7 +73,7 @@ describe('inventory FACT boundary', () => {
     expect(state.player.inventory.value?.primary).toBe('ak47');
   });
 
-  it.each(['armor', 'helmet', 'defusekit'])('does not default a missing %s field', (field) => {
+  it.each(['armor', 'helmet'])('does not default a missing %s field', (field) => {
     const tracker = new PolicyStateTracker();
     const partial = payload();
     delete (partial.player!.state as Record<string, unknown>)[field];

@@ -103,7 +103,7 @@ describe('live HUD semantics', () => {
           player: {
             ...payload().player,
             team: 'T',
-            state: { money: 4500, armor: 100, helmet: false, defusekit: false },
+            state: { money: 4500, armor: 100, helmet: false },
             weapons: {},
           },
         }),
@@ -127,7 +127,7 @@ describe('live HUD semantics', () => {
           player: {
             ...payload().player,
             team: 'CT',
-            state: { money: 5600, armor: 0, helmet: false, defusekit: false },
+            state: { money: 5600, armor: 0, helmet: false },
             weapons: {},
           },
         }),
@@ -151,7 +151,7 @@ describe('live HUD semantics', () => {
     }
   });
 
-  it.each(['live', 'over', undefined])('hides outside explicit freezetime: %s', (phase) => {
+  it.each(['live', 'over', undefined])('does not open a HUD when first observed in %s', (phase) => {
     const runtime = new HudRuntime();
     runtime.observe(receipt(payload({ round: { phase } })));
     expect(runtime.snapshot(0n)).toMatchObject({
@@ -160,6 +160,53 @@ describe('live HUD semantics', () => {
       money: null,
       hiddenReason: 'outside-freezetime',
     });
+  });
+
+  it('keeps the opening strategy through purchases and hides five seconds after unfreeze', () => {
+    const runtime = new HudRuntime();
+    runtime.observe(receipt());
+    const opening = runtime.snapshot(0n);
+    const bought = payload();
+    bought.player!.state = { money: 650, armor: 100, helmet: true };
+    bought.player!.weapons = { rifle: { name: 'weapon_m4a1_silencer', type: 'Rifle' } };
+    runtime.observe(receipt(bought, 1, 200));
+    expect(runtime.snapshot(200_000_000n)).toMatchObject({
+      displayPhase: 'freezetime',
+      money: opening.money,
+      options: opening.options,
+    });
+
+    const live = { ...bought, round: { phase: 'live' } };
+    runtime.observe(receipt(live, 2, 1000));
+    runtime.observe(receipt(live, 3, 5700));
+    expect(runtime.snapshot(5_999_000_000n)).toMatchObject({
+      visible: true,
+      displayPhase: 'post-freezetime',
+      money: opening.money,
+      options: opening.options,
+    });
+    expect(runtime.snapshot(6_000_000_000n)).toMatchObject({
+      visible: false,
+      displayPhase: null,
+      options: [],
+    });
+  });
+
+  it('hides on a player switch or round end during the hold', () => {
+    for (const cut of [
+      payload({ round: { phase: 'over' } }),
+      payload({
+        round: { phase: 'live' },
+        player: { ...payload().player, steamid: '76561198000000002' },
+      }),
+    ]) {
+      const runtime = new HudRuntime();
+      runtime.observe(receipt());
+      runtime.observe(receipt(payload({ round: { phase: 'live' } }), 1, 100));
+      expect(runtime.snapshot(100_000_000n).visible).toBe(true);
+      runtime.observe(receipt(cut, 2, 200));
+      expect(runtime.snapshot(200_000_000n).visible).toBe(false);
+    }
   });
 
   it('expires without a new packet and never returns stale options', () => {
@@ -193,13 +240,22 @@ describe('live HUD semantics', () => {
     const runtime = new HudRuntime();
     runtime.observe(receipt());
     runtime.observe(
-      receipt(payload({ player: { ...payload().player, weapons: undefined } }), 1, 50),
+      receipt(
+        payload({
+          map: { ...payload().map, round: 9 },
+          player: { ...payload().player, weapons: undefined },
+        }),
+        1,
+        50,
+      ),
     );
     expect(runtime.snapshot(50_000_000n)).toMatchObject({
       visible: true,
       policyStatus: 'INSUFFICIENT_STATE',
       options: [],
     });
+    runtime.observe(receipt(payload({ map: { ...payload().map, round: 9 } }), 2, 100));
+    expect(runtime.snapshot(100_000_000n).policyStatus).toBe('READY');
   });
 
   it('reports missing loss state and pistol unsupported without made-up options', () => {
@@ -228,6 +284,24 @@ describe('live HUD semantics', () => {
     const runtime = new HudRuntime();
     lifecycle(runtime);
     expect(runtime.snapshot(300_000_000n).options.some((o) => o.mode === 'FULL')).toBe(true);
+  });
+
+  it('labels projected buying power for the post-pistol rifle and SMG choices', () => {
+    const runtime = new HudRuntime();
+    const opening = payload();
+    opening.map!.round = 0;
+    opening.player!.team = 'T';
+    runtime.observe(receipt(opening));
+    runtime.observe(receipt({ ...opening, round: { phase: 'live' } }, 1, 100));
+    const map = { ...opening.map, round: 1, team_t: { score: 1, consecutive_round_losses: 0 } };
+    runtime.observe(receipt({ ...opening, map, round: { phase: 'over', win_team: 'T' } }, 2, 200));
+    const player = { ...opening.player, state: { money: 5200, armor: 100, helmet: false } };
+    runtime.observe(receipt({ ...opening, map, player }, 3, 300));
+
+    expect(runtime.snapshot(300_000_000n).options).toMatchObject([
+      { spend: 4250, lossNextMoney: 2350, futureCapability: 'INSUFFICIENT' },
+      { spend: 2600, lossNextMoney: 4000, futureCapability: 'RIFLE_ARMOR' },
+    ]);
   });
 
   it('retains complete history when changing presentation settings', () => {
@@ -312,6 +386,7 @@ describe('live HUD semantics', () => {
     prefer.observe(receipt(atThreshold));
     expect(prefer.snapshot(0n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady).toBe(true);
 
+    belowThreshold.map!.round = 9;
     prefer.observe(receipt(belowThreshold, 1, 100));
     expect(
       prefer.snapshot(100_000_000n).options.find((o) => o.mode === 'PRESERVE')?.awpNextReady,

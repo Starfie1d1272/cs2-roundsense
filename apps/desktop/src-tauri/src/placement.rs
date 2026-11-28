@@ -8,7 +8,7 @@ pub struct Rect {
 
 /// Computes physical desktop coordinates for the HUD inside the CS2 client rect,
 /// supporting multi-monitor setups (including negative origins).
-/// Percentages match apps/roundsense/ui/hud.css (.pos-below-radar / .pos-lower-left / .pos-lower-right).
+/// Settings uses the same placement for the observed game client rectangle.
 pub fn place(game: Rect, width: i32, height: i32, position: &str) -> (i32, i32) {
     let padding = ((game.width as f64 * 0.02).round() as i32).max(12);
     let x = if position == "lower-right" {

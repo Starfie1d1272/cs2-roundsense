@@ -77,7 +77,11 @@ describe('HUD real HTTP pipeline', () => {
       body: JSON.stringify({ ...data, round: { phase: 'live' } }),
     });
     expect(live.status).toBe(204);
-    expect(s.snapshot()).toMatchObject({ visible: false, options: [] });
+    expect(s.snapshot()).toMatchObject({
+      visible: true,
+      displayPhase: 'post-freezetime',
+      options: snap.options,
+    });
   });
   it('allows same-origin settings and rejects external origins and malformed values', async () => {
     const s = await service();

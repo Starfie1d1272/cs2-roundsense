@@ -505,12 +505,11 @@ html, body {
 }
 
 .rs-cs2-stage {
+  --preview-ratio: 1.7777778;
   position: relative;
-  width: auto;
-  height: min(calc(100vh - 152px), 740px);
-  max-width: 100%;
-  aspect-ratio: 4 / 3;
-  border: 1px solid var(--border-rule);
+  width: min(100%, calc(clamp(180px, 100vh - 152px, 740px) * var(--preview-ratio)));
+  aspect-ratio: var(--preview-ratio);
+  outline: 1px solid var(--border-rule);
   overflow: hidden;
   user-select: none;
   background-color: var(--bg-inset);
@@ -518,28 +517,10 @@ html, body {
   background-position: center;
 }
 
-.rs-cs2-stage.aspect-16-10 {
-  width: 100%;
-  height: auto;
-  max-height: calc(100vh - 152px);
-  aspect-ratio: 16 / 10;
-  background-size: cover;
-  background-position: center top;
-}
-
-.rs-cs2-stage.aspect-16-9 {
-  width: 100%;
-  height: auto;
-  max-height: calc(100vh - 152px);
-  aspect-ratio: 16 / 9;
-  background-size: cover;
-  background-position: center top;
-}
-
 .rs-hud-anchor {
   position: absolute;
   z-index: 10;
-  transform: scale(var(--hud-scale));
+  transform: scale(var(--preview-hud-scale, 1));
 }
 
 .rs-hud-anchor.pos-below-radar {
@@ -558,6 +539,11 @@ html, body {
   bottom: 16%;
   right: 2%;
   transform-origin: bottom right;
+}
+
+.rs-hud-anchor.is-game-position {
+  inset: var(--preview-y) auto auto var(--preview-x);
+  transform-origin: top left;
 }
 
 .rs-stage-footer {
@@ -927,10 +913,6 @@ input[type="range"]::-moz-range-thumb {
     padding: 16px;
   }
 
-  .rs-cs2-stage {
-    max-height: none;
-  }
-
   .rs-rail {
     padding: 18px 16px;
   }
@@ -938,30 +920,5 @@ input[type="range"]::-moz-range-thumb {
   .rs-stage-footer {
     flex-direction: column;
     align-items: flex-start;
-  }
-}
-
-@media (max-width: 720px) {
-  .rs-cs2-stage {
-    aspect-ratio: auto;
-    min-height: 300px;
-    padding: 18px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .rs-cs2-stage {
-    width: 100%;
-    height: auto;
-    background-size: cover;
-  }
-
-  .rs-hud-anchor,
-  .rs-hud-anchor.pos-below-radar,
-  .rs-hud-anchor.pos-lower-left,
-  .rs-hud-anchor.pos-lower-right {
-    position: static;
-    transform-origin: center center;
   }
 }

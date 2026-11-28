@@ -1,5 +1,5 @@
 use crate::placement::{place, Rect};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, State, WebviewWindow};
@@ -16,6 +16,7 @@ pub struct OverlayRequest {
 struct Lease {
     request: Option<OverlayRequest>,
     renewed: Instant,
+    viewport: Option<(Rect, f64)>,
 }
 
 pub struct OverlayHost(Mutex<Lease>);
@@ -25,6 +26,7 @@ impl OverlayHost {
         Self(Mutex::new(Lease {
             request: None,
             renewed: Instant::now(),
+            viewport: None,
         }))
     }
 }
@@ -38,20 +40,66 @@ pub fn set_overlay_state(
     if window.label() != "overlay" {
         return Err("invalid caller".into());
     }
-    if !request.width.is_finite()
-        || !request.height.is_finite()
-        || !request.scale.is_finite()
-        || !(100.0..=420.0).contains(&request.width)
+    validate_geometry(&request)?;
+    let mut lease = state.0.lock().map_err(|_| "overlay host unavailable")?;
+    lease.request = Some(request);
+    lease.renewed = Instant::now();
+    Ok(())
+}
+
+fn validate_geometry(request: &OverlayRequest) -> Result<(), String> {
+    if !(100.0..=420.0).contains(&request.width)
         || !(40.0..=640.0).contains(&request.height)
         || !(0.8..=1.5).contains(&request.scale)
         || !["below-radar", "lower-left", "lower-right"].contains(&request.position.as_str())
     {
         return Err("invalid overlay geometry".into());
     }
-    let mut lease = state.0.lock().map_err(|_| "overlay host unavailable")?;
-    lease.request = Some(request);
-    lease.renewed = Instant::now();
     Ok(())
+}
+
+fn overlay_geometry(game: Rect, dpi: f64, request: &OverlayRequest) -> (i32, i32, i32, i32) {
+    let width = (request.width * request.scale * dpi).ceil() as i32;
+    let height = (request.height * request.scale * dpi).ceil() as i32;
+    let (x, y) = place(game, width, height, &request.position);
+    (x, y, width, height)
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewGeometry {
+    game_width: i32,
+    game_height: i32,
+    x: i32,
+    y: i32,
+    dpi: f64,
+}
+
+#[tauri::command]
+pub fn preview_overlay_geometry(
+    window: WebviewWindow,
+    state: State<'_, OverlayHost>,
+    request: OverlayRequest,
+) -> Result<Option<PreviewGeometry>, String> {
+    if window.label() != "settings" {
+        return Err("invalid caller".into());
+    }
+    validate_geometry(&request)?;
+    let viewport = state
+        .0
+        .lock()
+        .map_err(|_| "overlay host unavailable")?
+        .viewport;
+    Ok(viewport.map(|(game, dpi)| {
+        let (x, y, _, _) = overlay_geometry(game, dpi, &request);
+        PreviewGeometry {
+            game_width: game.width,
+            game_height: game.height,
+            x: x - game.x,
+            y: y - game.y,
+            dpi,
+        }
+    }))
 }
 
 /// Queries foreground window identity and client geometry only; never reads game memory.
@@ -144,11 +192,12 @@ pub fn spawn_tracker(handle: AppHandle) {
             };
             if let Some(game) = foreground_cs2() {
                 let dpi = window.scale_factor().unwrap_or(1.0);
-                let width = (request.width * request.scale * dpi).ceil() as i32;
-                let height = (request.height * request.scale * dpi).ceil() as i32;
-                let (x, y) = place(game, width, height, &request.position);
-                let geometry = (x, y, width, height);
+                if let Ok(mut lease) = state.0.lock() {
+                    lease.viewport = Some((game, dpi));
+                }
+                let geometry = overlay_geometry(game, dpi, &request);
                 if last_geometry != Some(geometry) {
+                    let (x, y, _, _) = geometry;
                     let _ = window.set_position(PhysicalPosition::new(x, y));
                     let _ = window.set_size(LogicalSize::new(
                         request.width * request.scale,

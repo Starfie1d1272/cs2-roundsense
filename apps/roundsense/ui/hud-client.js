@@ -21,14 +21,13 @@
     // Avoid sending 2/s hidden-state IPC pings when the native overlay is already hidden.
     if (!visible && lastReportedVisible === false) return;
     nativePending = true;
-    const rect = hud.getBoundingClientRect();
+    const size = visible ? window.RoundSenseHud.measure(hud) : { width: 264, height: 84 };
     const scale = latest?.settings?.scale ?? 1;
     try {
       await invoke('set_overlay_state', {
         request: {
           visible,
-          width: Math.ceil(rect.width / scale || 264),
-          height: Math.ceil(rect.height / scale || 84),
+          ...size,
           scale,
           position: latest?.settings?.position ?? 'below-radar',
         },

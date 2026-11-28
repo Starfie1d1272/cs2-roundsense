@@ -3,7 +3,7 @@
 [简体中文](README.md) | **English**
 
 **A read-only, zero-injection CS2 freezetime economy decision HUD.**  
-During every 15-second freezetime, RoundSense appears below your radar so you can answer three high-leverage questions in a 1–2 second glance: **how much is this round worth spending, what can I buy within that budget, and if we lose, can I still full-buy next round?** It hides automatically once the round goes live.
+During freezetime, RoundSense appears below your radar so you can answer three questions in a 1–2 second glance: **how much is this round worth spending, what can I buy within that budget, and if we lose, can I still full-buy next round?** The opening plan stays fixed through purchases and disappears five seconds after freezetime ends.
 
 ---
 
@@ -88,7 +88,7 @@ What does that look like in a real match?
 
 - **Portable & ready to run**: The Windows portable ZIP bundles a self-contained Node runtime and local backend—no Node, pnpm, or Rust installation required.
 - **Strictly read-only & VAC-safe**: Uses only CS2’s official local HTTP Game State Integration (`127.0.0.1:3001`) and read-only Win32 window geometry. **Never reads or writes game memory, and never injects into `cs2.exe`.**
-- **Honest boundaries**: Never fabricates exact opponent cash or uncalibrated C4 countdown timers. Automatically hides outside freezetime, while spectating, on Alt+Tab, or when GSI data goes stale.
+- **Honest boundaries**: Never fabricates exact opponent cash or uncalibrated C4 countdown timers. Automatically hides while spectating, on Alt+Tab, or when GSI data goes stale.
 - **Three economy roles**: Supports **Rifler**, **AWPer**, and **Jame Save-for-AWP** (adds an ECO save line when saving unlocks AWP + Kevlar next round).
 - **One-click GSI setup & offline preview**: Auto-discovers your Steam / CS2 folder, detects same-port GSI conflicts, backs up existing configs, and lets you tune HUD position, scale, and opacity against bright/dark offline CS2 scenes before launching the game.
 - **Quiet desktop utility**: Single-instance, minimizes to system tray, click-through overlay that never steals focus, and cleans up background processes cleanly via Windows Job Objects.
@@ -108,7 +108,7 @@ What does that look like in a real match?
 2. Run `RoundSense.exe` to open the Settings & Preview window.
 3. In the right-hand **Game Integration & Connection** panel, click **One-Click Install GSI Config** (or click **Browse…** if CS2 is in a custom library).
 4. Adjust HUD placement (below radar / lower-left / lower-right), scale, opacity, and economy role—changes preview live and auto-save immediately.
-5. Launch (or restart) CS2 into Competitive mode. The HUD appears during freezetime and hides automatically when the round starts or when you Alt+Tab.
+5. Launch (or restart) CS2 into Competitive mode. The HUD appears during freezetime and hides five seconds after it ends or when you Alt+Tab.
 6. Close the Settings window anytime to keep RoundSense running quietly in the system tray; right-click the tray icon and choose **Quit RoundSense** to exit completely.
 
 ---

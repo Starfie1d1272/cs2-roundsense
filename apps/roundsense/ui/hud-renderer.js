@@ -332,7 +332,7 @@
       const left = document.createElement('span');
       left.textContent = anchorText;
       const right = document.createElement('span');
-      right.textContent = '回合开始后自动隐藏';
+      right.textContent = '解冻 5 秒后隐藏';
       foot.append(left, right);
 
       container.append(empty, foot);
@@ -480,6 +480,10 @@
 
   window.RoundSenseHud = {
     render: renderHud,
+    measure(container) {
+      const { width, height } = getComputedStyle(container);
+      return { width: Math.ceil(parseFloat(width)), height: Math.ceil(parseFloat(height)) };
+    },
     formatMoney,
     MODE_NAMES,
     ITEM_NAMES,
