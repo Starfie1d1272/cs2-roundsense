@@ -112,11 +112,23 @@
     const baseSnap = useLive ? liveSnapshot : previewSnapshot;
     if (!baseSnap) return;
 
-    const snap = { ...baseSnap, settings: { ...currentSettings } };
+    const previewSaveAwpOverride =
+      !useLive &&
+      activeScenario === 'ct-save-awp' &&
+      currentSettings.awpPriority !== 'SAVE_FOR_AWP';
+    const effectiveSettings = previewSaveAwpOverride
+      ? { ...currentSettings, awpPriority: 'SAVE_FOR_AWP' }
+      : { ...currentSettings };
+    const snap = { ...baseSnap, settings: effectiveSettings };
     window.RoundSenseHud.render(hudPreview, snap, { forceShow: true, skipRootVars: true });
 
-    previewSourceBadge.textContent = useLive ? '实时对局接入' : 'Policy V3 预览';
+    previewSourceBadge.textContent = useLive
+      ? '实时对局接入'
+      : previewSaveAwpOverride
+        ? '按「Jame 攒狙」预览'
+        : 'Policy V3 预览';
     previewSourceBadge.classList.toggle('is-live', Boolean(useLive));
+    previewSourceBadge.classList.toggle('is-preview-override', Boolean(previewSaveAwpOverride));
   }
 
   async function refreshPreviewSnapshot() {
@@ -125,11 +137,15 @@
       return;
     }
     const seq = ++previewSeq;
+    const effectiveAwpPriority =
+      activeScenario === 'ct-save-awp' && currentSettings.awpPriority !== 'SAVE_FOR_AWP'
+        ? 'SAVE_FOR_AWP'
+        : currentSettings.awpPriority;
     const url =
       '/preview?scenario=' +
       encodeURIComponent(activeScenario) +
       '&awpPriority=' +
-      encodeURIComponent(currentSettings.awpPriority);
+      encodeURIComponent(effectiveAwpPriority);
     try {
       const res = await fetch(url);
       if (!res.ok) return;
@@ -219,6 +235,8 @@
       gsiStateLabel.className = 'rs-status-val ok';
       gsiSummary.textContent = '配置已安装并校验一致，正常启动 CS2 即可自动生效。';
       gsiManualBox.hidden = true;
+      gsiManualToggle.hidden = false;
+      gsiManualToggle.textContent = '指定目录';
       gsiSecondaryActions.hidden = !status.canRestore;
       return;
     }
@@ -235,6 +253,8 @@
         : '已定位到 CS2 安装目录，点击下方按钮一键写入配置。';
       gsiPrimaryBtn.textContent = mismatch ? '一键修复 GSI 配置' : '一键安装 GSI 配置';
       gsiPrimaryBtn.hidden = false;
+      gsiManualToggle.hidden = false;
+      gsiManualToggle.textContent = gsiManualBox.hidden ? '指定目录' : '收起输入';
       return;
     }
 
@@ -242,10 +262,14 @@
       gsiDot.className = 'rs-dot err';
       gsiStateLabel.textContent = '未找到 CS2 目录';
       gsiStateLabel.className = 'rs-status-val err';
-      gsiSummary.textContent = '未自动检测到 Counter-Strike 2，请在下方手动输入安装根目录。';
+      gsiSummary.textContent = '未自动检测到 Counter-Strike 2，请在下方输入或选择安装目录。';
       gsiManualBox.hidden = false;
+      gsiManualToggle.hidden = true;
       return;
     }
+
+    gsiManualToggle.hidden = false;
+    gsiManualToggle.textContent = gsiManualBox.hidden ? '指定目录' : '收起输入';
 
     gsiDot.className = 'rs-dot err';
     gsiStateLabel.textContent = '配置异常';
@@ -433,6 +457,7 @@
   gsiRestoreBtn.addEventListener('click', () => void runGsiMutation('/gsi/restore', {}));
   gsiManualToggle.addEventListener('click', () => {
     gsiManualBox.hidden = !gsiManualBox.hidden;
+    gsiManualToggle.textContent = gsiManualBox.hidden ? '指定目录' : '收起输入';
     if (!gsiManualBox.hidden) manualPathInput.focus();
   });
   manualApplyBtn.addEventListener('click', () => {

@@ -48,7 +48,7 @@ export interface HudConditionalAlternative {
 }
 
 export type HudFutureCapability =
-  'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
+  'FULL_UTILITY' | 'RIFLE_ARMOR_BASIC_UTILITY' | 'RIFLE_ARMOR' | 'INSUFFICIENT' | 'NOT_EVALUATED';
 
 export interface HudOption {
   id: string;
@@ -96,6 +96,20 @@ function mapPurchases(
 }
 
 const AWP_ARMOR_THRESHOLD = price(DEFAULT_RULES, 'awp') + price(DEFAULT_RULES, 'kevlar');
+const FULL_UTILITY_THRESHOLD_CT =
+  price(DEFAULT_RULES, 'm4a1s') +
+  price(DEFAULT_RULES, 'kevlar') +
+  price(DEFAULT_RULES, 'defuse_kit') +
+  price(DEFAULT_RULES, 'smoke') +
+  price(DEFAULT_RULES, 'incendiary') +
+  price(DEFAULT_RULES, 'he');
+const FULL_UTILITY_THRESHOLD_T =
+  price(DEFAULT_RULES, 'ak47') +
+  price(DEFAULT_RULES, 'kevlar_helmet') +
+  price(DEFAULT_RULES, 'smoke') +
+  price(DEFAULT_RULES, 'molotov') +
+  price(DEFAULT_RULES, 'flash') +
+  price(DEFAULT_RULES, 'he');
 
 export function optionForRecommendation(
   policy: PolicyV3Output,
@@ -103,6 +117,7 @@ export function optionForRecommendation(
   armor: number,
   helmet: boolean,
   awpPriority: HudSettings['awpPriority'] = 'NEUTRAL',
+  side?: 'CT' | 'T',
 ): HudOption {
   const capabilityToProtect =
     'protectedCapability' in option.spendingGuidance
@@ -121,15 +136,22 @@ export function optionForRecommendation(
       : policy.futureAffordability.boundaries.filter(
           (b) => b.reachableWithNoSpend && lossNextMoney >= b.targetCash,
         );
-  const futureCapability: HudFutureCapability = affordable.some(
-    (b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY',
-  )
-    ? 'RIFLE_ARMOR_BASIC_UTILITY'
-    : affordable.length > 0
-      ? 'RIFLE_ARMOR'
-      : policy.futureAffordability.status === 'PROJECTED'
-        ? 'INSUFFICIENT'
-        : 'NOT_EVALUATED';
+  const fullUtilityThreshold =
+    side === 'CT' ? FULL_UTILITY_THRESHOLD_CT : side === 'T' ? FULL_UTILITY_THRESHOLD_T : null;
+  const hasBasicUtility = affordable.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
+  const futureCapability: HudFutureCapability =
+    hasBasicUtility &&
+    fullUtilityThreshold !== null &&
+    lossNextMoney !== null &&
+    lossNextMoney >= fullUtilityThreshold
+      ? 'FULL_UTILITY'
+      : hasBasicUtility
+        ? 'RIFLE_ARMOR_BASIC_UTILITY'
+        : affordable.length > 0
+          ? 'RIFLE_ARMOR'
+          : policy.futureAffordability.status === 'PROJECTED'
+            ? 'INSUFFICIENT'
+            : 'NOT_EVALUATED';
 
   return {
     id: option.id,
@@ -249,7 +271,7 @@ export class HudRuntime {
     const options =
       visible && p && side
         ? p.options.map((option) =>
-            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority),
+            optionForRecommendation(p, option, armor, helmet, this.settings.awpPriority, side),
           )
         : [];
 

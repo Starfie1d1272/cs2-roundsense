@@ -113,6 +113,8 @@ describe('engine runtime gates', () => {
     const missing = payload();
     missing.map!.team_ct = { score: 2 };
     missing.map!.team_t = { score: 3 };
-    expect(tick(missing, { seq: 1 })?.policy.status).toBe('INSUFFICIENT_STATE');
+    const res = tick(missing, { seq: 1 });
+    expect(res?.policy.status).toBe('READY');
+    expect(res?.policy.futureAffordability.status).toBe('UNKNOWN');
   });
 });

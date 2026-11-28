@@ -90,7 +90,8 @@ describe('V3 engine integration', () => {
       map: { name: 'de_mirage', round: 2, team_ct: { score: 1 }, team_t: { score: 0 } },
     });
     const out = tick(payload, { seq: 1 });
-    expect(out?.policy.status).toBe('INSUFFICIENT_STATE');
+    expect(out?.policy.status).toBe('READY');
+    expect(out?.policy.options.every((o) => o.trajectory.length === 0)).toBe(true);
     expect(out?.policy.unresolved.join(' ')).toContain('consecutive_round_losses');
   });
 

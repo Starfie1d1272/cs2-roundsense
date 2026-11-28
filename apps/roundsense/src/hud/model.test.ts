@@ -67,7 +67,7 @@ describe('live HUD semantics', () => {
     expect(out.roundContext).toBe('NORMAL');
     expect(out.policyStatus).toBe('READY');
     expect(out.defaultOptionId).toBeNull();
-    expect(out.options.map((o) => o.mode)).toEqual(['FORCE', 'LIGHT', 'PRESERVE']);
+    expect(out.options.map((o) => o.mode)).toEqual(['LIGHT', 'PRESERVE', 'FORCE']);
 
     const light = out.options.find((o) => o.mode === 'LIGHT')!;
     expect(light.id).toBeTruthy();
@@ -90,6 +90,7 @@ describe('live HUD semantics', () => {
     expect(preserve).toMatchObject({
       spend: 0,
       lossNextMoney: 5350,
+      futureCapability: 'FULL_UTILITY',
       purchases: [],
     });
   });
@@ -204,11 +205,14 @@ describe('live HUD semantics', () => {
   it('reports missing loss state and pistol unsupported without made-up options', () => {
     const missingLoss = new HudRuntime();
     missingLoss.observe(receipt(payload({ map: { ...payload().map, team_ct: { score: 4 } } })));
-    expect(missingLoss.snapshot(0n)).toMatchObject({
+    const missingSnap = missingLoss.snapshot(0n);
+    expect(missingSnap).toMatchObject({
       visible: true,
-      policyStatus: 'INSUFFICIENT_STATE',
-      options: [],
+      policyStatus: 'READY',
+      lossIndex: null,
     });
+    expect(missingSnap.options.length).toBeGreaterThan(0);
+    expect(missingSnap.options.every((o) => o.lossNextMoney === null)).toBe(true);
 
     const pistol = new HudRuntime();
     pistol.observe(receipt(payload({ map: { ...payload().map, round: 1 } })));
