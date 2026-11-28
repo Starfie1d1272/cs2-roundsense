@@ -97,7 +97,7 @@
     const fit = stageEl.clientWidth / width;
     hudAnchor.style.setProperty(
       '--preview-hud-scale',
-      String(currentSettings.scale * fit * (game?.dpi ?? 1)),
+      String(currentSettings.scale * window.RoundSenseHud.BASE_SCALE * fit * (game?.dpi ?? 1)),
     );
     hudAnchor.classList.toggle('is-game-position', Boolean(game));
     if (game) {

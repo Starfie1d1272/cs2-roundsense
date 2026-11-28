@@ -23,6 +23,7 @@
   --danger: #F87171;
   --hud-opacity: 0.84;
   --hud-scale: 1;
+  --hud-base-scale: 1.2;
 }
 
 *, *::before, *::after {
@@ -63,7 +64,7 @@ html, body {
 
 .overlay-page .rs-hud {
   transform-origin: top left;
-  transform: scale(var(--hud-scale));
+  transform: scale(calc(var(--hud-scale) * var(--hud-base-scale)));
 }
 
 /* =========================================================

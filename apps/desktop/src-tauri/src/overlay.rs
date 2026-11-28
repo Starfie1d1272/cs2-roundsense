@@ -58,9 +58,16 @@ fn validate_geometry(request: &OverlayRequest) -> Result<(), String> {
     Ok(())
 }
 
+const HUD_BASE_SCALE: f64 = 1.2;
+
+fn effective_scale(request: &OverlayRequest) -> f64 {
+    request.scale * HUD_BASE_SCALE
+}
+
 fn overlay_geometry(game: Rect, dpi: f64, request: &OverlayRequest) -> (i32, i32, i32, i32) {
-    let width = (request.width * request.scale * dpi).ceil() as i32;
-    let height = (request.height * request.scale * dpi).ceil() as i32;
+    let scale = effective_scale(request);
+    let width = (request.width * scale * dpi).ceil() as i32;
+    let height = (request.height * scale * dpi).ceil() as i32;
     let (x, y) = place(game, width, height, &request.position);
     (x, y, width, height)
 }
@@ -244,9 +251,10 @@ pub fn spawn_tracker(handle: AppHandle) {
                 if last_geometry != Some(geometry) {
                     let (x, y, _, _) = geometry;
                     let _ = window.set_position(PhysicalPosition::new(x, y));
+                    let scale = effective_scale(&request);
                     let _ = window.set_size(LogicalSize::new(
-                        request.width * request.scale,
-                        request.height * request.scale,
+                        request.width * scale,
+                        request.height * scale,
                     ));
                     last_geometry = Some(geometry);
                 }

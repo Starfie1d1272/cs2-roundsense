@@ -479,6 +479,7 @@
   }
 
   window.RoundSenseHud = {
+    BASE_SCALE: 1.2,
     render: renderHud,
     measure(container) {
       if (!container) return { width: 264, height: 84 };
