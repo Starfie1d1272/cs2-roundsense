@@ -1,5 +1,6 @@
 import {
   DEFAULT_RULES,
+  fullUtilityTargetCash,
   price,
   recommendPolicyV3,
   type PolicyMode,
@@ -96,20 +97,6 @@ function mapPurchases(
 }
 
 const AWP_ARMOR_THRESHOLD = price(DEFAULT_RULES, 'awp') + price(DEFAULT_RULES, 'kevlar');
-const FULL_UTILITY_THRESHOLD_CT =
-  price(DEFAULT_RULES, 'm4a1s') +
-  price(DEFAULT_RULES, 'kevlar') +
-  price(DEFAULT_RULES, 'defuse_kit') +
-  price(DEFAULT_RULES, 'smoke') +
-  price(DEFAULT_RULES, 'incendiary') +
-  price(DEFAULT_RULES, 'he');
-const FULL_UTILITY_THRESHOLD_T =
-  price(DEFAULT_RULES, 'ak47') +
-  price(DEFAULT_RULES, 'kevlar_helmet') +
-  price(DEFAULT_RULES, 'smoke') +
-  price(DEFAULT_RULES, 'molotov') +
-  price(DEFAULT_RULES, 'flash') +
-  price(DEFAULT_RULES, 'he');
 
 export function optionForRecommendation(
   policy: PolicyV3Output,
@@ -136,8 +123,7 @@ export function optionForRecommendation(
       : policy.futureAffordability.boundaries.filter(
           (b) => b.reachableWithNoSpend && lossNextMoney >= b.targetCash,
         );
-  const fullUtilityThreshold =
-    side === 'CT' ? FULL_UTILITY_THRESHOLD_CT : side === 'T' ? FULL_UTILITY_THRESHOLD_T : null;
+  const fullUtilityThreshold = side ? fullUtilityTargetCash(side) : null;
   const hasBasicUtility = affordable.some((b) => b.capability === 'RIFLE_ARMOR_BASIC_UTILITY');
   const futureCapability: HudFutureCapability =
     hasBasicUtility &&

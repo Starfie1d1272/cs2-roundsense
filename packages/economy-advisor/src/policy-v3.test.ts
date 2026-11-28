@@ -1020,4 +1020,52 @@ describe('Policy V3 deterministic core', () => {
     expect(out.options[0]?.bundleSpend).toBe(0);
     expect(out.options[0]?.conditionalAlternatives).toEqual([]);
   });
+
+  it('swaps newly bought HE for a second flash correctly when 1 flash is already retained', () => {
+    const current = state({
+      round: {
+        ...state().round,
+        number: observed(6),
+        side: observed('T'),
+        context: observed('NORMAL'),
+      },
+    });
+    current.player.money = observed(5000);
+    current.player.inventory = observed({
+      primary: 'ak47',
+      armor: 100,
+      hasHelmet: true,
+      hasDefuseKit: false,
+      grenades: ['flash'],
+    });
+    const out = recommendPolicyV3(current);
+    const full = out.options.find((o) => o.mode === 'FULL')!;
+    expect(full.bundleSpend).toBe(1000);
+    const swap = full.conditionalAlternatives.find((a) => a.condition === '手雷换闪');
+    expect(swap).toBeDefined();
+    expect(swap?.bundleSpend).toBe(900);
+    expect(swap?.purchases).toContainEqual({ item: 'flash', quantity: 1 });
+  });
+
+  it('does not emit a $0 FORCE when a retained SMG loadout needs no purchases', () => {
+    const current = state({
+      round: {
+        ...state().round,
+        number: observed(6),
+        side: observed('CT'),
+        context: observed('NORMAL'),
+      },
+    });
+    current.player.money = observed(1500);
+    current.player.inventory = observed({
+      primary: 'mp9',
+      armor: 100,
+      hasHelmet: true,
+      hasDefuseKit: true,
+      grenades: ['smoke', 'incendiary', 'he', 'flash'],
+    });
+    const out = recommendPolicyV3(current);
+    expect(out.options.some((o) => o.mode === 'FORCE' && o.bundleSpend === 0)).toBe(false);
+    expect(out.options.map((o) => o.mode)).toEqual(['PRESERVE']);
+  });
 });

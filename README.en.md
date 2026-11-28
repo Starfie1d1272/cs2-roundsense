@@ -26,7 +26,7 @@ Most CS2 buy helpers either dictate a single rigid loadout or hook into the game
 
 The live overlay contains only what you need to decide in a glance—zero prose, zero clutter:
 
-- **Mode column**: Lists every viable option for your current bank (`Full`, `Force`, `Light`, `ECO`, `AWP`) at equal weight, highlighting a default only when pro-level logic strongly converges.
+- **Mode column**: Shows only the most meaningful buy options (`Full`, `Force`, `Light`, `ECO`, `AWP`) alongside their next-round consequences—no redundant force row when a clean full buy is available.
 - **Spend column**: Shows exact cost for fixed buys, or a **spend cap (e.g. `≤ $1,300`)** paired with a suggested loadout cost (`$1,150`) for flexible light buys so you can adapt to your spawn and team call.
 - **Gear silhouettes**: Native CS2 weapon, armor (including standalone `+helmet` upgrades), defuse kit, and utility icons, plus dashed conditional notes when relevant (e.g. swapping a utility slot or picking up a kit if teammates lack one).
 - **Post-loss cash & next-round capability**: Projects your conservative next-round cash (loss without plant or extra kills) and color-codes what you can afford:
@@ -35,6 +35,20 @@ The live overlay contains only what you need to decide in a glance—zero prose,
   - **Amber (Rifle + Armor)**: Enough for rifle + armor only, with almost no utility budget.
   - **Slate (Insufficient)**: Spending this much risks breaking your next-round rifle buy.
   - **T-side `+Plant`**: Also shows your post-loss cash with a bomb plant bonus.
+
+---
+
+## Pro Match Replay Validation (IEM Cologne Major 2026)
+
+We replayed RoundSense offline across **202 maps and 25,748 valid freezetime decisions** from IEM Cologne Major 2026 (covering both fresh buys and retained-gear rounds, using only normal-player GSI observable fields) and compared it against a naive buy-what-you-can baseline:
+
+![RoundSense IEM Cologne Major 2026 Offline Replay Validation](docs/assets/cologne-validation.png)
+
+- **Main weapon family match**: **70.9%** vs. 61.2% naive (**+9.7%** overall; **+14.2%** on fresh buys).
+- **CT helmet vs. utility match**: **80.9%** vs. 66.8% naive (**+14.1%**).
+- **Fresh-buy primary spend MAE**: **$577** vs. $661 naive (**−$84 / −12.7%**), with **0** over-budget, illegal, or duplicate suggestions and an average of **1.62** options per round.
+- Reproducible script: [cologne-replay-benchmark.ts](scripts/cologne-replay-benchmark.ts) · Machine-readable metrics & real pro cases: [cologne-replay-benchmark.json](docs/data/cologne-replay-benchmark.json).
+- *Note: Historical freezetime replay on the study corpus; behavioral alignment measures decision proximity rather than win-rate guarantees.*
 
 ---
 
@@ -69,8 +83,8 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 ## FAQ
 
-**Q: Can RoundSense trigger VAC?**  
-No. RoundSense relies exclusively on Valve’s official local Game State Integration (GSI) HTTP feed and an external transparent overlay window. It **never reads/modifies game memory and never injects DLLs into `cs2.exe`**.
+**Q: How does RoundSense interact with CS2, and what are its safety boundaries?**  
+RoundSense relies exclusively on Valve’s official local Game State Integration (GSI) HTTP feed and renders an external transparent OS overlay window. It **never reads or writes game memory, never injects DLLs into `cs2.exe`, never hooks game rendering, and never simulates keyboard/mouse input**. While no third-party tool can speak for Valve with an absolute guarantee, RoundSense is strictly engineered to stay within official read-only boundaries.
 
 **Q: Why does CS2 need to be in Fullscreen Windowed mode?**  
 Because RoundSense refuses to inject into the game process, the HUD renders as a separate transparent OS window. Exclusive fullscreen lets the display driver bypass desktop windows, whereas Fullscreen Windowed displays the overlay cleanly with zero injection.

@@ -217,6 +217,15 @@ function paidPistolFor(side: Side): ItemId {
   return side === 'T' ? 'tec9' : 'fiveseven';
 }
 
+/**
+ * Unified canonical full-utility target cash derived directly from the planner's
+ * side rifle, base armor, and top 4-grenade combo (CT $4,850, T $4,900).
+ */
+export function fullUtilityTargetCash(side: Side): number {
+  const items: ItemId[] = [rifleFor(side), baseArmorFor(side), ...UTILITY_COMBOS[side][0]!];
+  return items.reduce((total, item) => total + price(DEFAULT_RULES, item), 0);
+}
+
 function effectiveGrenadeCount(loadout: PostLoadout): number {
   return loadout.grenades.filter((g) => EFFECTIVE_GRENADES.has(g)).length;
 }
@@ -379,28 +388,26 @@ function planLoadout(
     return tryCore(options.targetPrimary);
   }
 
+  const tryRetainedTopUp = (): PurchasePlan | null => {
+    const withArmor = tryCore();
+    if (withArmor) return withArmor;
+    if (requireArmor) return null;
+    const utilOnly = planPurchases(
+      inventory,
+      compact(utilityBundle(side, inventory, budget)),
+      DEFAULT_RULES,
+      side,
+    );
+    return utilOnly.isComplete && utilOnly.totalCost <= budget ? utilOnly : null;
+  };
+
   const retained = inventory.primary;
   const hasRetainedRifleOrAwp = hasMainRifleOrAwp(retained) || hasEcoRifle(retained);
   const hasRetainedSmg =
     retained !== null && retained !== undefined && weaponClassOf(retained) === 'smg';
 
-  // 2. Retained rifle or AWP: keep weapon, top up armor + utility.
-  if (hasRetainedRifleOrAwp) {
-    const plan = tryCore();
-    if (plan) return plan;
-    if (!requireArmor) {
-      const utilOnly = planPurchases(
-        inventory,
-        compact(utilityBundle(side, inventory, budget)),
-        DEFAULT_RULES,
-        side,
-      );
-      return utilOnly.isComplete && utilOnly.totalCost <= budget ? utilOnly : null;
-    }
-    return null;
-  }
-
-  // 3. Retained SMG: upgrade to main rifle if it forms a complete loadout, else keep SMG.
+  // 2. Retained primary: keep rifle/AWP; upgrade SMG only when a full main-rifle loadout fits.
+  if (hasRetainedRifleOrAwp) return tryRetainedTopUp();
   if (hasRetainedSmg) {
     const upgrade = tryCore(rifleFor(side));
     if (
@@ -409,21 +416,10 @@ function planLoadout(
     ) {
       return upgrade;
     }
-    const keepSmg = tryCore();
-    if (keepSmg) return keepSmg;
-    if (!requireArmor) {
-      const utilOnly = planPurchases(
-        inventory,
-        compact(utilityBundle(side, inventory, budget)),
-        DEFAULT_RULES,
-        side,
-      );
-      return utilOnly.isComplete && utilOnly.totalCost <= budget ? utilOnly : null;
-    }
-    return null;
+    return tryRetainedTopUp();
   }
 
-  // 4. Empty primary: evaluate coherent loadout packages by side.
+  // 3. Empty primary: evaluate coherent loadout packages by side.
   const mainRifle = tryCore(rifleFor(side));
   if (
     mainRifle &&
@@ -432,6 +428,7 @@ function planLoadout(
     return mainRifle;
   }
 
+  const smg = tryCore(smgFor(side));
   if (side === 'T') {
     // Cologne Major 2026: T $3,700-$4,199 strongly favors Galil+VH+utility over bare AK+VH.
     const galil = tryCore('galil');
@@ -441,19 +438,14 @@ function planLoadout(
     if (mainRifle) return mainRifle;
     if (galil) return galil;
   } else {
-    // CT: bare M4 + Kevlar (+1 nade) vs MP9 + armor + utility; prefer M4+Kevlar+nade, then MP9, then bare M4.
     if (mainRifle && effectiveGrenadeCount(resultingLoadout(inventory, mainRifle.purchases)) >= 1) {
       return mainRifle;
     }
-    const mp9 = tryCore('mp9');
-    if (mp9 && effectiveGrenadeCount(resultingLoadout(inventory, mp9.purchases)) >= 2) {
-      return mp9;
+    if (smg && effectiveGrenadeCount(resultingLoadout(inventory, smg.purchases)) >= 2) {
+      return smg;
     }
     if (mainRifle) return mainRifle;
-    if (mp9) return mp9;
   }
-
-  const smg = tryCore(smgFor(side));
   if (smg) return smg;
 
   const pistol = tryCore(paidPistolFor(side));
@@ -494,17 +486,12 @@ function buildConditionalAlternatives(
   );
 
   if (side === 'CT' && !inventory.hasDefuseKit && !boughtItems.includes('defuse_kit')) {
-    const kitPlan = planPurchases(
-      inventory,
-      compact([...boughtItems, 'defuse_kit']),
-      DEFAULT_RULES,
-      side,
-    );
-    if (kitPlan.isComplete && kitPlan.totalCost <= budget) {
+    const kitSpend = plan.totalCost + price(DEFAULT_RULES, 'defuse_kit');
+    if (kitSpend <= budget) {
       alternatives.push({
         condition: '若队友无钳',
-        purchases: kitPlan.purchases,
-        bundleSpend: kitPlan.totalCost,
+        purchases: compact([...boughtItems, 'defuse_kit']),
+        bundleSpend: kitSpend,
         reason: '钳子不占道具槽，队友持钳情况不可见',
       });
     }
@@ -514,25 +501,27 @@ function buildConditionalAlternatives(
     const loadout = resultingLoadout(inventory, plan.purchases);
     if (count(loadout.grenades, 'flash') < 2) {
       let replaced = false;
-      const swappedItems = boughtItems.map((item) => {
-        if (!replaced && item === 'he') {
-          replaced = true;
-          return 'flash' as ItemId;
-        }
-        return item;
-      });
-      const swapPlan = planPurchases(inventory, compact(swappedItems), DEFAULT_RULES, side);
-      const swapLoadout = resultingLoadout(inventory, swapPlan.purchases);
+      const swappedPurchases = compact(
+        boughtItems.map((item) => {
+          if (!replaced && item === 'he') {
+            replaced = true;
+            return 'flash' as ItemId;
+          }
+          return item;
+        }),
+      );
+      const swapSpend = plan.totalCost - price(DEFAULT_RULES, 'he') + price(DEFAULT_RULES, 'flash');
+      const swapLoadout = resultingLoadout(inventory, swappedPurchases);
       if (
-        swapPlan.isComplete &&
-        swapPlan.totalCost <= budget &&
+        swapSpend >= 0 &&
+        swapSpend <= budget &&
         swapLoadout.grenades.length <= MAX_GRENADE_CARRY &&
         count(swapLoadout.grenades, 'flash') <= 2
       ) {
         alternatives.push({
           condition: '手雷换闪',
-          purchases: swapPlan.purchases,
-          bundleSpend: swapPlan.totalCost,
+          purchases: swappedPurchases,
+          bundleSpend: swapSpend,
           reason: '手雷与双闪均为职业主流第 4 颗道具',
         });
       }
@@ -840,89 +829,33 @@ function postPistolWinOptions(
     detail: 'pistol winner conversion is team-level FULL with vesthelm priority',
   };
   const guidance: SpendingGuidance = { layer: 'ADVICE', kind: 'COMPLETE_CURRENT_BUY' };
+  const emptyHold: PurchasePlan = {
+    purchases: [],
+    totalCost: 0,
+    targetCost: 0,
+    isComplete: true,
+    rejectedItems: [],
+  };
+  const make = (plan: PurchasePlan, prefix: string, s: RecommendationOption['adviceStrength']) =>
+    buildOption(state, 'FULL', plan, guidance, s, money, [reason], prefix);
 
   if (retained) {
     const plan = planLoadout(side, inventory, money, { preferVesthelm: true, requireArmor: false });
-    if (plan) {
-      return [
-        buildOption(
-          state,
-          'FULL',
-          plan,
-          guidance,
-          strength,
-          money,
-          [reason],
-          'post-pistol-retained',
-        ),
-      ];
-    }
-    return [
-      buildOption(
-        state,
-        'FULL',
-        { purchases: [], totalCost: 0, targetCost: 0, isComplete: true, rejectedItems: [] },
-        guidance,
-        strength,
-        money,
-        [reason],
-        'post-pistol-hold',
-      ),
-    ];
+    return [make(plan ?? emptyHold, plan ? 'post-pistol-retained' : 'post-pistol-hold', strength)];
   }
 
   const results: RecommendationOption[] = [];
-  const riflePlan = planLoadout(side, inventory, money, {
-    preferVesthelm: true,
-    targetPrimary: rifleFor(side),
-  });
-  const smgPlan = planLoadout(side, inventory, money, {
-    preferVesthelm: true,
-    targetPrimary: smgFor(side),
-  });
-  if (riflePlan) {
-    results.push(
-      buildOption(
-        state,
-        'FULL',
-        riflePlan,
-        guidance,
-        strength,
-        money,
-        [reason],
-        'post-pistol-rifle',
-      ),
-    );
+  for (const [primary, prefix] of [
+    [rifleFor(side), 'post-pistol-rifle'],
+    [smgFor(side), 'post-pistol-smg'],
+  ] as const) {
+    const plan = planLoadout(side, inventory, money, {
+      preferVesthelm: true,
+      targetPrimary: primary,
+    });
+    if (plan) results.push(make(plan, prefix, results.length === 0 ? strength : 'ALTERNATIVE'));
   }
-  if (smgPlan) {
-    results.push(
-      buildOption(
-        state,
-        'FULL',
-        smgPlan,
-        guidance,
-        results.length === 0 ? strength : 'ALTERNATIVE',
-        money,
-        [reason],
-        'post-pistol-smg',
-      ),
-    );
-  }
-  if (results.length === 0) {
-    results.push(
-      buildOption(
-        state,
-        'FULL',
-        { purchases: [], totalCost: 0, targetCost: 0, isComplete: true, rejectedItems: [] },
-        guidance,
-        strength,
-        money,
-        [reason],
-        'post-pistol-hold',
-      ),
-    );
-  }
-  return results;
+  return results.length > 0 ? results : [make(emptyHold, 'post-pistol-hold', strength)];
 }
 
 /** Deduplicate identical purchase lists, preferring LIGHT over FORCE when both buy the exact same items. */
@@ -981,16 +914,18 @@ function normalRoundOptions(
   }
 
   // Current round cannot form a complete loadout: assemble real tradeoffs (FORCE / LIGHT / PRESERVE).
-  const forceOpt = currentPlan
-    ? buildOption(
-        state,
-        'FORCE',
-        currentPlan,
-        { layer: 'ADVICE', kind: 'CURRENT_ROUND_PRIORITY' },
-        'SUPPORTED',
-        money,
-      )
-    : null;
+  // A $0 non-complete hold is not a FORCE buy; let PRESERVE carry the hold semantics.
+  const forceOpt =
+    currentPlan && currentPlan.totalCost > 0
+      ? buildOption(
+          state,
+          'FORCE',
+          currentPlan,
+          { layer: 'ADVICE', kind: 'CURRENT_ROUND_PRIORITY' },
+          'SUPPORTED',
+          money,
+        )
+      : null;
 
   const lightOptions: RecommendationOption[] = [];
   let nextFullReachable = false;
@@ -1117,43 +1052,24 @@ export function recommendPolicyV3(state: PolicyV3State): PolicyV3Output {
     const pistolOutcome = previousPistolOutcome(state, side);
     if (pistolOutcome === 'WIN') {
       options = postPistolWinOptions(state, 'SUPPORTED');
-    } else if (pistolOutcome === 'LOSS') {
-      const forcePlan = planLoadout(side, inventory, money);
-      const forceOpt = forcePlan
-        ? buildOption(
-            state,
-            'FORCE',
-            forcePlan,
-            { layer: 'ADVICE', kind: 'CURRENT_ROUND_PRIORITY' },
-            side === 'CT' ? 'DOMINANT' : 'SUPPORTED',
-            money,
-          )
-        : null;
-      const ecoOpt = preserveOption(
-        state,
-        affordability,
-        side === 'CT' ? 'ALTERNATIVE' : 'SUPPORTED',
-      );
-      options =
-        side === 'T'
-          ? [ecoOpt, ...(forceOpt ? [forceOpt] : [])]
-          : [...(forceOpt ? [forceOpt] : []), ecoOpt];
     } else {
+      const isCtLoss = pistolOutcome === 'LOSS' && side === 'CT';
       const forcePlan = planLoadout(side, inventory, money);
-      const forceOpt = forcePlan
-        ? buildOption(
-            state,
-            'FORCE',
-            forcePlan,
-            { layer: 'ADVICE', kind: 'CURRENT_ROUND_PRIORITY' },
-            'SUPPORTED',
-            money,
-          )
-        : null;
-      options = [
-        preserveOption(state, affordability, 'SUPPORTED'),
-        ...(forceOpt ? [forceOpt] : []),
-      ];
+      const forceOpt =
+        forcePlan && forcePlan.totalCost > 0
+          ? buildOption(
+              state,
+              'FORCE',
+              forcePlan,
+              { layer: 'ADVICE', kind: 'CURRENT_ROUND_PRIORITY' },
+              isCtLoss ? 'DOMINANT' : 'SUPPORTED',
+              money,
+            )
+          : null;
+      const ecoOpt = preserveOption(state, affordability, isCtLoss ? 'ALTERNATIVE' : 'SUPPORTED');
+      options = isCtLoss
+        ? [...(forceOpt ? [forceOpt] : []), ecoOpt]
+        : [ecoOpt, ...(forceOpt ? [forceOpt] : [])];
     }
   } else {
     options = normalRoundOptions(state, affordability);
