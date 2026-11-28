@@ -38,14 +38,25 @@
 
 ---
 
-## 职业比赛回放验证（IEM Cologne Major 2026）
+## 跨赛事职业回放验证（Cologne 开发集 → Singapore Stage 1 样本外）
 
-我们在 **202 张 IEM Cologne Major 2026 职业比赛地图、25,748 条有效冻结时间决策样本**（含空装起枪与保枪补装备，仅输入普通玩家 GSI 可见信息）上做了离线回放对比，将 RoundSense 与「买得起最高武器即买」的简单策略直接对照职业选手真实购买行为：
+我们先在 **IEM Cologne Major 2026**（202 张地图、28,594 条有效样本）上完成经济规律研究与策略定型，随后**正式冻结生产策略（`dc1c84a`）**，在不根据新数据做任何参数调整的前提下，将同一套脚本与四组对照基准（`B0` 简单购买 / `B1` 常规经济常识 / `B2` 旧版 Policy V3 / `RoundSense` 冻结版）直接跑在 **PGL Singapore Major 2026 · Stage 1**（53 张地图、7,062 条样本）的独立样本外数据集上（统一基于 `replay.json` 回合末真实状态恢复，仅输入普通玩家 GSI 可见字段）：
 
-![RoundSense IEM Cologne Major 2026 离线冻结时间决策回放验证](docs/assets/cologne-validation.png)
+![RoundSense 跨赛事样本外回放验证（Cologne vs Singapore Stage 1）](docs/assets/cross-event-validation.png)
 
-- 完整机器可读统计与真实案例见 [cologne-replay-benchmark.json](docs/data/cologne-replay-benchmark.json)，可通过 [cologne-replay-benchmark.ts](scripts/cologne-replay-benchmark.ts) 复现。
-- 说明：以上为基于研究语料的历史冻结时间回放验证；职业行为一致率衡量决策贴近度，不代表胜率承诺。
+| 严格 1-vs-1 首选指标（全部样本） | Cologne 开发集 (`n=28,594`) | Singapore S1 样本外 (`n=7,062`) |
+| :--- | ---: | ---: |
+| **首选购买金额 MAE**（vs B0 / B1 / B2） | **$472**（vs $555 / $506 / $538） | **$460**（vs $547 / $487 / $527） |
+| **首选误差 ≤ $400** | **73.2%**（vs 66.7% / 59.1% / 72.0%） | **74.4%**（vs 68.1% / 62.0% / 74.0%） |
+| **首选主武器类别一致率** | **76.8%**（vs 69.2% / 76.6% / 72.1%） | **77.4%**（vs 69.6% / 76.8% / 72.7%） |
+| **CT 常规局头盔一致率** | **83.0%**（vs 71.7% / 80.8% / 76.7%） | **83.9%**（vs 68.6% / 82.6% / 74.2%） |
+| **常规局败后下局仍可全起比例**（职业实际 51.6% / 51.9%） | **44.3%**（vs 33.3% / 37.8% / 33.0%） | **45.6%**（vs 35.7% / 39.4% / 35.1%） |
+| **方案集误差 ≤ $400 / 平均方案数** | **81.8% / 1.55** | **82.6% / 1.52** |
+| **9 项机械合规审计违规数**（含条件替代与半起底线） | **0**（旧版 V3 为 10,232） | **0**（旧版 V3 为 2,530） |
+
+- 可复现统一脚本：[cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
+- 完整机器可读报告：[cologne-cross-event-benchmark.json](docs/data/cologne-cross-event-benchmark.json) · [singapore-s1-cross-event-benchmark.json](docs/data/singapore-s1-cross-event-benchmark.json)
+- 说明：以上为历史冻结时间决策回放验证；新加坡 Stage 1 未参与任何策略制定，结果原样保留，不代表胜率承诺。
 
 ---
 

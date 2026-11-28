@@ -38,17 +38,25 @@ The live overlay contains only what you need to decide in a glance—zero prose,
 
 ---
 
-## Pro Match Replay Validation (IEM Cologne Major 2026)
+## Cross-Event Out-of-Sample Validation (Cologne → Singapore Stage 1)
 
-We replayed RoundSense offline across **202 maps and 25,748 valid freezetime decisions** from IEM Cologne Major 2026 (covering both fresh buys and retained-gear rounds, using only normal-player GSI observable fields) and compared it against a naive buy-what-you-can baseline:
+We studied pro economy habits on **IEM Cologne Major 2026** (202 maps, 28,594 eligible decisions), **froze production Policy V3 (`dc1c84a`)**, and then ran the exact same replay pipeline and four-way baseline comparison (`B0` naive buy-what-you-can / `B1` standard economy-aware heuristic / `B2` pre-refactor Policy V3 / frozen `RoundSense`) untouched on **PGL Singapore Major 2026 · Stage 1** (53 maps, 7,062 decisions) using validated `replay.json` end-of-round state recovery and normal-player GSI inputs only:
 
-![RoundSense IEM Cologne Major 2026 Offline Replay Validation](docs/assets/cologne-validation.png)
+![RoundSense Cross-Event Out-of-Sample Validation (Cologne vs Singapore Stage 1)](docs/assets/cross-event-validation.png)
 
-- **Main weapon family match**: **70.9%** vs. 61.2% naive (**+9.7%** overall; **+14.2%** on fresh buys).
-- **CT helmet vs. utility match**: **80.9%** vs. 66.8% naive (**+14.1%**).
-- **Fresh-buy primary spend MAE**: **$577** vs. $661 naive (**−$84 / −12.7%**), with **0** over-budget, illegal, or duplicate suggestions and an average of **1.62** options per round.
-- Reproducible script: [cologne-replay-benchmark.ts](scripts/cologne-replay-benchmark.ts) · Machine-readable metrics & real pro cases: [cologne-replay-benchmark.json](docs/data/cologne-replay-benchmark.json).
-- *Note: Historical freezetime replay on the study corpus; behavioral alignment measures decision proximity rather than win-rate guarantees.*
+| Strict 1-vs-1 Lead Metric (All Eligible Rounds) | Cologne Study Set (`n=28,594`) | Singapore S1 Out-of-Sample (`n=7,062`) |
+| :--- | ---: | ---: |
+| **Lead spend MAE** (vs. B0 / B1 / B2) | **$472** (vs. $555 / $506 / $538) | **$460** (vs. $547 / $487 / $527) |
+| **Lead spend within $400** | **73.2%** (vs. 66.7% / 59.1% / 72.0%) | **74.4%** (vs. 68.1% / 62.0% / 74.0%) |
+| **Lead primary weapon family match** | **76.8%** (vs. 69.2% / 76.6% / 72.1%) | **77.4%** (vs. 69.6% / 76.8% / 72.7%) |
+| **CT normal-round helmet match** | **83.0%** (vs. 71.7% / 80.8% / 76.7%) | **83.9%** (vs. 68.6% / 82.6% / 74.2%) |
+| **Next-round full-buy continuity after loss** (pro actual 51.6% / 51.9%) | **44.3%** (vs. 33.3% / 37.8% / 33.0%) | **45.6%** (vs. 35.7% / 39.4% / 35.1%) |
+| **Option-set within $400 / avg options** | **81.8% / 1.55** | **82.6% / 1.52** |
+| **9-check mechanical invariant violations** (incl. alternatives & LIGHT floors) | **0** (legacy V3: 10,232) | **0** (legacy V3: 2,530) |
+
+- Reproducible unified script: [cross-event-replay-benchmark.ts](scripts/cross-event-replay-benchmark.ts)
+- Machine-readable reports: [cologne-cross-event-benchmark.json](docs/data/cologne-cross-event-benchmark.json) · [singapore-s1-cross-event-benchmark.json](docs/data/singapore-s1-cross-event-benchmark.json)
+- *Note: Historical freezetime decision replay. Singapore Stage 1 was never used to tune any policy rule; results are reported verbatim with no win-rate guarantees.*
 
 ---
 
